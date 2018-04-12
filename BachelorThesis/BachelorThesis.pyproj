@@ -23,6 +23,27 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="BachelorThesis.py" />
+    <Compile Include="dataset.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="filesystem.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="lstm.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="metrics.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="preprocessing.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="qrs_detector.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="stopwatch.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
