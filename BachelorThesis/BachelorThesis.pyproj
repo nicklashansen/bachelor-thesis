@@ -12,6 +12,8 @@
     <OutputPath>.</OutputPath>
     <Name>BachelorThesis</Name>
     <RootNamespace>BachelorThesis</RootNamespace>
+    <InterpreterId>{33e55c76-bf90-4a97-b5ea-558a28588aa8}</InterpreterId>
+    <InterpreterVersion>3.5</InterpreterVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -29,7 +31,7 @@
     <Compile Include="filesystem.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="lstm.py">
+    <Compile Include="gru.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="metrics.py">
@@ -44,6 +46,9 @@
     <Compile Include="stopwatch.py">
       <SubType>Code</SubType>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="{33e55c76-bf90-4a97-b5ea-558a28588aa8}\3.5" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

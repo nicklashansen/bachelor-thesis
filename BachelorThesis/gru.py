@@ -11,10 +11,8 @@ WRITTEN BY:
 Nicklas Hansen
 """
 
-class lstm:
-	data = dataset()
-	model = Sequential()
-	neurons = 10
+class gru:
+	data, model, neurons = None, None, None
 
 	def __init__(self, data, neurons = 10):
 		self.data = data
@@ -40,16 +38,13 @@ class lstm:
 
 	# fix data pass format
 	def cross_val(self, tuple: tuple, trainX=None, trainY=None, testX=None, testY=None, metric=metrics.TPR_FNR):
-		print('Cross-validating...')
 		if (tuple != None):
 			trainX, trainY, testX, testY = tuple[0], tuple[1], tuple[2], tuple[3]
 		timer, score = stopwatch(), []
 		for fold in range(len(trainX)):
 			self.build()
 			X,y,_X,_y = trainX[fold], trainY[fold], testX[fold], testY[fold]
-			#print('Fitting ', len(X), ' sequences...')
 			self.fit(X, y, 1)
-			#print('Evaluating ', len(_X), ' sequences...')
 			score.append(self.evaluate(_X, _y, metric=metric))
 			print(fold+1, '/', len(trainX), 'folds completed...')
 		print('Duration: ', timer.stop(), 's')
