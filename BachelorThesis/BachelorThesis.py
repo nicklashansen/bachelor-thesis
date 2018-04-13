@@ -1,5 +1,5 @@
 from stopwatch import stopwatch
-from lstm import gru
+from gru import gru
 from dataset import dataset
 from preprocessing import prepAll
 import filesystem as fs
