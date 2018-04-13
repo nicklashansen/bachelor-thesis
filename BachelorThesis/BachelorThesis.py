@@ -1,5 +1,5 @@
 from stopwatch import stopwatch
-from lstm import lstm
+from lstm import gru
 from dataset import dataset
 from preprocessing import prepAll
 import filesystem as fs
@@ -19,7 +19,7 @@ def eval():
 	data.load_mesa(summary=True)	# Mesa dataset
 	#data.load_physionet()			# PhysioNet dataset
 	#data.load_example(1000, 60)	# Example dataset
-	model = lstm(data, neurons)
+	model = gru(data, neurons)
 	score = model.cross_val(data.kfold(folds))	# K-fold
 	#score = model.cross_val(data.holdout())	# Holdout
 	print(metrics.compute_score(score, metrics.TPR_FNR).items())

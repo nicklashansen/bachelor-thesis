@@ -11,7 +11,7 @@ WRITTEN BY:
 Nicklas Hansen
 """
 
-class lstm:
+class gru:
 
 	def __init__(self, data, neurons = 10):
 		self.data = data

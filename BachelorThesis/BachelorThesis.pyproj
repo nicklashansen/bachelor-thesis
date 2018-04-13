@@ -29,7 +29,7 @@
     <Compile Include="filesystem.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="lstm.py">
+    <Compile Include="gru.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="metrics.py">
