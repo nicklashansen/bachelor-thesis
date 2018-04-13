@@ -7,19 +7,22 @@ import filesystem as fs
 
 """
 WRITTEN BY:
-Nicklas Hansen
+Nicklas Hansen,
+Michael Kirkegaard
 """
 
 class dataset:
-	X,y,raw=[],[],[]
-	features = 1
-	timesteps = 80
-	size = 0
+	def __init__(self):
+		self.X = []
+		self.y = []
+		self.size = -1
+		self.features = -1
+		self.timesteps = -1
 
 	def holdout(self, split = 0.67):
 		train_size = int(self.size * split)
 		test_size = self.size - train_size
-		trainX, trainY, testX, testY = self.X[0:train_size], self.y[0:train_size], self.X[train_size:self.size], self.y[train_size:self.size]
+		trainX, trainY, testX, testY = self.X[:train_size], self.y[:train_size], self.X[train_size:], self.y[train_size:]
 		return trainX, trainY, testX, testY
 
 	def kfold(self, folds = 5):
@@ -33,27 +36,42 @@ class dataset:
 		return trainX, trainY, testX, testY
 
 	def load_mesa(self, summary = False):
-		setlist = ['ecg']
-		shuffle(setlist)
-		for set in setlist:
-			raw = fs.load_csv(set)
-		#self.load_external(setlist, summary)
+		setlist,_ = fs.getAllSubjectFilenames(preprocessed=True)
+		self.load_external(setlist, summary)
 
+	'''
 	def load_physionet(self, summary = False):
 		#'0005', '0029', '0052', '0061', 
 		setlist = ['0078', '0079', '0083', '0086', '0087', '0092', '0100', '0103', '0134', '0135', '0141', '0146', '0152', '0166', '0167', '0179', '0184', '0198']
 		for i in range(len(setlist)):
 			setlist[i] = 'tr03-' + setlist[i]
 		self.load_external(setlist, summary)
+	'''
 
 	def load_external(self, setlist, summary = False):
 		shuffle(setlist)
 		for set in setlist:
-			X = fs.load_csv(set + '_X')
-			y = fs.load_csv(set + '_y', type=int)
+			# Load Data
+			X,y = fs.load_csv(set)
+
+			# Count Arousals
+			c = 0
+			b = False
+			for a in y:
+				if a == 1.0:
+					if not b:
+						b = True
+						c += 1
+				else:
+					b = False
+			print(set, ' contains ', c, ' arousals!')
+
+			# Transform Data
 			X,y = self.transform(X, y)
 			self.X.append(X)
 			self.y.append(y)
+			
+			
 		self.size = len(self.X)
 		if (summary):
 			print('Count: ', self.size, ' Timesteps: ', self.timesteps, ' Features: ', self.features)
@@ -67,11 +85,6 @@ class dataset:
 		for i in range(len(y)):
 			if y[i] == -1:
 				y[i] = 0
-		#c = 0
-		#for i in range(len(y)):
-		#	if y[i] == 1:
-		#		c += 1
-		#print(set, ' contains ', c, ' arousals!')
 		if (len(X) > self.timesteps):
 			self.timesteps = len(X)
 		X = X.reshape(1, len(X), self.features)
@@ -86,6 +99,7 @@ class dataset:
 			tensor[i] = seq
 		return tensor
 
+	'''
 	def load_example(self, count = 1000, timesteps = 80):
 		for i in range(count):
 			X,y = self.get_sequence(timesteps)
@@ -111,3 +125,4 @@ class dataset:
 		X = X.reshape(1, timesteps, 1)
 		y = y.reshape(1, timesteps, 1)
 		return X, y
+	'''

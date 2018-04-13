@@ -44,6 +44,11 @@
     <Compile Include="stopwatch.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Mads\DataExtraction.py" />
+    <Compile Include="Mads\subject.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Mads\" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

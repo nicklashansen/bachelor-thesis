@@ -12,13 +12,11 @@ Nicklas Hansen
 """
 
 class lstm:
-	data = dataset()
-	model = Sequential()
-	neurons = 10
 
 	def __init__(self, data, neurons = 10):
 		self.data = data
 		self.neurons = neurons
+		self.model = None
 		self.build()
 
 	def build(self):

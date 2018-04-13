@@ -8,7 +8,8 @@ WRITTEN BY:
 Micha? Sznajder, Marta ?ukowska
 
 MODIFIED BY:
-Nicklas Hansen
+Nicklas Hansen,
+Michael Kirkegaard
 """
 
 class QRSDetectorOffline(object):
@@ -47,19 +48,17 @@ class QRSDetectorOffline(object):
     SOFTWARE.
     """
 
-    def __init__(self, ecg_data_path, verbose=True, log_data=False, plot_data=False, show_plot=False):
+    def __init__(self, ecg_data_raw, verbose=False, log_data=False, plot_data=False, show_plot=False):
         """
         QRSDetectorOffline class initialisation method.
-        :param string ecg_data_path: path to the ECG dataset
+        :param string ecg_data_raw: path to the ECG dataset
         :param bool verbose: flag for printing the results
         :param bool log_data: flag for logging the results
         :param bool plot_data: flag for plotting the results to a file
         :param bool show_plot: flag for showing generated results plot - will not show anything if plot is not generated
         """
         # Configuration parameters.
-        self.ecg_data_path = ecg_data_path
-
-        self.signal_frequency = 200  # Set ECG device frequency in samples per second here.
+        self.signal_frequency = 256  # Set ECG device frequency in samples per second here.
 
         self.filter_lowcut = 0.0001
         self.filter_highcut = 15.0
@@ -76,7 +75,7 @@ class QRSDetectorOffline(object):
         self.qrs_noise_diff_weight = 0.25
 
         # Loaded ECG data.
-        self.ecg_data_raw = None
+        self.ecg_data_raw = ecg_data_raw
 
         # Measured and calculated values.
         self.filtered_ecg_measurements = None
@@ -98,10 +97,11 @@ class QRSDetectorOffline(object):
         self.ecg_data_detected = None
 
         # Run whole detector flow.
-        self.load_ecg_data()
+        self.ecg_data_raw = np.reshape(self.ecg_data_raw, (self.ecg_data_raw.size, -1))
         self.detect_peaks()
         self.detect_qrs()
 
+    '''
     """Loading ECG measurements data methods."""
 
     def load_ecg_data(self):
@@ -110,6 +110,7 @@ class QRSDetectorOffline(object):
         """
         self.ecg_data_raw = fs.load_csv(self.ecg_data_path)
         self.ecg_data_raw = np.reshape(self.ecg_data_raw, (self.ecg_data_raw.size, -1))
+    '''
 
     """ECG measurements data processing methods."""
 
