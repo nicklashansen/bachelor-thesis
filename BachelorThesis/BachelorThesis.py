@@ -8,6 +8,7 @@ import matlab.engine
 """
 WRITTEN BY:
 Nicklas Hansen
+Michael Kirkegaard
 """
 
 def eval(neurons = 20, folds = 5):
@@ -18,7 +19,7 @@ def eval(neurons = 20, folds = 5):
 	print(metrics.compute_score(score, metrics.TPR_FNR).items())
 
 if __name__ == '__main__':
-	eval(20, 5)
-	eng = matlab.engine.start_matlab()
-	print(eng.isprime(37))
-	#preprocess()
+	prepAll()
+	eval()
+	#eng = matlab.engine.start_matlab()
+	#print(eng.isprime(37))
