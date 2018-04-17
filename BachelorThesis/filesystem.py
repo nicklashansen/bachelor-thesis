@@ -63,6 +63,9 @@ class Subject(object):
 		assert(self.ECG_signal.duration == self.SleepStage_anno.duration)
 		self.duration = self.ECG_signal.duration
 
+		assert(self.ECG_signal.sampleFrequency == self.PPG_signal.sampleFrequency)
+		self.frequency = self.ECG_signal.sampleFrequency
+
 	def get_signal(self, label):
 		filepath = Filepaths.LoadPsg + self.filename + ".edf"
 		with pyedflib.EdfReader(filepath) as file:
