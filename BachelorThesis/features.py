@@ -9,13 +9,13 @@ def make_features(X, y):
 
 	# Make Masks
 	m_DR = maskDR(Xt[0])
-	m_RWA = maskRWA(Xt[1])
+	m_RPA = maskRPA(Xt[1])
 	m_PTT = maskPTT(Xt[2])
 	m_PWA = maskPTT(Xt[3])
 	m_SS = maskSS(Xt[4])
 	m_AA = maskAA(y)
 
-	mask = mergeMasks([m_DR, m_RWA, m_PTT, m_PWA, m_SS, m_AA])
+	mask = mergeMasks([m_DR, m_RPA, m_PTT, m_PWA, m_SS, m_AA])
 
 	# Make Epoch Slices
 	e = epoch_Slices(X, y)
@@ -25,6 +25,8 @@ def make_features(X, y):
 
 	# Create and Normalize each epoch
 	E = epoch_Create(e, X, y)
+
+	return E
 
 # Input [ [0, 1, ...], ...]
 def mergeMasks(masks):
@@ -78,8 +80,8 @@ def maskAA(y_AA):
 # TODO: improve
 def epoch_Slices(X, y):
 	l = len(X)
-	li = np.arange(0, l, 180/l)
-	lis = [[li[i],li[i+1]] for i,_ in enumerate(li) if i+1 < len(li)]
+	li = np.arange(0, l, l/180)
+	lis = [[int(li[i]),int(li[i+1])] for i,_ in enumerate(li) if i+1 < len(li)]
 	
 	return lis # 180 Epochs for full set
 
@@ -89,7 +91,7 @@ def epoch_Cut(e, mask, percent = cutoffPercent):
 		i,j = epoch[0], epoch[1]
 		maskslice = mask[i:j]
 		masksum = sum(maskslice)
-		if masksum/len(maskslice) <= percent:
+		if (1-masksum/len(maskslice)) <= percent:
 			return True
 		return False
 
@@ -99,12 +101,11 @@ def epoch_Cut(e, mask, percent = cutoffPercent):
 # TODO: improve
 def epoch_Create(e, X, y):
 
-	Xt = np.transpose(X)
 	def create(epoch):
 		i,j = epoch[0], epoch[1]
 		
-		# Normalize each feature row and transpose to columns
-		X_ = np.transpose([normalize(x) for x in Xt[i:j]])
+		# Normalize each feature as row
+		X_ = np.transpose([normalize(x) for x in np.transpose(X[i:j])])
 		y_ = y[i:j]
 
 		return [X_, y_]
@@ -146,5 +147,6 @@ def epoch_Create(e, X, y):
 	]
 		
 	"""
+
 def normalize(X, scaler=MinMaxScaler()):
-	return squeeze(scaler.fit_transform(X.reshape(X.shape[0], 1)))
+	return np.squeeze(scaler.fit_transform(X.reshape(X.shape[0], 1)))

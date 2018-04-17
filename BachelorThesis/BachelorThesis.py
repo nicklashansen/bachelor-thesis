@@ -2,6 +2,7 @@ from stopwatch import *
 #from gru import *
 #from dataset import *
 from preprocessing import *
+from features import *
 #import metrics
 import matlab.engine
 
@@ -21,6 +22,10 @@ def eval(neurons = 20, folds = 5):
 #'''
 
 if __name__ == '__main__':
-	filename = 'mesa-sleep-0002' ; prepSingle(filename)
+	filename = 'mesa-sleep-0002'
+	X, y = prepSingle(filename)
+	E = make_features(X, y)
 	#prepAll()
 	#eval()
+
+	breakpoint = 0

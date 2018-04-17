@@ -18,6 +18,7 @@ def prepSingle(filename):
 	X, y = preprocess(sub)
 	fs.write_csv(filename, X, y)
 	print('Done')
+	return X, y
 
 def prepAll():
 	# Status
@@ -56,7 +57,7 @@ def preprocess(subject):
 	y_AA = ArousalBin(anno_Arousal, subject.frequency, index)
 
 	# Collect Matrix
-	features = [x_DR, x_RPA, x_PPT, x_PWA, x_SS]
+	features = [x_DR, x_RPA, x_PTT, x_PWA, x_SS]
 	X = empty((len(features), len(x_DR)))
 	for i,feat in enumerate(features):
 		X[i] = feat
@@ -68,8 +69,7 @@ def QRS(subject):
 	eng = matlab.engine.start_matlab()
 	os.makedirs(fs.Filepaths.Matlab, exist_ok=True)
 	eng.cd(fs.Filepaths.Matlab)
-	index, amp = eng.peak_detect(fs.directory(), subject.filename + '.edf', subject.frequency, nargout=2)
-	index = [i for i in index[0]]
+	index, amp = eng.peak_detect(fs.directory(), subject.filename + '.edf', float(subject.frequency), nargout=2)
 	return index, amp
 
 def ECG(sig_ECG, index):
@@ -117,12 +117,12 @@ def SleepStageBin(anno_SleepStage, frequency, index):
 		start = float(start)
 		dur = float(dur)
 		stage = int(stage)
-		range = range(int(start*frequency), int((start+dur)*frequency))
+		ran = range(int(start*frequency), int((start+dur)*frequency))
 		if stage > 0 and stage < 5:
-			for i in range:
+			for i in ran:
 				SS[i] = 0
 		elif stage >= 5:
-			for i in range:
+			for i in ran:
 				SS[i] = 1
 	
 	SS = array([SS[idx] for idx in index]).astype(float)

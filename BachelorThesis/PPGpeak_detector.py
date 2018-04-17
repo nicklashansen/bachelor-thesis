@@ -32,7 +32,7 @@ def PPG_Peaks(data, freq, plot=False):
 def getMax(data, i, freq):
 	slice = 1/4
 	h,j = int(max(i-(slice*freq),0)), int(min(i+(slice*freq), len(data)))
-	k = h + np.argmax(data[h:j])[0]
+	k = h + np.argmax(data[h:j])
 	amp = data[k]
 	return k, amp
 
