@@ -1,9 +1,9 @@
 from numpy import *
 from scipy.signal import medfilt
-from sklearn.preprocessing import MinMaxScaler
 from PPGpeak_detector import PPG_Peaks
 import filesystem as fs
 import matlab.engine
+import os
 
 """
 WRITTEN BY:
@@ -12,13 +12,16 @@ Michael Kirkegaard
 """
 
 def prepSingle(filename):
+	# Status
+	print('Extracting and preprocessing file: {0}...'.format(filename))
 	sub = fs.Subject(filename)
 	X, y = preprocess(sub)
 	fs.write_csv(filename, X, y)
+	print('Done')
 
 def prepAll():
 	# Status
-	print('Extracting and preprocessing files..')
+	print('Extracting and preprocessing files...')
 
 	# get subject names
 	filenames,datasetCSV = fs.getAllSubjectFilenames()
@@ -63,6 +66,7 @@ def preprocess(subject):
 
 def QRS(subject):
 	eng = matlab.engine.start_matlab()
+	os.makedirs(fs.Filepaths.Matlab, exist_ok=True)
 	eng.cd(fs.Filepaths.Matlab)
 	index, amp = eng.peak_detect(fs.directory(), subject.filename + '.edf', subject.frequency, nargout=2)
 	index = [i for i in index[0]]
@@ -137,6 +141,3 @@ def ArousalBin(anno_Arousal, frequency, index):
 
 	AA = array([AA[idx] for idx in index]).astype(float)
 	return AA
-
-def normalize(X, scaler=MinMaxScaler()):
-	return squeeze(scaler.fit_transform(X.reshape(X.shape[0], 1)))

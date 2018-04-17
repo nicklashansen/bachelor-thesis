@@ -28,6 +28,9 @@
     <Compile Include="dataset.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="features.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="filesystem.py">
       <SubType>Code</SubType>
     </Compile>

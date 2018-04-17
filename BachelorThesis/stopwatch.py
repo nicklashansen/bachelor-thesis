@@ -6,11 +6,11 @@ Nicklas Hansen
 """
 
 class stopwatch:
-	a=b=c=0
 
 	def __init__(self):
 		self.a = int(time.time())
 		self.b = self.a
+		self.c = 0
 
 	def round(self):
 		self.b = int(time.time() - self.b)

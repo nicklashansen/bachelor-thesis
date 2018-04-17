@@ -39,14 +39,14 @@ def getMax(data, i, freq):
 # Plot
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
-import preprocessing as p
+import features as feat
 
 def plotData(data, _data, peaks, i=0, j=45000):
 	i,j = int(max(i,0)),int(min(len(data),j))
 	x = range(i,j)
 	plt.figure(figsize=(6.5, 4))
-	nd = p.normalize(data[i:j]) ; plt.plot(x, nd, 'b-', label='data')
-	nx = p.normalize(_data[i:j]) ; plt.plot(x, nx, 'g-', label='filter')
+	nd = feat.normalize(data[i:j]) ; plt.plot(x, nd, 'b-', label='data')
+	nx = feat.normalize(_data[i:j]) ; plt.plot(x, nx, 'g-', label='filter')
 	ns = [ix for ix in peaks if i <= ix < j]
 	plt.plot(ns, [nd[ix] for ix in ns], 'rx', label='peak')
 	plt.legend()

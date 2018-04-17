@@ -3,7 +3,6 @@ from numpy import *
 
 import pyedflib
 
-from time import time
 from os import listdir, makedirs
 from os.path import isfile, join
 
