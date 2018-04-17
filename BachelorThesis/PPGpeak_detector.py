@@ -2,10 +2,10 @@ from scipy.signal import butter, filtfilt
 from peakutils.peak import indexes
 import numpy as np
 
-'''
+"""
 WRITTEN BY:
 Michael Kirkegaard
-'''
+"""
 
 def lowpass_butter_filter(data, Norder=5, lowcut=0.03):
 	B, A = butter(Norder, Wn=lowcut, btype='lowpass', output='ba')

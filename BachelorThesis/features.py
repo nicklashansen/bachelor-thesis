@@ -1,7 +1,10 @@
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 
-cutoffPercent = 0.45
+"""
+WRITTEN BY
+Micheal Kirkegaard
+"""
 
 def make_features(X, y):
 	# Transpose X
@@ -86,7 +89,7 @@ def epoch_Slices(X, y):
 	return lis # 180 Epochs for full set
 
 # Cut Epochs with XX percent uncertainty in mask
-def epoch_Cut(e, mask, percent = cutoffPercent):
+def epoch_Cut(e, mask, percent = 0.45):
 	def cut(epoch):
 		i,j = epoch[0], epoch[1]
 		maskslice = mask[i:j]

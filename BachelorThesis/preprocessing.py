@@ -48,7 +48,6 @@ def preprocess(subject):
 	
 	# Get Index
 	index, amp = QRS(subject)
-	index = array(index).astype(int)
 	
 	# Preprocess Features
 	x_DR, x_RPA = ECG(sig_ECG, index), array(amp)
@@ -70,6 +69,7 @@ def QRS(subject):
 	os.makedirs(fs.Filepaths.Matlab, exist_ok=True)
 	eng.cd(fs.Filepaths.Matlab)
 	index, amp = eng.peak_detect(fs.directory(), subject.filename + '.edf', float(subject.frequency), nargout=2)
+	index = [int(i) for i in index[0]]
 	return index, amp
 
 def ECG(sig_ECG, index):
