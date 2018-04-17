@@ -1,7 +1,6 @@
 from numpy import *
 from scipy.signal import medfilt
 from sklearn.preprocessing import MinMaxScaler
-from qrs_detector import QRSDetectorOffline as QRS
 from PPGpeak_detector import PPG_Peaks
 import filesystem as fs
 import matlab.engine
@@ -11,6 +10,11 @@ WRITTEN BY:
 Nicklas Hansen,
 Michael Kirkegaard
 """
+
+def prepSingle(filename):
+	sub = fs.Subject(filename)
+	X, y = preprocess(sub)
+	fs.write_csv(filename, X, y)
 
 def prepAll():
 	# Status
@@ -32,17 +36,27 @@ def prepAll():
 	print('') # reset '\r'
 
 def preprocess(subject):
+	#Signals
 	sig_ECG = subject.ECG_signal
 	sig_PPG = subject.PPG_signal
 	anno_SleepStage = subject.SleepStage_anno
 	anno_Arousal = subject.Arousal_anno
+	
+	# Get Index
+	index, amp = QRS(subject)
+	index = array(index).astype(int)
+	
+	# Preprocess Features
 	x_DR, x_RPA = ECG(sig_ECG, index), array(amp)
-	x_SS = SleepStageBin(anno_SleepStage, sig_ECG.sampleFrequency, index)
-	y_AA = ArousalBin(anno_Arousal, sig_ECG.sampleFrequency, index)
-	features = [x_DR, x_RPA, x_SS]
+	x_PTT, x_PWA = PPG(sig_PPG, index)
+	x_SS = SleepStageBin(anno_SleepStage, subject.frequency, index)
+	y_AA = ArousalBin(anno_Arousal, subject.frequency, index)
+
+	# Collect Matrix
+	features = [x_DR, x_RPA, x_PPT, x_PWA, x_SS]
 	X = empty((len(features), len(x_DR)))
-	for i in range(len(features)):
-		X[i] = features[i]
+	for i,feat in enumerate(features):
+		X[i] = feat
 	X = transpose(X)
 	y = array(y_AA)
 	return X, y
@@ -50,17 +64,13 @@ def preprocess(subject):
 def QRS(subject):
 	eng = matlab.engine.start_matlab()
 	eng.cd(fs.Filepaths.Matlab)
-	index, amp = eng.peak_detect(fs.directory(), subject.filename + '.edf', 256.0, nargout=2)
-	d = index[0]
-	e = d[3]
-
-	return [i for i in d], amp
+	index, amp = eng.peak_detect(fs.directory(), subject.filename + '.edf', subject.frequency, nargout=2)
+	index = [i for i in index[0]]
+	return index, amp
 
 def ECG(sig_ECG, index):
 	DR = array(medfilt([0]+[index[i]-index[i-1] for i in range(1,len(index))], 5)).astype(float)
 	return DR
-
-	return DR,RPA
 
 def PPG(sig_PPG, index):
 	peaks, amps = PPG_Peaks(sig_PPG.signal, sig_PPG.sampleFrequency)
