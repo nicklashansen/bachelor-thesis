@@ -24,7 +24,7 @@ class gru:
 		#model.add(Bidirectional(GRU(self.neurons, return_sequences=True), input_shape=(self.data.timesteps, self.data.features), merge_mode='sum'))
 		model.add(GRU(self.neurons, return_sequences=True, input_shape=(self.data.timesteps, self.data.features)))
 		model.add(TimeDistributed(Dense(1, activation='sigmoid')))
-		model.compile(loss='binary_crossentropy', optimizer='rmsprop')
+		model.compile(loss='binary_crossentropy', optimizer='adam')
 		self.model = model
 
 	def fit(self, X, y, epochs):

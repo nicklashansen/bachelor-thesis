@@ -1,8 +1,9 @@
 from numpy import *
 from scipy.signal import medfilt
 from sklearn.preprocessing import MinMaxScaler
-from qrs_detector import QRSDetectorOffline as QRS
+#from qrs_detector import QRSDetectorOffline as QRS
 import filesystem as fs
+import matlab.engine
 
 """
 WRITTEN BY:
@@ -28,40 +29,36 @@ def prepAll():
 
 		print('{0:.3f} %'.format((i+1) / len(filenames) * 100), end='\r')
 	print('') # reset '\r'
-	
+
 def preprocess(subject):
-	# Load signals
 	sig_ECG = subject.ECG_signal
-	sig_PPG = subject.PPG_signal
+	index, amp = QRS(subject)
+	index = array(index).astype(int)
 	anno_SleepStage = subject.SleepStage_anno
 	anno_Arousal = subject.Arousal_anno
-
-	# Get Indexes / Time Series Stamps
-	index = _QRS(sig_ECG)
-
-	# Process each signal
-	x_DR, x_RPA = ECG(sig_ECG, index)
-	x_PTT, x_PWA  = PPG(sig_PPG, index)
+	x_DR, x_RPA = ECG(sig_ECG, index), array(amp)
 	x_SS = SleepStageBin(anno_SleepStage, sig_ECG.sampleFrequency, index)
-
 	y_AA = ArousalBin(anno_Arousal, sig_ECG.sampleFrequency, index)
-	
-	X = transpose(array([x_DR, x_RPA, x_PTT, x_PWA, x_SS]))
-	y = y_AA
+	features = [x_DR, x_RPA, x_SS]
+	X = empty((len(features), len(x_DR)))
+	for i in range(len(features)):
+		X[i] = features[i]
+	X = transpose(X)
+	y = array(y_AA)
+	return X, y
 
-	return X, y 
+def QRS(subject):
+	eng = matlab.engine.start_matlab()
+	eng.cd(fs.Filepaths.Matlab)
+	index, amp = eng.peak_detect(fs.directory(), subject.filename + '.edf', 256.0, nargout=2)
+	d = index[0]
+	e = d[3]
 
-def _QRS(sig_ECG):
-	# find all peak-indexs in ECG signal
-	index = QRS(sig_ECG.signal).detected_peaks_indices # TODO: Better QRS-index detection
-
-	return index
+	return [i for i in d], amp
 
 def ECG(sig_ECG, index):
 	DR = array(medfilt([0]+[index[i]-index[i-1] for i in range(1,len(index))], 5)).astype(float)
-	RPA = array([sig_ECG.signal[idx] for idx in index])
-
-	return DR, RPA
+	return DR
 
 def PPG(sig_PPG, index):
 	# 1) Find all peak-indexs in PPG singal
