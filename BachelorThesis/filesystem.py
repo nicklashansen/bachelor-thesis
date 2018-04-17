@@ -27,6 +27,7 @@ def directory():
 class Filepaths(object):
 	# Folder 
 	Folder = directory() + 'Files\\'
+	Matlab = directory() + 'Matlab\\'
 
 	# Save paths
 	SaveSubject = Folder + 'Subjects\\'

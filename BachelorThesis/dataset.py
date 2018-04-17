@@ -7,8 +7,7 @@ import filesystem as fs
 
 """
 WRITTEN BY:
-Nicklas Hansen,
-Michael Kirkegaard
+Nicklas Hansen
 """
 
 class dataset:

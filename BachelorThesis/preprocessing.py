@@ -4,6 +4,7 @@ from sklearn.preprocessing import MinMaxScaler
 from qrs_detector import QRSDetectorOffline as QRS
 from PPGpeak_detector import PPG_Peaks
 import filesystem as fs
+import matlab.engine
 
 """
 WRITTEN BY:
@@ -19,7 +20,7 @@ def prepAll():
 	filenames,datasetCSV = fs.getAllSubjectFilenames()
 
 	# extract all subjects
-	for i, filename in enumerate(filenames[1:]):
+	for i, filename in enumerate(filenames):
 
 		subject = fs.Subject(filename)
 		# TODO: Cut data by datasetCsv rules
@@ -29,44 +30,35 @@ def prepAll():
 
 		print('{0:.3f} %'.format((i+1) / len(filenames) * 100), end='\r')
 	print('') # reset '\r'
-	
+
 def preprocess(subject):
-	# Load signals
 	sig_ECG = subject.ECG_signal
 	sig_PPG = subject.PPG_signal
 	anno_SleepStage = subject.SleepStage_anno
 	anno_Arousal = subject.Arousal_anno
-
-	# Get Indexes / Time Series Stamps
-	index,_ = _QRS(sig_ECG)
-
-	# Process each signal
-	x_DR, x_RPA = ECG(sig_ECG, index)
-	x_PTT, x_PWA  = PPG(sig_PPG, index)
-	x_SS = SleepStageBin(anno_SleepStage, subject.frequency, index)
-
-	y_AA = ArousalBin(anno_Arousal, subject.frequency, index)
-	
-	X = transpose(array([x_DR, x_RPA, x_PTT, x_PWA, x_SS]))
+	x_DR, x_RPA = ECG(sig_ECG, index), array(amp)
+	x_SS = SleepStageBin(anno_SleepStage, sig_ECG.sampleFrequency, index)
+	y_AA = ArousalBin(anno_Arousal, sig_ECG.sampleFrequency, index)
+	features = [x_DR, x_RPA, x_SS]
+	X = empty((len(features), len(x_DR)))
+	for i in range(len(features)):
+		X[i] = features[i]
+	X = transpose(X)
 	y = array(y_AA)
+	return X, y
 
-	return X, y 
+def QRS(subject):
+	eng = matlab.engine.start_matlab()
+	eng.cd(fs.Filepaths.Matlab)
+	index, amp = eng.peak_detect(fs.directory(), subject.filename + '.edf', 256.0, nargout=2)
+	d = index[0]
+	e = d[3]
 
-def _QRS(sig_ECG):
-	# find all peak-indexs in ECG signal
-	qrs = QRS(sig_ECG.signal)# TODO: Better QRS-index detection
-	index = qrs.detected_peaks_indices 
-	amps = qrs.detected_peaks_values
-
-	return index,amps
+	return [i for i in d], amp
 
 def ECG(sig_ECG, index):
-	DR = [index[i]-index[i-1] for i in range(1,len(index))]
-	DR = [average(DR)] + DR
-	RPA = [sig_ECG.signal[idx] for idx in index]
-
-	DR = medfilt(DR, 5).astype(float)
-	RPA = array(RPA).astype(float)
+	DR = array(medfilt([0]+[index[i]-index[i-1] for i in range(1,len(index))], 5)).astype(float)
+	return DR
 
 	return DR,RPA
 
