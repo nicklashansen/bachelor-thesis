@@ -57,7 +57,8 @@ class Subject(object):
 		self.Arousal_anno = self.get_anno('Arousal')
 
 		assert(self.ECG_signal.duration == self.PPG_signal.duration)
-		assert(self.ECG_signal.duration == self.SleepStage_anno.duration)
+		assert(self.ECG_signal.duration <= self.SleepStage_anno.duration)
+		assert(self.ECG_signal.duration <= self.Arousal_anno.duration)
 		self.duration = self.ECG_signal.duration
 
 		assert(self.ECG_signal.sampleFrequency == self.PPG_signal.sampleFrequency)
