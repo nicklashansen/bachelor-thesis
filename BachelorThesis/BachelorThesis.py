@@ -1,7 +1,7 @@
 from stopwatch import *
 from preprocessing import *
 from features import *
-import matlab.engine
+import filesystem as fs
 
 """
 WRITTEN BY:
@@ -20,7 +20,8 @@ def eval(neurons = 20, folds = 5):
 
 if __name__ == '__main__':
 	filename = 'mesa-sleep-0002'
-	X, y = prepSingle(filename)
+	#X, y = prepSingle(filename)
+	X,y = fs.load_csv(filename)
 	E = make_features(X, y)
 	#prepAll()
 	#eval()

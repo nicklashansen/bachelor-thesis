@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
+from epoch import *
 
 """
 WRITTEN BY
@@ -20,19 +21,23 @@ def make_features(X, y):
 
 	mask = mergeMasks([m_DR, m_RPA, m_PTT, m_PWA, m_SS, m_AA])
 
+	epochs = generate_epochs(X, y, mask)
+
+	epochs = filter_epochs(epochs)
+
 	# TODO:
 	# cubic spline x_Feature at mask issue-points
 	# Or otherwise correct outliers and issues in data
 	# OBS: Will be cut later if too many correctins are made.
 
 	# Make Epoch Slices
-	e = epoch_Slices(X, y)
+	#e = epoch_Slices(X, y, mask)
 
 	# Cut Epochs with XX percent uncertainty in mask
-	e = epoch_Cut(e, mask)
+	#e = epoch_Cut(e, mask)
 
 	# Create and Normalize each epoch
-	E = epoch_Create(e, X, y)
+	#E = epoch_Create(e, X, y)
 
 	return E
 

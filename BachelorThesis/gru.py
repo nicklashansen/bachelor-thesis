@@ -12,7 +12,6 @@ Nicklas Hansen
 """
 
 class gru:
-
 	def __init__(self, data, neurons = 10):
 		self.data = data
 		self.neurons = neurons
@@ -21,8 +20,8 @@ class gru:
 
 	def build(self):
 		model = Sequential()
-		#model.add(Bidirectional(GRU(self.neurons, return_sequences=True), input_shape=(self.data.timesteps, self.data.features), merge_mode='sum'))
-		model.add(GRU(self.neurons, return_sequences=True, input_shape=(self.data.timesteps, self.data.features)))
+		model.add(Bidirectional(GRU(self.neurons, return_sequences=True), input_shape=(self.data.timesteps, self.data.features), merge_mode='concat'))
+		#model.add(GRU(self.neurons, return_sequences=True, input_shape=(self.data.timesteps, self.data.features)))
 		model.add(TimeDistributed(Dense(1, activation='sigmoid')))
 		model.compile(loss='binary_crossentropy', optimizer='adam')
 		self.model = model
