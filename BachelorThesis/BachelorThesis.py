@@ -1,6 +1,7 @@
 from stopwatch import *
 from preprocessing import *
 from features import *
+from dataset import dataset
 import filesystem as fs
 
 """
@@ -22,7 +23,8 @@ if __name__ == '__main__':
 	filename = 'mesa-sleep-0002'
 	#X, y = prepSingle(filename)
 	X,y = fs.load_csv(filename)
-	E = make_features(X, y)
+	epochs = make_features(X, y)
+	data = dataset()
 	#prepAll()
 	#eval()
 

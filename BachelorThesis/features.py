@@ -1,10 +1,11 @@
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
 from epoch import *
+from normalization import quantile_norm
 
 """
 WRITTEN BY
-Micheal Kirkegaard
+Micheal Kirkegaard,
+Nicklas Hansen
 """
 
 def make_features(X, y):
@@ -21,8 +22,10 @@ def make_features(X, y):
 
 	mask = mergeMasks([m_DR, m_RPA, m_PTT, m_PWA, m_SS, m_AA])
 
-	epochs = generate_epochs(X, y, mask)
+	# Generate epochs from time series
+	epochs = generate_epochs(quantile_norm(X), y, mask)
 
+	# Filter unsuitable epochs
 	epochs = filter_epochs(epochs)
 
 	# TODO:
@@ -39,7 +42,7 @@ def make_features(X, y):
 	# Create and Normalize each epoch
 	#E = epoch_Create(e, X, y)
 
-	return E
+	return epochs
 
 # Input [ [0, 1, ...], ...]
 def mergeMasks(masks):
@@ -179,6 +182,3 @@ def epoch_Create(e, X, y):
 	]
 		
 	"""
-
-def normalize(X, scaler=MinMaxScaler()):
-	return np.squeeze(scaler.fit_transform(X.reshape(X.shape[0], 1)))

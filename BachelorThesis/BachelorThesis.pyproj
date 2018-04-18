@@ -43,6 +43,9 @@
     <Compile Include="metrics.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="normalization.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="PPGpeak_detector.py">
       <SubType>Code</SubType>
     </Compile>

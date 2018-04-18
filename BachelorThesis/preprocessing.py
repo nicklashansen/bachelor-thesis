@@ -56,7 +56,7 @@ def preprocess(subject):
 	y_AA = ArousalBin(anno_Arousal, subject.frequency, index)
 
 	# Collect Matrix
-	features = [x_DR, x_RPA, x_PTT, x_PWA, x_SS]
+	features = [index, x_DR, x_RPA, x_PTT, x_PWA, x_SS]
 	X = empty((len(features), len(x_DR)-1))
 	for i,feat in enumerate(features):
 		X[i] = feat[1:len(feat)]
@@ -75,7 +75,7 @@ def QRS(subject):
 
 def ECG(sig_ECG, index):
 	DR = array(medfilt([0]+[index[i]-index[i-1] for i in range(1,len(index))], 3)).astype(float)
-	return DR/sig_ECG.frequency
+	return DR/sig_ECG.sampleFrequency
 
 def PPG(sig_PPG, index):
 	peaks, amps = PPG_Peaks(sig_PPG.signal, sig_PPG.sampleFrequency)
@@ -107,7 +107,7 @@ def PPG(sig_PPG, index):
 	PTT = array(medfilt(PTT, 3)).astype(float)
 	PWA = array(medfilt(PWA, 3)).astype(float)
 
-	return PTT/sig_PPG.frequency, PWA
+	return PTT/sig_PPG.sampleFrequency, PWA
 
 def SleepStageBin(anno_SleepStage, frequency, index):
 	# 0			= WAKE	=> -1
