@@ -1,11 +1,8 @@
 import os
 from numpy import *
-
 import pyedflib
-
 from os import listdir, makedirs
 from os.path import isfile, join
-
 import xml.etree.ElementTree as xmlTree
 
 """

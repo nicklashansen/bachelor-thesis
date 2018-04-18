@@ -5,7 +5,7 @@ import filesystem as fs
 
 """
 WRITTEN BY:
-Micha? Sznajder, Marta ?ukowska
+Michal Sznajder, Marta Lukowska
 
 MODIFIED BY:
 Nicklas Hansen,
@@ -16,8 +16,8 @@ class QRSDetectorOffline(object):
     """
     Python Offline ECG QRS Detector based on the Pan-Tomkins algorithm.
     
-    Micha? Sznajder (Jagiellonian University) - technical contact (msznajder@gmail.com)
-    Marta ?ukowska (Jagiellonian University)
+    Michal Sznajder (Jagiellonian University) - technical contact (msznajder@gmail.com)
+    Marta Lukowska (Jagiellonian University)
     The module is offline Python implementation of QRS complex detection in the ECG signal based
     on the Pan-Tomkins algorithm: Pan J, Tompkins W.J., A real-time QRS detection algorithm,
     IEEE Transactions on Biomedical Engineering, Vol. BME-32, No. 3, March 1985, pp. 230-236.
@@ -30,7 +30,7 @@ class QRSDetectorOffline(object):
     https://zenodo.org/record/583770
     If you use these modules in any other project, please refer to MIT open-source license.
     MIT License
-    Copyright (c) 2017 Micha? Sznajder, Marta ?ukowska
+    Copyright (c) 2017 Michal Sznajder, Marta Lukowska
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
     in the Software without restriction, including without limitation the rights

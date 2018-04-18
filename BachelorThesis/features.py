@@ -46,13 +46,14 @@ def mergeMasks(masks):
 # DR
 def maskDR(x_DR):
 	mask = [0]*len(x_DR)
-	# TODO
+	for index in mask:
+		if (x_DR[index] > 2.0 or x_DR[index] < 0.4):
+			mask[index] = 1
 	return mask
 
 # RPA
 def maskRPA(x_RPA):
 	mask = [0]*len(x_RPA)
-	# TODO
 	return mask
 
 # PTT

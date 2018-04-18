@@ -50,18 +50,18 @@ def preprocess(subject):
 	index, amp = QRS(subject)
 	
 	# Preprocess Features
-	x_DR, x_RPA = ECG(sig_ECG, index), array(amp)
-	x_PTT, x_PWA = PPG(sig_PPG, index)
+	x_DR, x_RPA = ECG(subject, sig_ECG, index), array(medfilt(amp, 3)).astype(float)
+	x_PTT, x_PWA = PPG(subject, sig_PPG, index)
 	x_SS = SleepStageBin(anno_SleepStage, subject.frequency, index)
 	y_AA = ArousalBin(anno_Arousal, subject.frequency, index)
 
 	# Collect Matrix
 	features = [x_DR, x_RPA, x_PTT, x_PWA, x_SS]
-	X = empty((len(features), len(x_DR)))
+	X = empty((len(features), len(x_DR)-1))
 	for i,feat in enumerate(features):
-		X[i] = feat
+		X[i] = feat[1:len(feat)]
 	X = transpose(X)
-	y = array(y_AA)
+	y = array(y_AA[1:len(y_AA)])
 	return X, y
 
 def QRS(subject):
@@ -70,13 +70,14 @@ def QRS(subject):
 	eng.cd(fs.Filepaths.Matlab)
 	index, amp = eng.peak_detect(fs.directory(), subject.filename + '.edf', float(subject.frequency), nargout=2)
 	index = [int(i) for i in index[0]]
+	amp = [float(i) for i in amp[0]]
 	return index, amp
 
-def ECG(sig_ECG, index):
-	DR = array(medfilt([0]+[index[i]-index[i-1] for i in range(1,len(index))], 5)).astype(float)
-	return DR
+def ECG(subject, sig_ECG, index):
+	DR = array(medfilt([0]+[index[i]-index[i-1] for i in range(1,len(index))], 3)).astype(float)
+	return DR/subject.frequency
 
-def PPG(sig_PPG, index):
+def PPG(subject, sig_PPG, index):
 	peaks, amps = PPG_Peaks(sig_PPG.signal, sig_PPG.sampleFrequency)
 	
 	def find_ptt(idx, idxplus, h):
@@ -103,10 +104,10 @@ def PPG(sig_PPG, index):
 			PTT += [-1]
 			PWA += [-1]
 
-	PTT = array(PTT).astype(float)
-	PWA = array(PWA).astype(float)
+	PTT = array(medfilt(PTT, 3)).astype(float)
+	PWA = array(medfilt(PWA, 3)).astype(float)
 
-	return PTT, PWA
+	return PTT/subject.frequency, PWA
 
 def SleepStageBin(anno_SleepStage, frequency, index):
 	# 0			= WAKE	=> -1
