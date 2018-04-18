@@ -20,6 +20,11 @@ def make_features(X, y):
 
 	mask = mergeMasks([m_DR, m_RPA, m_PTT, m_PWA, m_SS, m_AA])
 
+	# TODO:
+	# cubic spline x_Feature at mask issue-points
+	# Or otherwise correct outliers and issues in data
+	# OBS: Will be cut later if too many correctins are made.
+
 	# Make Epoch Slices
 	e = epoch_Slices(X, y)
 
@@ -57,27 +62,45 @@ def maskRPA(x_RPA):
 
 # PTT
 def maskPTT(x_PTT):
-	mask = [0]*len(x_PTT)
-	# TODO
+	mask = threeSigmaRule(x_PTT)
+	for i,ppt in enumerate(x_PTT):
+		if ppt == -1:
+			mask[i] = 1
 	return mask
 
 # PWA
 def maskPWA(x_PWA):
-	mask = [0]*len(x_PWA)
-	# TODO
+	mask = threeSigmaRule(x_PWA)
+	for i,pwa in enumerate(x_PWA):
+		if pwa == -1:
+			mask[i] = 1
 	return mask
 
 # SS
 def maskSS(x_SS):
 	mask = [0]*len(x_SS)
-	# TODO
+	
+	# Wake States
+	for i,state in enumerate(x_SS):
+		if state == -1:
+			mask[i] = -1
+
 	return mask
 
 # AA
 def maskAA(y_AA):
 	mask = [0]*len(y_AA)
-	# TODO
-	return mask
+	# No Mask, but leaving in, in case of future changes
+	return mask 
+
+# Outlier detection
+''' https://en.wikipedia.org/wiki/68%E2%80%9395%E2%80%9399.7_rule '''
+def threeSigmaRule(data):
+	mu = np.mean(data)
+	std3 = np.std(data)*3
+
+	#(if datapoint's distance from mu is above 3 times the standard deviation, it's an outlier)
+	return [(1 if abs(mu-x) > std3 else 0) for x in data]
 
 # Make Epochs indexes
 # TODO: improve
