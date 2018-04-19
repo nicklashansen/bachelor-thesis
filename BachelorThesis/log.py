@@ -7,7 +7,7 @@ WRITTEN BY
 Nicklas Hansen
 """
 
-class log:
+class Log:
 	def __init__(self, directory = 'Evaluation'):
 		self.filename = strftime("%Y-%m-%d_%H-%M", gmtime()) + '_log.txt'
 		self.directory = fs.Filepaths.Logs + directory + '\\'
