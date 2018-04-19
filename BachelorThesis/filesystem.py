@@ -1,8 +1,8 @@
 import os
+from os.path import isfile, join
 from numpy import *
 import pyedflib
-from os import listdir, makedirs
-from os.path import isfile, join
+import pandas as pd
 import xml.etree.ElementTree as xmlTree
 
 """
@@ -29,7 +29,7 @@ class Filepaths(object):
 	SaveSubject = Folder + 'Subjects\\'
 
 	# Load paths
-	LoadCsv = Folder + 'Data\\mesa\\datasets\\mesa-sleep-dataset-0.3.0.csv'
+	LoadDatabaseCsv = Folder + 'Data\\mesa\\datasets\\mesa-sleep-dataset-0.3.0.csv'
 	LoadPsg = Folder + 'Data\\mesa\\polysomnography\\edfs\\'
 	LoadAnno = Folder + 'Data\\mesa\\polysomnography\\annotations-events-nsrr\\'
 
@@ -114,8 +114,8 @@ def getAllSubjectFilenames(preprocessed=False):
 		path = Filepaths.SaveSubject
 	else:
 		path = Filepaths.LoadPsg
-	datasetCSV = ''
-	filenames = [f[:-4] for f in listdir(path) if isfile(join(path, f))]
+	datasetCSV = pd.read_csv(Filepaths.LoadDatabaseCsv)
+	filenames = [f[:-4] for f in os.listdir(path) if isfile(join(path, f))]
 	return filenames, datasetCSV
 
 def load_csv(filename):

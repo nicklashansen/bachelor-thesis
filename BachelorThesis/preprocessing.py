@@ -1,8 +1,8 @@
 from numpy import *
-from scipy.signal import medfilt
 from PPGpeak_detector import PPG_Peaks
 import filesystem as fs
 import matlab.engine
+#import log
 import os
 
 """
@@ -27,17 +27,47 @@ def prepAll():
 	# get subject names
 	filenames,datasetCSV = fs.getAllSubjectFilenames()
 
+	# Database criteria
+	reliablility = [reliable(fn, datasetCSV) for fn in filenames]
+	a = list(array(reliablility)[:,0]).count(False)
+	b = list(array(reliablility)[:,1]).count(False)
+	c = list(array(reliablility)[:,2]).count(False)
+
+	# Cut files
+	filenames = [filenames[i] for i,r in enumerate(reliablility) if all(r)]
+
 	# extract all subjects
 	for i, filename in enumerate(filenames):
-
-		subject = fs.Subject(filename)
-		# TODO: Cut data by datasetCsv rules
-		
-		X, y = preprocess(subject)
-		fs.write_csv(filename, X, y)
+		try:
+			subject = fs.Subject(filename)
+			X, y = preprocess(subject)
+			fs.write_csv(filename, X, y)
+		except Exception as e:
+			0
+			#log.print(filename, ' removed by ERROR')
 
 		print('{0:.3f} %'.format((i+1) / len(filenames) * 100), end='\r')
 	print('') # reset '\r'
+	print('Done')
+
+def reliable(filename, datasetCsv):
+
+	mesaid = int(filename[-4:])
+	filter = ['ai_all5','overall5','slewake5',]
+	# ai_all5  = arousal index
+	# overall5 = overall study quality 
+	# slewake5 = poor quailty EEG (sleep stage)
+
+	# Check if it is too uncertain
+	df = datasetCsv[datasetCsv['mesaid'] == mesaid][filter].iloc[0]
+
+	criteria = [
+		df[0] > 10.0,	# ai index < 10.0
+		df[1] > 3.0,	# low overall quality
+		df[2] == 0.0	# poor EEG (sleep stage scoring)
+		]	
+
+	return criteria
 
 def preprocess(subject):
 	#Signals
@@ -50,7 +80,7 @@ def preprocess(subject):
 	index, amp = QRS(subject)
 	
 	# Preprocess Features
-	x_DR, x_RPA = ECG(sig_ECG, index), array(medfilt(amp, 3)).astype(float)
+	x_DR, x_RPA = ECG(sig_ECG, index), array(amp).astype(float)
 	x_PTT, x_PWA = PPG(sig_PPG, index)
 	x_SS = SleepStageBin(anno_SleepStage, subject.frequency, index)
 	y_AA = ArousalBin(anno_Arousal, subject.frequency, index)
@@ -74,7 +104,7 @@ def QRS(subject):
 	return index, amp
 
 def ECG(sig_ECG, index):
-	DR = array(medfilt([0]+[index[i]-index[i-1] for i in range(1,len(index))], 3)).astype(float)
+	DR = array([0]+[index[i]-index[i-1] for i in range(1,len(index))]).astype(float)
 	return DR/sig_ECG.sampleFrequency
 
 def PPG(sig_PPG, index):
@@ -104,8 +134,8 @@ def PPG(sig_PPG, index):
 			PTT += [-1]
 			PWA += [-1]
 
-	PTT = array(medfilt(PTT, 3)).astype(float)
-	PWA = array(medfilt(PWA, 3)).astype(float)
+	PTT = array(PTT).astype(float)
+	PWA = array(PWA).astype(float)
 
 	return PTT/sig_PPG.sampleFrequency, PWA
 
