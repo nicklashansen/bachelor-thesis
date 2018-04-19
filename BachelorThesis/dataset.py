@@ -47,14 +47,12 @@ class dataset:
 		setlist,_ = fs.getAllSubjectFilenames(preprocessed=True)
 		self.load_external(setlist, summary)
 
-	'''
 	def load_physionet(self, summary = False):
 		#'0005', '0029', '0052', '0061', 
 		setlist = ['0078', '0079', '0083', '0086', '0087', '0092', '0100', '0103', '0134', '0135', '0141', '0146', '0152', '0166', '0167', '0179', '0184', '0198']
 		for i in range(len(setlist)):
 			setlist[i] = 'tr03-' + setlist[i]
 		self.load_external(setlist, summary)
-	'''
 
 	def load_external(self, setlist, summary = False):
 		shuffle(setlist)
@@ -107,7 +105,6 @@ class dataset:
 			tensor[i] = seq
 		return tensor
 
-	'''
 	def load_example(self, count = 1000, timesteps = 80):
 		for i in range(count):
 			X,y = self.get_sequence(timesteps)
@@ -133,4 +130,4 @@ class dataset:
 		X = X.reshape(1, timesteps, 1)
 		y = y.reshape(1, timesteps, 1)
 		return X, y
-	'''
+	

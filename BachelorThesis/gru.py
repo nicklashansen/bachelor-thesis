@@ -3,7 +3,6 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, LSTM, Embedding, TimeDistributed, Bidirectional, GRU
 import metrics
 from stopwatch import *
-from dataset import *
 import sys
 
 """
@@ -15,25 +14,25 @@ class gru:
 	def __init__(self, data, neurons = 10):
 		self.data = data
 		self.neurons = neurons
-		self.model = None
+		self.graph = None
 		self.build()
 
 	def build(self):
-		model = Sequential()
-		model.add(Bidirectional(GRU(self.neurons, return_sequences=True), input_shape=(self.data.timesteps, self.data.features), merge_mode='concat'))
-		#model.add(GRU(self.neurons, return_sequences=True, input_shape=(self.data.timesteps, self.data.features)))
-		model.add(TimeDistributed(Dense(1, activation='sigmoid')))
-		model.compile(loss='binary_crossentropy', optimizer='adam')
-		self.model = model
+		graph = Sequential()
+		#graph.add(Bidirectional(GRU(self.neurons, return_sequences=True), input_shape=(self.data.timesteps, self.data.features), merge_mode='concat'))
+		graph.add(GRU(self.neurons, return_sequences=True, input_shape=(self.data.timesteps, self.data.features)))
+		graph.add(TimeDistributed(Dense(1, activation='sigmoid')))
+		graph.compile(loss='binary_crossentropy', optimizer='adam')
+		self.graph = graph
 
-	def fit(self, X, y, epochs):
-		for epoch in range(epochs):
-			for sample in range(len(X)):
-				hist = self.model.fit(X[sample], y[sample], epochs=1, batch_size=1, verbose=0)
-				#loss = hist.history['loss']	
+	def fit(self, epochs, iterations):
+		for iteration in range(iterations):
+			for epoch in epochs:
+				hist = self.graph.fit(epoch.X, epoch.y, epochs=1, batch_size=1, verbose=0)
+				#loss = hist.history['loss']
 				#print('loss:', loss[0])
-			if (epochs > 1):
-				print(epoch+1, '/', epochs, ' epochs completed')
+			if (iterations > 1):
+				print(iteration+1, '/', iterations, ' iterations completed')
 
 	# fix data pass format
 	def cross_val(self, tuple: tuple, trainX=None, trainY=None, testX=None, testY=None, metric=metrics.TPR_FNR):
@@ -55,7 +54,7 @@ class gru:
 	def evaluate(self, X, y, metric=metrics.TPR_FNR):
 		TPR=FNR=0
 		for epoch in range(len(X)):
-			yhat = self.model.predict_classes(X[epoch], verbose=0)
+			yhat = self.graph.predict_classes(X[epoch], verbose=0)
 			p, n = metric(y[epoch], yhat)
 			TPR += p
 			FNR += n

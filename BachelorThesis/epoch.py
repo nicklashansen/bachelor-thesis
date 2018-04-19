@@ -20,7 +20,7 @@ def generate_epochs(X, y, mask):
 	X = delete(X, 0, axis=1)
 	while (index < length):
 		index = int(index)
-		end = int(index+EPOCH_LENGTH-1)
+		end = int(index+EPOCH_LENGTH)
 		e = epoch(X[index:end], y[index:end], timecol[index:end], mask[index:end])
 		if (e.continuous()):
 			if (e.acceptable()):
@@ -39,7 +39,7 @@ def filter_epochs(epochs):
 class epoch(object):
 	def __init__(self, X, y, timecol, mask = None):
 		self.X, self.y = X, y
-		self.timecol, self.mask, self.features = timecol, mask, X.shape[1]
+		self.timecol, self.mask, self.timesteps, self.features = timecol, mask, X.shape[0], X.shape[1]
 		self.index_start, self.index_stop = int(timecol[0]), int(timecol[len(timecol)-1])
 
 	def continuous(self):

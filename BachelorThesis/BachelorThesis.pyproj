@@ -12,7 +12,7 @@
     <OutputPath>.</OutputPath>
     <Name>BachelorThesis</Name>
     <RootNamespace>BachelorThesis</RootNamespace>
-    <InterpreterId>{eeaa2aaa-8303-48ac-bcb8-05bf91db1da3}</InterpreterId>
+    <InterpreterId>{33e55c76-bf90-4a97-b5ea-558a28588aa8}</InterpreterId>
     <InterpreterVersion>3.5</InterpreterVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -35,6 +35,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="filesystem.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="dataflow.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="gru.py">
@@ -72,7 +75,6 @@
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="{33e55c76-bf90-4a97-b5ea-558a28588aa8}\3.5" />
-    <InterpreterReference Include="{eeaa2aaa-8303-48ac-bcb8-05bf91db1da3}\3.5" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
