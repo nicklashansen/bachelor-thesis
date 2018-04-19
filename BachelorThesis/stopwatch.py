@@ -8,14 +8,14 @@ Nicklas Hansen
 class stopwatch:
 
 	def __init__(self):
-		self.a = int(time.time())
+		self.a = time.time()
 		self.b = self.a
 		self.c = 0
 
 	def round(self):
-		self.b = int(time.time() - self.b)
-		return self.b
+		self.b = time.time() - self.b
+		return int(self.b)
 
 	def stop(self):
-		self.c = int(time.time() - self.a)
-		return self.c
+		self.c = time.time() - self.a
+		return int(self.c)

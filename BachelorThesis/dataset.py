@@ -15,17 +15,17 @@ class dataset:
 	def __init__(self, epochs = None):
 		self.X = []
 		self.y = []
-		if epochs is not None:
-			for epoch in epochs:
-				self.X.append(epoch.X)
-				self.y.append(epoch.y)
-			self.size = len(self.X)
-			self.timesteps = len(self.X[0])
-			self.features = len(self.X[0,0])
-		else:
-			self.size = -1
-			self.timesteps = -1
-			self.features = -1
+		#if epochs is not None:
+		#	for epoch in epochs:
+		#		self.X.append(epoch.X)
+		#		self.y.append(epoch.y)
+		#	self.size = len(self.X)
+		#	self.timesteps = len(self.X[0])
+		#	self.features = len(self.X[0,0])
+		#else:
+		#	self.size = -1
+		#	self.timesteps = -1
+		#	self.features = -1
 
 	def holdout(self, split = 0.67):
 		train_size = int(self.size * split)
