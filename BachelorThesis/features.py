@@ -1,6 +1,6 @@
 import numpy as np
 from epoch import *
-from filters import quantile_norm
+from filters import quantile_norm, median_filt
 from scipy.interpolate import CubicSpline
 from log import Log
 from stopwatch import stopwatch
@@ -27,7 +27,9 @@ def make_features(X, y):
 	mask = mergeMasks(masklist)
 
 	# Datafix
-	X, y = datafix(X, y, masklist)
+	#X, y = datafix(X, y, masklist)
+
+	X = median_filt(X)
 
 	epochs = get_epochs(X, y, mask)
 	print('Generated {0} epochs'.format(len(epochs)))

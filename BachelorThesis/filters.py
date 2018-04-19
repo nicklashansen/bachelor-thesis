@@ -8,10 +8,10 @@ Nicklas Hansen
 """
 
 def median_filt(X, kernel = 3):
-	operation(X, medfilt, (3))
+	return operation(X, medfilt, (3))
 
 def quantile_norm(X, quantiles = 10):
-	operation(X, quantile_transform, (0,10))
+	return operation(X, quantile_transform, (0,10))
 
 def operation(X, op=quantile_transform, args=None):
 	_X = transpose(X)
