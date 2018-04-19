@@ -28,9 +28,9 @@ def PPG_Peaks(data, freq, plot=False):
 
 	return peaks, amps
 
-# Max value within a 1/2 (2*1/4) frequency span (min-dist)
+# Max value within a 1/4 (2*1/8) frequency span (min-dist)
 def getMax(data, i, freq):
-	slice = 1/4
+	slice = 1/8
 	h,j = int(max(i-(slice*freq),0)), int(min(i+(slice*freq), len(data)))
 	k = h + np.argmax(data[h:j])
 	amp = data[k]
@@ -42,12 +42,17 @@ from sklearn.preprocessing import MinMaxScaler
 import features as feat
 
 def plotData(data, _data, peaks, i=0, j=45000):
+
+	def normalize(X, scaler=MinMaxScaler()):
+		return np.squeeze(scaler.fit_transform(X.reshape(X.shape[0], 1)))
+
 	i,j = int(max(i,0)),int(min(len(data),j))
 	x = range(i,j)
 	plt.figure(figsize=(6.5, 4))
-	nd = feat.normalize(data[i:j]) ; plt.plot(x, nd, 'b-', label='data')
-	nx = feat.normalize(_data[i:j]) ; plt.plot(x, nx, 'g-', label='filter')
+	nd = normalize(data[i:j]) ; plt.plot(x, nd, 'b-', label='data')
+	nx = normalize(_data[i:j]) ; plt.plot(x, nx, 'g-', label='filter')
 	ns = [ix for ix in peaks if i <= ix < j]
 	plt.plot(ns, [nd[ix] for ix in ns], 'rx', label='peak')
 	plt.legend()
 	plt.show()
+

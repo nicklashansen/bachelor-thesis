@@ -1,7 +1,7 @@
 import numpy as np
 from epoch import *
-from log import Log
-from stopwatch import stopwatch
+from normalization import quantile_norm
+from scipy.interpolate import CubicSpline
 
 """
 WRITTEN BY
@@ -10,39 +10,37 @@ Nicklas Hansen
 """
 
 def make_features(X, y):
-	log, clock = Log('Features'), stopwatch()
 	# Transpose X
 	Xt = np.transpose(X)
 
 	# Make Masks
-	m_DR = maskDR(Xt[0])
-	m_RPA = maskRPA(Xt[1])
-	m_PTT = maskPTT(Xt[2])
-	m_PWA = maskPTT(Xt[3])
-	m_SS = maskSS(Xt[4])
+	index = Xt[0]
+	m_DR = maskDR(Xt[1])
+	m_RPA = maskRPA(Xt[2])
+	m_PTT = maskPTT(Xt[3])
+	m_PWA = maskPTT(Xt[4])
+	m_SS = maskSS(Xt[5])
 	m_AA = maskAA(y)
 
-	mask = mergeMasks([m_DR, m_RPA, m_PTT, m_PWA, m_SS, m_AA])
+	masklist = [m_DR, m_RPA, m_PTT, m_PWA, m_SS, m_AA]
+	mask = mergeMasks(masklist)
 
-	epochs = get_epochs(X, y, mask)
+	# Datafix
+	X, y = dataFix(X, y, masklist)
+
+	# Generate epochs from time series
+	epochs = generate_epochs(quantile_norm(X), y, mask)
+
+	# Filter unsuitable epochs
+	epochs = filter_epochs(epochs)
 
 	return epochs
-
-# Input [ [0, 1, ...], ...]
-def mergeMasks(masks):
-	def AnyAboveZero(tub):
-		for i in tub:
-			if i > 0:
-				return True
-		return False
-	# Returns [0, 1, ...]
-	return [(1 if AnyAboveZero(tub) else 0) for tub in zip(*masks)]
 
 # Makes Feature Masks
 
 # DR
 def maskDR(x_DR):
-	mask = [0]*len(x_DR)
+	mask = threeSigmaRule(x_DR)
 	for index in mask:
 		if (x_DR[index] > 2.0 or x_DR[index] < 0.4):
 			mask[index] = 1
@@ -50,7 +48,7 @@ def maskDR(x_DR):
 
 # RPA
 def maskRPA(x_RPA):
-	mask = [0]*len(x_RPA)
+	mask = threeSigmaRule(x_RPA)
 	return mask
 
 # PTT
@@ -95,74 +93,47 @@ def threeSigmaRule(data):
 	#(if datapoint's distance from mu is above 3 times the standard deviation, it's an outlier)
 	return [(1 if abs(mu-x) > std3 else 0) for x in data]
 
-# Make Epochs indexes
-# TODO: improve
-def epoch_Slices(X, y):
-	l = len(X)
-	li = np.arange(0, l, l/180)
-	lis = [[int(li[i]),int(li[i+1])] for i,_ in enumerate(li) if i+1 < len(li)]
-	
-	return lis # 180 Epochs for full set
+def mergeMasks(masks):
+	return [sum(tub) for tub in zip(*masks)]
 
-# Cut Epochs with XX percent uncertainty in mask
-def epoch_Cut(e, mask, percent = 0.45):
-	def cut(epoch):
-		i,j = epoch[0], epoch[1]
-		maskslice = mask[i:j]
-		masksum = sum(maskslice)
-		if (1-masksum/len(maskslice)) <= percent:
-			return True
-		return False
+def dataFix(X, y, masks):
+	Xt = np.transpose(X)
+	sleepCut = [i for i,state in enumerate(Xt[5]) if state >= 0]
 
-	return [epoch for epoch in e if not cut(epoch)]
+	def spline(maskid, data):
+		mask = masks[maskid]
+		x = [i for i,m in enumerate(mask) if m == 0]
+		datamask = [data[i] for i in x]
+		cs = CubicSpline(x,datamask)
+		xs = range(len(mask))
+		datacs = cs(xs)
+		plotData(data, datacs, [i for i,m in enumerate(mask) if m > 0])
+		return datacs
 
-# Create and Normalize each epoch
-# TODO: improve
-def epoch_Create(e, X, y):
+	Xt = array([spline(id,x) for id,x in enumerate(Xt[1:5])]) # Spline DR,RPA,PTT,PWA
+	Xt = np.insert(Xt, 0, index)
+	Xt = np.append(Xt, x_SS)
+	X = transpose(Xt)
+	X = array([X[i] for i in sleepCut])
+	y = array([y[i] for i in sleepCut])
+	return X, y 
 
-	def create(epoch):
-		i,j = epoch[0], epoch[1]
-		
-		# Normalize each feature as row
-		X_ = np.transpose([normalize(x) for x in np.transpose(X[i:j])])
-		y_ = y[i:j]
+# Plot
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
+import features as feat
 
-		return [X_, y_]
+def plotData(data, _data, peaks, i=0, j=45000):
 
-	return [create(epoch) for epoch in e]
-	"""
-	Returns:
-	[ [ X_0, y_0 ], [ X_1, y_1 ], ... ]
+	def normalize(X, scaler=MinMaxScaler()):
+		return np.squeeze(scaler.fit_transform(X.reshape(X.shape[0], 1)))
 
-	[
-		[ [ [x0_DR[0], ...], [x0_DR[1], ...], ... ], [y0_AA[0], y0_AA[1], ...] ],
-	    [ [ [x1_DR[0], ...], [x1_DR[1], ...], ... ], [y1_AA[0], y0_AA[1], ...] ],
-		...
-	    ]
-	
-	[
-		# epoch_0, i_0 : j_0
-		[
-			[
-				[DR_0, RDA_0, PPT_0, PWA_0, SS_0],
-				[DR_1, RDA_1, PPT_1, PWA_1, SS_1], ...
-			],
-			[
-				AA_0,
-				AA_1, ...
-			],
-		],
-		# epoch_1, i_1 : j_1
-		[
-			[
-				[DR_0, RDA_0, PPT_0, PWA_0, SS_0],
-				[DR_1, RDA_1, PPT_1, PWA_1, SS_1], ...
-			],
-			[
-				AA_0,
-				AA_1, ...
-			],
-		], ...
-	]
-		
-	"""
+	i,j = int(max(i,0)),int(min(len(data),j))
+	x = range(i,j)
+	plt.figure(figsize=(6.5, 4))
+	nd = normalize(data[i:j]) ; plt.plot(x, nd, 'b-', label='data')
+	nx = normalize(_data[i:j]) ; plt.plot(x, nx, 'g-', label='filter')
+	ns = [ix for ix in peaks if i <= ix < j]
+	plt.plot(ns, [nd[ix] for ix in ns], 'rx', label='peak')
+	plt.legend()
+	plt.show()
