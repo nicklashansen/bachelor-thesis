@@ -4,7 +4,8 @@ from PPGpeak_detector import PPG_Peaks
 import filesystem as fs
 import matlab.engine
 import os
-import log
+from log import Log
+from stopwatch import stopwatch
 
 """
 WRITTEN BY:
@@ -13,36 +14,23 @@ Michael Kirkegaard
 """
 
 def prepSingle(filename):
-	# Status
-	log.print('Extracting and preprocessing file: {0}...'.format(filename))
+	log, clock = Log('Preprocessing'), stopwatch()
 	sub = fs.Subject(filename)
 	X, y = preprocess(sub)
 	fs.write_csv(filename, X, y)
-	print('Done')
+	log.print('Preprocessed {0} in {1}s'.format(filename, clock.round()))
 	return X, y
 
 def prepAll():
-	# Status
-	log = log.log('Preprocessing')
-	log.print('Extracting and preprocessing files...')
-
-	# get subject names
+	log, clock = Log('Preprocessing'), stopwatch()
 	filenames,datasetCSV = fs.getAllSubjectFilenames()
-
-	# extract all subjects
 	for i, filename in enumerate(filenames):
-
 		subject = fs.Subject(filename)
-		# TODO: Cut data by datasetCsv rules
-		
 		X, y = preprocess(subject)
 		fs.write_csv(filename, X, y)
-
-		log.print('{0:.3f} %'.format((i+1) / len(filenames) * 100), end='\r')
-	log.print('') # reset '\r'
+		log.print('Preprocessed {0} in {1}s'.format(filename, clock.round()))
 
 def preprocess(subject):
-	#Signals
 	sig_ECG = subject.ECG_signal
 	sig_PPG = subject.PPG_signal
 	anno_SleepStage = subject.SleepStage_anno
