@@ -1,5 +1,4 @@
 from numpy import *
-from scipy.signal import medfilt
 from PPGpeak_detector import PPG_Peaks
 import filesystem as fs
 import matlab.engine

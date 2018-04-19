@@ -1,5 +1,5 @@
 from numpy import *
-from normalization import quantile_norm
+from filters import quantile_norm
 
 """
 WRITTEN BY

@@ -1,7 +1,9 @@
 import numpy as np
 from epoch import *
-from normalization import quantile_norm
+from filters import quantile_norm
 from scipy.interpolate import CubicSpline
+from log import Log
+from stopwatch import stopwatch
 
 """
 WRITTEN BY
@@ -10,10 +12,10 @@ Nicklas Hansen
 """
 
 def make_features(X, y):
-	# Transpose X
+	#log, clock = Log('Features'), stopwatch()
+
 	Xt = np.transpose(X)
 
-	# Make Masks
 	index = Xt[0]
 	m_DR = maskDR(Xt[1])
 	m_RPA = maskRPA(Xt[2])
@@ -21,19 +23,13 @@ def make_features(X, y):
 	m_PWA = maskPTT(Xt[4])
 	m_SS = maskSS(Xt[5])
 	m_AA = maskAA(y)
-
 	masklist = [m_DR, m_RPA, m_PTT, m_PWA, m_SS, m_AA]
 	mask = mergeMasks(masklist)
 
-	# Datafix
-	X, y = dataFix(X, y, masklist)
+	#X, y = dataFix(X, y, masklist)
 
-	# Generate epochs from time series
-	epochs = generate_epochs(quantile_norm(X), y, mask)
-
-	# Filter unsuitable epochs
-	epochs = filter_epochs(epochs)
-
+	epochs = get_epochs(X, y, mask)
+	print('Generated {0} epochs'.format(len(epochs)))
 	return epochs
 
 # Makes Feature Masks
@@ -98,6 +94,8 @@ def mergeMasks(masks):
 
 def dataFix(X, y, masks):
 	Xt = np.transpose(X)
+	index = Xt[0]
+	x_SS = Xt[5]
 	sleepCut = [i for i,state in enumerate(Xt[5]) if state >= 0]
 
 	def spline(maskid, data):
@@ -107,7 +105,7 @@ def dataFix(X, y, masks):
 		cs = CubicSpline(x,datamask)
 		xs = range(len(mask))
 		datacs = cs(xs)
-		plotData(data, datacs, [i for i,m in enumerate(mask) if m > 0])
+		#plotData(data, datacs, [i for i,m in enumerate(mask) if m > 0])
 		return datacs
 
 	Xt = array([spline(id,x) for id,x in enumerate(Xt[1:5])]) # Spline DR,RPA,PTT,PWA
