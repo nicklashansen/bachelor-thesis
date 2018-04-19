@@ -49,6 +49,9 @@
     <Compile Include="filters.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="plots.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="PPGpeak_detector.py">
       <SubType>Code</SubType>
     </Compile>

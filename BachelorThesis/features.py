@@ -1,9 +1,10 @@
 import numpy as np
 from epoch import *
-from filters import quantile_norm
+from filters import quantile_norm, median_filt
 from scipy.interpolate import CubicSpline
 from log import Log
 from stopwatch import stopwatch
+from plots import plot_data
 
 """
 WRITTEN BY
@@ -27,7 +28,14 @@ def make_features(X, y):
 	mask = mergeMasks(masklist)
 
 	# Datafix
-	X, y = datafix(X, y, masklist)
+	#X, y = datafix(X, y, masklist)
+
+	X = median_filt(X)
+	X = quantile_norm(X, 10)
+
+	z = np.transpose(X)[1]
+	zz = np.transpose(X)[5]
+	plot_data([z,zz])
 
 	epochs = get_epochs(X, y, mask)
 	print('Generated {0} epochs'.format(len(epochs)))
@@ -106,7 +114,7 @@ def datafix(X, y, masks):
 		cs = CubicSpline(x,datamask)
 		xs = range(len(mask))
 		datacs = cs(xs)
-		#plotData(data, datacs, [i for i,m in enumerate(mask) if m > 0])
+		plot_data(data, datacs, [i for i,m in enumerate(mask) if m > 0])
 		return datacs
 
 	Xt = array([spline(id,x) for id,x in enumerate(Xt[1:5])]) # Spline DR,RPA,PTT,PWA
@@ -116,23 +124,3 @@ def datafix(X, y, masks):
 	X = array([X[i] for i in sleepCut])
 	y = array([y[i] for i in sleepCut])
 	return X, y 
-
-# Plot
-import matplotlib.pyplot as plt
-from sklearn.preprocessing import MinMaxScaler
-import features as feat
-
-def plotData(data, _data, peaks, i=0, j=45000):
-
-	def normalize(X, scaler=MinMaxScaler()):
-		return np.squeeze(scaler.fit_transform(X.reshape(X.shape[0], 1)))
-
-	i,j = int(max(i,0)),int(min(len(data),j))
-	x = range(i,j)
-	plt.figure(figsize=(6.5, 4))
-	nd = normalize(data[i:j]) ; plt.plot(x, nd, 'b-', label='data')
-	nx = normalize(_data[i:j]) ; plt.plot(x, nx, 'g-', label='filter')
-	ns = [ix for ix in peaks if i <= ix < j]
-	plt.plot(ns, [nd[ix] for ix in ns], 'rx', label='peak')
-	plt.legend()
-	plt.show()
