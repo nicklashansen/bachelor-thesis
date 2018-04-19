@@ -28,14 +28,16 @@ def make_features(X, y):
 	mask = mergeMasks(masklist)
 
 	# Datafix
-	#X, y = datafix(X, y, masklist)
+	#X, y = data_fix(X, y, masklist)
 
+	X,y = sleep_removal(X, y)
 	X = median_filt(X)
 	X = quantile_norm(X, 10)
 
-	z = np.transpose(X)[1]
-	zz = np.transpose(X)[5]
-	plot_data([z,zz])
+	# Plots
+	#z = np.transpose(X)[1]
+	#zz = np.transpose(X)[5]
+	#plot_data([z,zz])
 
 	epochs = get_epochs(X, y, mask)
 	print('Generated {0} epochs'.format(len(epochs)))
@@ -101,7 +103,15 @@ def threeSigmaRule(data):
 def mergeMasks(masks):
 	return [sum(tub) for tub in zip(*masks)]
 
-def datafix(X, y, masks):
+def sleep_removal(X, y):
+	_X = transpose(X)
+	keep = [i for i,state in enumerate(_X[5]) if state >= 0]
+	X = array([X[i] for i in keep])
+	y = array([y[i] for i in keep])
+	return X,y
+
+
+def data_fix(X, y, masks):
 	Xt = np.transpose(X)
 	index = Xt[0]
 	x_SS = Xt[5]
@@ -117,7 +127,7 @@ def datafix(X, y, masks):
 		plot_data(data, datacs, [i for i,m in enumerate(mask) if m > 0])
 		return datacs
 
-	Xt = array([spline(id,x) for id,x in enumerate(Xt[1:5])]) # Spline DR,RPA,PTT,PWA
+	#Xt = array([spline(id,x) for id,x in enumerate(Xt[1:5])]) # Spline DR,RPA,PTT,PWA
 	Xt = np.insert(Xt, 0, index)
 	Xt = np.append(Xt, x_SS)
 	X = transpose(Xt)
