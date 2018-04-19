@@ -1,5 +1,4 @@
 from numpy import *
-from scipy.signal import medfilt
 from PPGpeak_detector import PPG_Peaks
 import filesystem as fs
 import matlab.engine
@@ -23,30 +22,37 @@ def prepSingle(filename):
 
 def prepAll():
 	log, clock = Log('Preprocessing'), stopwatch()
-	filenames,datasetCSV = fs.getAllSubjectFilenames()
+	files,datasetCSV = fs.getAllSubjectFilenames()
 
 	# Database criteria
-	reliablility = [reliable(fn, datasetCSV) for fn in filenames]
-	a = list(array(reliablility)[:,0]).count(False)
-	b = list(array(reliablility)[:,1]).count(False)
-	c = list(array(reliablility)[:,2]).count(False)
+	reliablility = [reliable(fn, datasetCSV) for fn in files]
+	arr = array(reliablility)
+	a = list(arr[:,0]).count(False)
+	b = list(arr[:,1]).count(False)
+	c = list(arr[:,2]).count(False)
 
 	# Cut files
-	filenames = [filenames[i] for i,r in enumerate(reliablility) if all(r)]
+	filenames = [files[i] for i,r in enumerate(reliablility) if all(r)]
+
+	# Log Status
+	log.print('Total files: {0}'.format(len(files)))
+	log.print('Reliable files: {0}'.format(len(filenames)))
+	log.print('Removed by ai_all5 > 10.0: {0}'.format(a))
+	log.print('Removed by overall5 > 3.0: {0}'.format(b))
+	log.print('Removed by slewake5 = 1.0: {0}'.format(c))
+	log.print('-'*35)
 
 	# extract all subjects
+	clock.round()
 	for i, filename in enumerate(filenames):
 		try:
 			subject = fs.Subject(filename)
-			X, y = preprocess(subject)
+			#X, y = preprocess(subject)
 			fs.write_csv(filename, X, y)
+			log.print('Preprocessed {0} in {1}s'.format(filename, clock.round()))
 		except Exception as e:
-			0
-			#log.print(filename, ' removed by ERROR')
-
-		print('{0:.3f} %'.format((i+1) / len(filenames) * 100), end='\r')
-	print('') # reset '\r'
-	print('Done')
+			log.print('Exception in {0}'.format(filename))
+			clock.round()
 
 def reliable(filename, datasetCsv):
 
@@ -60,7 +66,7 @@ def reliable(filename, datasetCsv):
 	df = datasetCsv[datasetCsv['mesaid'] == mesaid][filter].iloc[0]
 
 	criteria = [
-		df[0] > 10.0,	# ai index < 10.0
+		df[0] > 10.0,	# low ai index
 		df[1] > 3.0,	# low overall quality
 		df[2] == 0.0	# poor EEG (sleep stage scoring)
 		]	

@@ -26,7 +26,7 @@ def make_features(X, y):
 	mask = mergeMasks(masklist)
 
 	# Datafix
-	X, y = dataFix(X, y, masklist)
+	X, y = datafix(X, y, masklist)
 
 	# Generate epochs from time series
 	epochs = generate_epochs(quantile_norm(X), y, mask)
@@ -87,8 +87,9 @@ def maskAA(y_AA):
 # Outlier detection
 ''' https://en.wikipedia.org/wiki/68%E2%80%9395%E2%80%9399.7_rule '''
 def threeSigmaRule(data):
-	mu = np.mean(data)
-	std3 = np.std(data)*3
+	_data = [x for x in data if x != 1]
+	mu = np.mean(_data)
+	std3 = np.std(_data)*3
 
 	#(if datapoint's distance from mu is above 3 times the standard deviation, it's an outlier)
 	return [(1 if abs(mu-x) > std3 else 0) for x in data]
@@ -96,7 +97,7 @@ def threeSigmaRule(data):
 def mergeMasks(masks):
 	return [sum(tub) for tub in zip(*masks)]
 
-def dataFix(X, y, masks):
+def datafix(X, y, masks):
 	Xt = np.transpose(X)
 	sleepCut = [i for i,state in enumerate(Xt[5]) if state >= 0]
 
@@ -107,7 +108,7 @@ def dataFix(X, y, masks):
 		cs = CubicSpline(x,datamask)
 		xs = range(len(mask))
 		datacs = cs(xs)
-		plotData(data, datacs, [i for i,m in enumerate(mask) if m > 0])
+		#plotData(data, datacs, [i for i,m in enumerate(mask) if m > 0])
 		return datacs
 
 	Xt = array([spline(id,x) for id,x in enumerate(Xt[1:5])]) # Spline DR,RPA,PTT,PWA
