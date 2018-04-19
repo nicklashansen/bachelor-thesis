@@ -1,7 +1,7 @@
 from stopwatch import *
 from preprocessing import *
 from features import *
-from dataset import dataset
+#from dataset import dataset
 import filesystem as fs
 
 """
@@ -21,10 +21,10 @@ def eval(neurons = 20, folds = 5):
 
 if __name__ == '__main__':
 	filename = 'mesa-sleep-0002'
-	#X, y = prepSingle(filename)
-	X,y = fs.load_csv(filename)
-	epochs = make_features(X, y)
-	data = dataset()
+	X, y = prepSingle(filename)
+	#X,y = fs.load_csv(filename)
+	#epochs = make_features(X, y)
+	#data = dataset()
 	#prepAll()
 	#eval()
 

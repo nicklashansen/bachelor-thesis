@@ -40,6 +40,9 @@
     <Compile Include="gru.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="log.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="metrics.py">
       <SubType>Code</SubType>
     </Compile>

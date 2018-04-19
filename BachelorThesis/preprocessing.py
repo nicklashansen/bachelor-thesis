@@ -4,6 +4,7 @@ from PPGpeak_detector import PPG_Peaks
 import filesystem as fs
 import matlab.engine
 import os
+import log
 
 """
 WRITTEN BY:
@@ -13,7 +14,7 @@ Michael Kirkegaard
 
 def prepSingle(filename):
 	# Status
-	print('Extracting and preprocessing file: {0}...'.format(filename))
+	log.print('Extracting and preprocessing file: {0}...'.format(filename))
 	sub = fs.Subject(filename)
 	X, y = preprocess(sub)
 	fs.write_csv(filename, X, y)
@@ -22,7 +23,8 @@ def prepSingle(filename):
 
 def prepAll():
 	# Status
-	print('Extracting and preprocessing files...')
+	log = log.log('Preprocessing')
+	log.print('Extracting and preprocessing files...')
 
 	# get subject names
 	filenames,datasetCSV = fs.getAllSubjectFilenames()
@@ -36,8 +38,8 @@ def prepAll():
 		X, y = preprocess(subject)
 		fs.write_csv(filename, X, y)
 
-		print('{0:.3f} %'.format((i+1) / len(filenames) * 100), end='\r')
-	print('') # reset '\r'
+		log.print('{0:.3f} %'.format((i+1) / len(filenames) * 100), end='\r')
+	log.print('') # reset '\r'
 
 def preprocess(subject):
 	#Signals

@@ -24,6 +24,7 @@ class Filepaths(object):
 	# Folder 
 	Folder = directory() + 'Files\\'
 	Matlab = directory() + 'Matlab\\'
+	Logs = directory() + 'Logs\\'
 
 	# Save paths
 	SaveSubject = Folder + 'Subjects\\'
@@ -143,3 +144,8 @@ def write_csv(filename, X, y):
 				s = s + str(val) + ','
 			s = s[:-1]
 			f.write(s + '\n')
+
+def write(directory, filename, line=None, wra='a'):
+	os.makedirs(directory, exist_ok=True)
+	with open(directory + filename, wra, encoding='utf8') as f:
+		f.write(line + '\n')
