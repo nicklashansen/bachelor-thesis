@@ -1,9 +1,11 @@
 from numpy import *
+from scipy.signal import medfilt
 from PPGpeak_detector import PPG_Peaks
 import filesystem as fs
 import matlab.engine
-#import log
 import os
+from log import Log
+from stopwatch import stopwatch
 
 """
 WRITTEN BY:
@@ -12,19 +14,15 @@ Michael Kirkegaard
 """
 
 def prepSingle(filename):
-	# Status
-	print('Extracting and preprocessing file: {0}...'.format(filename))
+	log, clock = Log('Preprocessing'), stopwatch()
 	sub = fs.Subject(filename)
 	X, y = preprocess(sub)
 	fs.write_csv(filename, X, y)
-	print('Done')
+	log.print('Preprocessed {0} in {1}s'.format(filename, clock.round()))
 	return X, y
 
 def prepAll():
-	# Status
-	print('Extracting and preprocessing files...')
-
-	# get subject names
+	log, clock = Log('Preprocessing'), stopwatch()
 	filenames,datasetCSV = fs.getAllSubjectFilenames()
 
 	# Database criteria
@@ -70,7 +68,6 @@ def reliable(filename, datasetCsv):
 	return criteria
 
 def preprocess(subject):
-	#Signals
 	sig_ECG = subject.ECG_signal
 	sig_PPG = subject.PPG_signal
 	anno_SleepStage = subject.SleepStage_anno
