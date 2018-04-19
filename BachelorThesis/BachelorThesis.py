@@ -21,9 +21,9 @@ def eval(neurons = 20, folds = 5):
 
 if __name__ == '__main__':
 	filename = 'mesa-sleep-0002'
-	X, y = prepSingle(filename)
-	#X,y = fs.load_csv(filename)
-	#epochs = make_features(X, y)
+	#X, y = prepSingle(filename)
+	X,y = fs.load_csv(filename)
+	epochs = make_features(X, y)
 	#data = dataset()
 	#prepAll()
 	#eval()

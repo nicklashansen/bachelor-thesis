@@ -1,6 +1,7 @@
 import numpy as np
 from epoch import *
-from normalization import quantile_norm
+from log import Log
+from stopwatch import stopwatch
 
 """
 WRITTEN BY
@@ -9,6 +10,7 @@ Nicklas Hansen
 """
 
 def make_features(X, y):
+	log, clock = Log('Features'), stopwatch()
 	# Transpose X
 	Xt = np.transpose(X)
 
@@ -22,25 +24,7 @@ def make_features(X, y):
 
 	mask = mergeMasks([m_DR, m_RPA, m_PTT, m_PWA, m_SS, m_AA])
 
-	# Generate epochs from time series
-	epochs = generate_epochs(quantile_norm(X), y, mask)
-
-	# Filter unsuitable epochs
-	epochs = filter_epochs(epochs)
-
-	# TODO:
-	# cubic spline x_Feature at mask issue-points
-	# Or otherwise correct outliers and issues in data
-	# OBS: Will be cut later if too many correctins are made.
-
-	# Make Epoch Slices
-	#e = epoch_Slices(X, y, mask)
-
-	# Cut Epochs with XX percent uncertainty in mask
-	#e = epoch_Cut(e, mask)
-
-	# Create and Normalize each epoch
-	#E = epoch_Create(e, X, y)
+	epochs = get_epochs(X, y, mask)
 
 	return epochs
 
