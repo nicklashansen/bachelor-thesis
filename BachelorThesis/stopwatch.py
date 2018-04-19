@@ -13,8 +13,10 @@ class stopwatch:
 		self.c = 0
 
 	def round(self):
-		self.b = time.time() - self.b
-		return int(self.b)
+		t = time.time()
+		r = t - self.b 
+		self.b = t
+		return int(r)
 
 	def stop(self):
 		self.c = time.time() - self.a

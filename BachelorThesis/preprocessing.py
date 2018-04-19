@@ -20,7 +20,7 @@ def prepSingle(filename):
 	log.print('Preprocessed {0} in {1}s'.format(filename, clock.round()))
 	return X, y
 
-def prepAll():
+def prepAll(force=False):
 	log, clock = Log('Preprocessing'), stopwatch()
 	files,datasetCSV = fs.getAllSubjectFilenames()
 
@@ -40,6 +40,21 @@ def prepAll():
 	log.print('Removed by ai_all5 > 10.0: {0}'.format(a))
 	log.print('Removed by overall5 > 3.0: {0}'.format(b))
 	log.print('Removed by slewake5 = 1.0: {0}'.format(c))
+	log.print('-'*35)
+
+	# already completed files
+	if not force:
+		oldFiles,_ = fs.getAllSubjectFilenames(preprocessed=True)
+		files = [fn for fn in files if fn not in oldFiles]
+
+		log.print('Files already completed: {0}'.format(len(oldFiles)))
+		log.print('Files remaining:         {0}'.format(len(files)))
+		for fn in oldFiles:
+			log.print('{0} already completed'.format(fn))
+	else:
+		oldFiles,_ = fs.getAllSubjectFilenames(preprocessed=True)
+		log.print('Files re-preprocessing: {0}'.format(len(oldFiles)))
+		log.print('Files remaining:        {0}'.format(len(files)))
 	log.print('-'*35)
 
 	# extract all subjects
