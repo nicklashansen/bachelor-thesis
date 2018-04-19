@@ -35,8 +35,8 @@ def prepAll():
 	filenames = [files[i] for i,r in enumerate(reliablility) if all(r)]
 
 	# Log Status
-	log.print('Total files: {0}'.format(len(files)))
-	log.print('Reliable files: {0}'.format(len(filenames)))
+	log.print('Total files:               {0}'.format(len(files)))
+	log.print('Reliable files:            {0}'.format(len(filenames)))
 	log.print('Removed by ai_all5 > 10.0: {0}'.format(a))
 	log.print('Removed by overall5 > 3.0: {0}'.format(b))
 	log.print('Removed by slewake5 = 1.0: {0}'.format(c))
@@ -47,11 +47,11 @@ def prepAll():
 	for i, filename in enumerate(filenames):
 		try:
 			subject = fs.Subject(filename)
-			#X, y = preprocess(subject)
+			X, y = preprocess(subject)
 			fs.write_csv(filename, X, y)
-			log.print('Preprocessed {0} in {1}s'.format(filename, clock.round()))
+			log.print('{0} preprocessed in {1}s'.format(filename, clock.round()))
 		except Exception as e:
-			log.print('Exception in {0}'.format(filename))
+			log.print('{0} Exception: {1}'.format(filename, str(e)))
 			clock.round()
 
 def reliable(filename, datasetCsv):

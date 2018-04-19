@@ -92,7 +92,6 @@ def maskAA(y_AA):
 	return mask 
 
 # Outlier detection
-''' https://en.wikipedia.org/wiki/68%E2%80%9395%E2%80%9399.7_rule '''
 def threeSigmaRule(data):
 	_data = [x for x in data if x != 1]
 	mu = np.mean(_data)
