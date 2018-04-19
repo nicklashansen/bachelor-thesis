@@ -24,7 +24,8 @@ def generate_epochs(X, y, mask):
 		e = epoch(X[index:end], y[index:end], timecol[index:end], mask[index:end])
 		if (e.continuous()):
 			if (e.acceptable()):
-				epochs.append(e)
+				if (e.no_cut()):
+					epochs.append(e)
 		index += EPOCH_LENGTH/OVERLAP_FACTOR
 	return epochs
 
@@ -52,5 +53,11 @@ class epoch(object):
 			return False
 		num = sum(self.mask)
 		if (num > MASK_THRESHOLD * EPOCH_LENGTH):
+			return False
+		return True
+
+	def no_cut(self):
+		start,stop = self.y[0], self.y[len(self.y)-1]
+		if start or stop:
 			return False
 		return True
