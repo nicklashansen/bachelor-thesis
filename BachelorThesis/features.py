@@ -26,7 +26,8 @@ def make_features(X, y):
 	masklist = [m_DR, m_RPA, m_PTT, m_PWA, m_SS, m_AA]
 	mask = mergeMasks(masklist)
 
-	#X, y = dataFix(X, y, masklist)
+	# Datafix
+	X, y = datafix(X, y, masklist)
 
 	epochs = get_epochs(X, y, mask)
 	print('Generated {0} epochs'.format(len(epochs)))
@@ -83,8 +84,9 @@ def maskAA(y_AA):
 # Outlier detection
 ''' https://en.wikipedia.org/wiki/68%E2%80%9395%E2%80%9399.7_rule '''
 def threeSigmaRule(data):
-	mu = np.mean(data)
-	std3 = np.std(data)*3
+	_data = [x for x in data if x != 1]
+	mu = np.mean(_data)
+	std3 = np.std(_data)*3
 
 	#(if datapoint's distance from mu is above 3 times the standard deviation, it's an outlier)
 	return [(1 if abs(mu-x) > std3 else 0) for x in data]
@@ -92,7 +94,7 @@ def threeSigmaRule(data):
 def mergeMasks(masks):
 	return [sum(tub) for tub in zip(*masks)]
 
-def dataFix(X, y, masks):
+def datafix(X, y, masks):
 	Xt = np.transpose(X)
 	index = Xt[0]
 	x_SS = Xt[5]
