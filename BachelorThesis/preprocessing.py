@@ -23,6 +23,7 @@ def prepSingle(filename):
 def prepAll(force=False):
 	log, clock = Log('Preprocessing'), stopwatch()
 	files,datasetCSV = fs.getAllSubjectFilenames()
+	#files.reverse() # Michael Start from bottom
 
 	# Database criteria
 	reliablility = [reliable(fn, datasetCSV) for fn in files]
@@ -58,7 +59,7 @@ def prepAll(force=False):
 
 	# extract all subjects
 	clock.round()
-	for i, filename in enumerate(filenames):
+	for i, filename in enumerate(files):
 		try:
 			subject = fs.Subject(filename)
 			X, y = preprocess(subject)
