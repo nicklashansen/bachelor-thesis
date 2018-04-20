@@ -19,7 +19,7 @@ def make_features(X, y):
 	X,y = sleep_removal(X, y)
 	X = median_filt(X)
 	X = quantile_norm(X, 10)
-	return X,y,mask
+	return X, y, mask
 
 def make_masks(X):
 	Xt = transpose(X)
@@ -31,33 +31,27 @@ def make_masks(X):
 		std3 = std(_data)*3
 		# if datapoint's distance from mu is above 3 times the standard deviation
 		# or value is -1 (i.e. no PTT value)
-		return [(1 if abs(mu-x) > std3 or x == -1 else 0) for x in data]
+		return [(1 if x < 0 or abs(mu-x) > std3 else 0) for x in data]
 
-	masklist = [threeSigmaRule(x) for x in Xt[1:5]] # DR, RPA, PTT, PWA
+	masklist = [threeSigmaRule(x_feat) for x_feat in Xt[1:5]] # DR, RPA, PTT, PWA
 	mask = [sum(tub) for tub in zip(*masklist)]
 
 	return masklist, mask
 
 def data_fix(X, masks):
 	Xt = transpose(X)
-	index = Xt[0]
-	x_SS = Xt[5]
 
 	def spline(maskid, data):
 		mask = masks[maskid]
 		x = [i for i,m in enumerate(mask) if m == 0]
 		datamask = [data[i] for i in x]
-		b = -1 in datamask
 		cs = CubicSpline(x,datamask)
 		xs = range(len(mask))
 		datacs = cs(xs)
-		datamed = medfilt(datacs, 3) 
-		plot_data([data, datacs, datamed], False)
-		return datacs
+		#plot_data([data, datacs], labels=['Signal','Correction'], normalization=False)
+		return array(datacs)
 
-	Xt = array([spline(id,x) for id,x in enumerate(Xt[3:5])]) # Spline DR,RPA,PTT,PWA
-	Xt = insert(Xt, 0, index)
-	Xt = append(Xt, x_SS)
+	Xt = array([Xt[0]] + [spline(id,x) for id,x in enumerate(Xt[1:5])] + [Xt[5]]) # Spline DR,RPA,PTT,PWA
 	X = transpose(Xt)
 	return X
 
