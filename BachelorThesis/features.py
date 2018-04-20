@@ -12,11 +12,8 @@ Micheal Kirkegaard,
 Nicklas Hansen
 """
 
-def make_features(X, y):
-	#log, clock = Log('Features'), stopwatch()
-
+def make_masks(X, y):
 	Xt = np.transpose(X)
-
 	index = Xt[0]
 	m_DR = maskDR(Xt[1])
 	m_RPA = maskRPA(Xt[2])
@@ -25,23 +22,15 @@ def make_features(X, y):
 	m_SS = maskSS(Xt[5])
 	m_AA = maskAA(y)
 	masklist = [m_DR, m_RPA, m_PTT, m_PWA, m_SS, m_AA]
-	mask = mergeMasks(masklist)
+	return masklist, mergeMasks(masklist)
 
-	# Datafix
+def make_features(X, y):
+	masklist, mask = make_masks(X, y)
 	#X, y = data_fix(X, y, masklist)
-
 	X,y = sleep_removal(X, y)
 	X = median_filt(X)
 	X = quantile_norm(X, 10)
-
-	# Plots
-	#z = np.transpose(X)[1]
-	#zz = np.transpose(X)[5]
-	#plot_data([z,zz])
-
-	epochs = get_epochs(X, y, mask)
-	print('Generated {0} epochs'.format(len(epochs)))
-	return epochs
+	return X,y,mask
 
 # Makes Feature Masks
 

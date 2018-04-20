@@ -21,12 +21,13 @@ def compute_score(score, metric):
 	return dict
 
 def TPR_FNR(y, yhat):
-		n = len(y[0])
+		yhat = squeeze(yhat)
+		n = len(y)
 		TP=FP=TN=FN=0
 		TPR=FNR=0.0
 		for i in range(n):
-			a = bool(yhat[0,i])
-			b = bool(y[0,i])
+			a = bool(yhat[i])
+			b = bool(y[i])
 			TP += int(a & b)
 			TN += int((not a) & ( not b))
 			FP += int(a & (not b))
