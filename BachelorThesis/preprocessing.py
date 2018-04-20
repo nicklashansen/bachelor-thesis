@@ -13,15 +13,15 @@ Michael Kirkegaard
 """
 
 def prepSingle(filename):
-	log, clock = Log('Preprocessing', True), stopwatch()
+	#log, clock = Log('Preprocessing', True), stopwatch()
 	sub = fs.Subject(filename)
 	X, y = preprocess(sub)
 	fs.write_csv(filename, X, y)
-	log.print('Preprocessed {0} in {1}s'.format(filename, clock.round()))
+	#log.print('Preprocessed {0} in {1}s'.format(filename, clock.round()))
 	return X, y
 
 def prepAll(force=False):
-	log, clock = Log('Preprocessing'), stopwatch()
+	log, clock = Log('Preprocessing', True), stopwatch()
 	files,datasetCSV = fs.getAllSubjectFilenames()
 	#files.reverse() # Michael Start from bottom
 
@@ -146,7 +146,7 @@ def PPG(sig_PPG, index):
 		else:					idxplus = sig_PPG.duration
 		peak, h = find_ptt(idx,idxplus,h+1)
 		if(peak != -1):
-			PTT += [peak-idx]
+			PTT += [(peak-idx) / sig_PPG.sampleFrequency]
 			PWA += [amps[h]]
 		else:
 			PTT += [-1]
@@ -155,7 +155,7 @@ def PPG(sig_PPG, index):
 	PTT = array(PTT).astype(float)
 	PWA = array(PWA).astype(float)
 
-	return PTT/sig_PPG.sampleFrequency, PWA
+	return PTT, PWA
 
 def SleepStageBin(anno_SleepStage, frequency, index):
 	# 0			= WAKE	=> -1
