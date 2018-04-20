@@ -13,7 +13,7 @@ Michael Kirkegaard
 """
 
 def prepSingle(filename):
-	log, clock = Log('Preprocessing'), stopwatch()
+	log, clock = Log('Preprocessing', True), stopwatch()
 	sub = fs.Subject(filename)
 	X, y = preprocess(sub)
 	fs.write_csv(filename, X, y)
@@ -48,7 +48,7 @@ def prepAll(force=False):
 	if not force:
 		filenames = [fn for fn in files if fn not in oldFiles]
 		log.print('Files already completed:   {0}'.format(len(oldFiles)))
-		log.print('Files remaining:           {0}'.format(len(filesnames)))
+		log.print('Files remaining:           {0}'.format(len(filenames)))
 		log.print('-'*35)
 		for fn in oldFiles:
 			log.print('{0} already completed'.format(fn))
