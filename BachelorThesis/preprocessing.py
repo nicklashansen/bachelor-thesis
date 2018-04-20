@@ -46,7 +46,7 @@ def prepAll(force=False):
 	# already completed files
 	oldFiles,_ = fs.getAllSubjectFilenames(preprocessed=True)
 	if not force:
-		files = [fn for fn in files if fn not in oldFiles]
+		filenames = [fn for fn in files if fn not in oldFiles]
 
 		log.print('Files already completed: {0}'.format(len(oldFiles)))
 		log.print('Files remaining:         {0}'.format(len(files)))
@@ -59,7 +59,7 @@ def prepAll(force=False):
 
 	# extract all subjects
 	clock.round()
-	for i, filename in enumerate(files):
+	for i, filename in enumerate(filenames):
 		try:
 			subject = fs.Subject(filename)
 			X, y = preprocess(subject)
