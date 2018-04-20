@@ -32,14 +32,9 @@ def make_features(X, y):
 	X = quantile_norm(X, 10)
 	return X,y,mask
 
-# Makes Feature Masks
-
 # DR
 def maskDR(x_DR):
 	mask = threeSigmaRule(x_DR)
-	for index in mask:
-		if (x_DR[index] > 2.0 or x_DR[index] < 0.4):
-			mask[index] = 1
 	return mask
 
 # RPA
