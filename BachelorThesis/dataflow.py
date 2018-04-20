@@ -3,7 +3,7 @@ from random import random, shuffle
 from sklearn.model_selection import KFold
 from features import *
 from epoch import *
-#from gru import *
+from gru import *
 import filesystem as fs
 
 """
@@ -11,19 +11,40 @@ WRITTEN BY:
 Nicklas Hansen
 """
 
-def dataflow(filename = 'mesa-sleep-0002'):
-	X,y = fs.load_csv(filename)
-	X,y,mask = make_features(X, y)
-	epochs = get_epochs(X, y, mask)
-	print('Generated {0} epochs'.format(len(epochs)))
+def flow_all(force=False):
+	log, clock = Log('Features', echo=True), stopwatch()
+	files,_ = fs.getAllSubjectFilenames(preprocessed=True)
+	log.print('Total files:  {0}'.format(len(files)))
+	log.print('-'*35)
+	clock.round()
+	epochs = []
+	for i, filename in enumerate(files):
+		try:
+			X,y = fs.load_csv(filename)
+			X,y,mask = make_features(X, y)
+			epochs.extend(get_epochs(X, y, mask))
+			log.print('{0}/{1} files appended'.format(i, len(files)))
+		except Exception as e:
+			log.print('{0} Exception: {1}'.format(filename, str(e)))
+	log.print('Initiating dataflow...')
+	dataflow(epochs)
+	log.print('Successfully completed full dataflow.')
+
+def dataflow(epochs):
+	#X,y = fs.load_csv(filename)
+	#X,y,mask = make_features(X, y)
+	#epochs = get_epochs(X, y, mask)
+	print('Generated a total of {0} epochs'.format(len(epochs)))
 	data = dataset(epochs)
-	train,test = data.holdout()
+	train,test = data.holdout(0.85)
 	print('train:', len(train), ' test:', len(test))
-	model = gru(data, neurons)
-	#print('Fitting...')
-	#model.fit(train,test)
-	#print('Evaluating...')
-	#score = model.cross_val(train, test)
+	n_cells = epochs[0].timesteps
+	model = gru(data, n_cells)
+	print('Fitting...')
+	model.fit(train, 32)
+	print('Evaluating...')
+	score = model.evaluate(test)
+	print(score)
 	#print(metrics.compute_score(score, metrics.TPR_FNR).items())
 
 class dataset:

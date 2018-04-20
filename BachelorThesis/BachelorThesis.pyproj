@@ -12,7 +12,7 @@
     <OutputPath>.</OutputPath>
     <Name>BachelorThesis</Name>
     <RootNamespace>BachelorThesis</RootNamespace>
-    <InterpreterId>{33e55c76-bf90-4a97-b5ea-558a28588aa8}</InterpreterId>
+    <InterpreterId>{5b3125f7-a263-401e-bb7b-06293404ee6e}</InterpreterId>
     <InterpreterVersion>3.5</InterpreterVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -74,7 +74,7 @@
     <Folder Include="Mads\" />
   </ItemGroup>
   <ItemGroup>
-    <InterpreterReference Include="{33e55c76-bf90-4a97-b5ea-558a28588aa8}\3.5" />
+    <InterpreterReference Include="{5b3125f7-a263-401e-bb7b-06293404ee6e}\3.5" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
