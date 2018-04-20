@@ -1,7 +1,5 @@
 from numpy import *
-#from epoch import *
 from filters import quantile_norm, median_filt
-from scipy.signal import medfilt
 from scipy.interpolate import CubicSpline
 from log import Log
 from stopwatch import stopwatch
