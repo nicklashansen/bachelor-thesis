@@ -20,20 +20,31 @@ def compute_score(score, metric):
 		dict[metrics[k]] = result[k]
 	return dict
 
+def F1(y, yhat):
+	TP,FP,TN,FN = basic(y, yhat)
+	return 2*TP / (2*TP + FP + FN)
+
+def TPR_TNR(y, yhat):
+	TP,FP,TN,FN = basic(y, yhat)
+	TPR = TP / (TP + FP)
+	FNR = TN / (TN + FP)
+
 def TPR_FNR(y, yhat):
-		yhat = squeeze(yhat)
-		n = len(y)
-		TP=FP=TN=FN=0
-		TPR=FNR=0.0
-		for i in range(n):
-			a = bool(yhat[i])
-			b = bool(y[i])
-			TP += int(a & b)
-			TN += int((not a) & ( not b))
-			FP += int(a & (not b))
-			FN += int(b & (not a))
-		if (TP + FP) > 0:
-			TPR = TP / (TP + FP)
-		if (TP + FN) > 0:
-			FNR = FN / (TP + FN)
-		return TPR, FNR
+	TP,FP,TN,FN = basic(y, yhat)
+	TPR = TP / (TP + FP)
+	FNR = FN / (TP + FN)
+	return TPR, FNR
+
+def basic(y, yhat):
+	yhat = squeeze(yhat)
+	n = len(y)
+	TP=FP=TN=FN=0
+	TPR=FNR=0.0
+	for i in range(n):
+		a = bool(yhat[i])
+		b = bool(y[i])
+		TP += int(a & b)
+		TN += int((not a) & ( not b))
+		FP += int(a & (not b))
+		FN += int(b & (not a))
+	return TP,FP,TN,FN

@@ -36,14 +36,9 @@ class gru:
 
 	def fit(self, epochs, iterations):
 		loss = []
-		for iteration in range(iterations):
-			X,y = self.shape_epochs(epochs)
-			hist = self.graph.fit(X, y, epochs=1, batch_size=50, verbose=1)
-			#for epoch in epochs:
-			#	hist = self.graph.fit(self.shape_X(epoch), self.shape_y(epoch), epochs=1, batch_size=1, verbose=0)
-			loss.append(hist.history['loss'])
-			if (iterations > 1):
-				print(iteration+1, '/', iterations, ' iterations completed')
+		X,y = self.shape_epochs(epochs)
+		hist = self.graph.fit(X, y, epochs=iterations, batch_size=100, verbose=1)
+		loss.append(hist.history['loss'])
 		plot_data([loss])
 
 	# fix data pass format
@@ -69,7 +64,7 @@ class gru:
 	def shape_y(self, epoch):
 		return reshape(epoch.y, (1, epoch.y.size, 1))
 
-	def evaluate(self, epochs, metric=metrics.TPR_FNR):
+	def evaluate(self, epochs, metric=metrics.TPR_TNR):
 		TPR=FNR=0
 		for epoch in epochs:
 			yhat = self.graph.predict_classes(self.shape_X(epoch), verbose=0)

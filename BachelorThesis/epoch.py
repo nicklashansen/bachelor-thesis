@@ -8,7 +8,7 @@ Nicklas Hansen
 
 EPOCH_LENGTH = 120
 OVERLAP_FACTOR = 2
-MASK_THRESHOLD = 0.25
+MASK_THRESHOLD = 0.125
 
 def get_epochs(X, y, mask):
 	epochs = generate_epochs(quantile_norm(X), y, mask)
@@ -53,6 +53,7 @@ class epoch(object):
 			return False
 		num = sum(self.mask)
 		if (num > MASK_THRESHOLD * EPOCH_LENGTH):
+			print('unacceptable')
 			return False
 		return True
 
