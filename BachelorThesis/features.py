@@ -15,7 +15,7 @@ Nicklas Hansen
 
 def make_features(X, y):
 	masklist, mask = make_masks(X)
-	X = data_fix(X, masklist)
+	#X = data_fix(X, masklist)
 	X,y = sleep_removal(X, y)
 	X = median_filt(X)
 	X = quantile_norm(X, 10)
@@ -52,7 +52,7 @@ def data_fix(X, masks):
 		xs = range(len(mask))
 		datacs = cs(xs)
 		datamed = medfilt(datacs, 3) 
-		plot_data([data, datacs, datamed], False)
+		#plot_data([data, datacs, datamed], False)
 		return datacs
 
 	Xt = array([spline(id,x) for id,x in enumerate(Xt[3:5])]) # Spline DR,RPA,PTT,PWA

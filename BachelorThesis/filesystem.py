@@ -29,6 +29,7 @@ class Filepaths(object):
 
 	# Save paths
 	SaveSubject = Folder + 'Subjects\\'
+	SaveEpochs = Folder + 'Epochs\\'
 
 	# Load paths
 	LoadDatabaseCsv = Folder + 'Data\\mesa\\datasets\\mesa-sleep-dataset-0.3.0.csv'
