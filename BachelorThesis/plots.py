@@ -12,6 +12,6 @@ def plot_data(signals, labels=None, normalization = False):
 	x = range(0,len(signals[0]))
 	for i,signal in enumerate(signals):
 		signal = normalize(signal) if normalization else signal
-		plt.plot(x, signal, color[i], label='signal'+str(i))
+		plt.plot(x, signal, color[i], label=(labels[i] if labels else 'signal'+str(i)))
 	plt.legend()
 	plt.show()

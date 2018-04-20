@@ -1,7 +1,7 @@
 from stopwatch import *
 from preprocessing import *
 from features import *
-from dataflow import *
+#	from dataflow import *
 import filesystem as fs
 
 """
@@ -21,14 +21,11 @@ def eval(neurons = 20, folds = 5):
 
 if __name__ == '__main__':
 	#flow_all()
-	#flow_fit()
 	filename = 'mesa-sleep-0002'
 	#X, y = prepSingle(filename)
-	X,y = fs.load_csv(filename)
-	X,y,mask = make_features(X, y)
-	epochs = get_epochs(X, y, mask)
-	#epochs = make_features(X, y)
+	X_, y_ = fs.load_csv(filename)
+	epochs = make_features(X_, y_)
 	#data = dataset()
-	#prepAll(force=True)
+	#prepAll(force=False)
 	#eval()
 	breakpoint = 0
