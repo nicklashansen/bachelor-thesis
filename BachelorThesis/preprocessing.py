@@ -46,12 +46,13 @@ def prepAll(force=False):
 	# already completed files
 	oldFiles,_ = fs.getAllSubjectFilenames(preprocessed=True)
 	if not force:
-		filenames = [fn for fn in files if fn not in oldFiles]
+		filenames = [fn for fn in filenames if fn not in oldFiles]
 		log.print('Files already completed:   {0}'.format(len(oldFiles)))
 		log.print('Files remaining:           {0}'.format(len(filenames)))
-		log.print('-'*35)
-		for fn in oldFiles:
-			log.print('{0} already completed'.format(fn))
+		if(len(oldFiles) > 0):
+			log.print('-'*35)
+			for fn in oldFiles:
+				log.print('{0} already completed'.format(fn))
 	else:
 		log.print('Files re-preprocessing:    {0}'.format(len(oldFiles)))
 		log.print('Files remaining:           {0}'.format(len(filenames)))

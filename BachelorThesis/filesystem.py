@@ -18,8 +18,8 @@ def directory():
 		i = i-1
 		if path[i] == '\\':
 			j = j + 1
-	return path[0:i+1]
-	#return 'D:\\BachelorThesis\\' # Michael Path
+	#return path[0:i+1]
+	return 'D:\\BachelorThesis\\' # Michael Path
 
 class Filepaths(object):
 	# Folder 
@@ -117,6 +117,7 @@ def getAllSubjectFilenames(preprocessed=False):
 	else:
 		path = Filepaths.LoadPsg
 	datasetCSV = pd.read_csv(Filepaths.LoadDatabaseCsv)
+	os.makedirs(path, exist_ok=True)
 	filenames = [f[:-4] for f in os.listdir(path) if isfile(join(path, f))]
 	return filenames, datasetCSV
 
