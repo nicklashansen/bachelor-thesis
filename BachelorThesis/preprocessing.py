@@ -21,7 +21,7 @@ def prepSingle(filename):
 	return X, y
 
 def prepAll(force=False):
-	log, clock = Log('Preprocessing', True), stopwatch()
+	log, clock = Log('Preprocessing', echo=True), stopwatch()
 	files,datasetCSV = fs.getAllSubjectFilenames()
 	#files.reverse() # Michael Start from bottom
 

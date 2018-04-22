@@ -5,6 +5,7 @@ from features import *
 from epoch import *
 from gru import *
 import filesystem as fs
+import epoch
 
 """
 WRITTEN BY:
@@ -21,7 +22,12 @@ def flow_all():
 	dataflow(epochs)
 	log.print('Successfully completed full dataflow.')
 
-def compile_epochs(files):
+def flow_fit():
+	file = fs.Filepaths.SaveEpochs + 'epochs.pickle'
+	with open(file, 'rb') as f:
+		epochs = pck.load(f)
+
+def compile_epochs(files, save = True):
 	epochs = []
 	for i, filename in enumerate(files):
 		try:
@@ -30,6 +36,8 @@ def compile_epochs(files):
 			epochs.extend(get_epochs(X, y, mask))
 		except Exception as e:
 			continue
+	if save:
+		save_epochs(epochs)
 	return epochs
 
 def dataflow(epochs):

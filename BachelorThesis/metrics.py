@@ -21,25 +21,25 @@ def compute_score(score, metric):
 	return dict
 
 def F1(y, yhat):
-	TP,FP,TN,FN = basic(y, yhat)
+	TP,FP,TN,FN = cm(y, yhat)
 	return 2*TP / (2*TP + FP + FN)
 
 def TPR_TNR(y, yhat):
-	TP,FP,TN,FN = basic(y, yhat)
+	TP,FP,TN,FN = cm(y, yhat)
 	TPR = TP / (TP + FP)
-	FNR = TN / (TN + FP)
+	TNR = TN / (TN + FP)
+	return TPR, TNR
 
 def TPR_FNR(y, yhat):
-	TP,FP,TN,FN = basic(y, yhat)
+	TP,FP,TN,FN = cm(y, yhat)
 	TPR = TP / (TP + FP)
 	FNR = FN / (TP + FN)
 	return TPR, FNR
 
-def basic(y, yhat):
+def cm(y, yhat):
 	yhat = squeeze(yhat)
 	n = len(y)
 	TP=FP=TN=FN=0
-	TPR=FNR=0.0
 	for i in range(n):
 		a = bool(yhat[i])
 		b = bool(y[i])

@@ -13,7 +13,7 @@ Nicklas Hansen
 
 def make_features(X, y):
 	masklist, mask = make_masks(X)
-	X = data_fix(X, masklist)
+	X = cubic_spline(X, masklist)
 	X,y = sleep_removal(X, y)
 	X = median_filt(X)
 	X = quantile_norm(X, 10)
@@ -36,7 +36,7 @@ def make_masks(X):
 
 	return masklist, mask
 
-def data_fix(X, masks):
+def cubic_spline(X, masks):
 	Xt = transpose(X)
 
 	def spline(maskid, data):
