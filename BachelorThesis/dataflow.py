@@ -74,6 +74,10 @@ def reliableFiles(files):
 def compile_epochs(files, save = True):
 	log = Log('Epochs', True)
 
+	log.print('Total files: {0}'.format(len(files)))
+	log.print('-'*35)
+
+	p = int(len(files)/15)
 	epochs = []
 	for i, filename in enumerate(files):
 		try:
@@ -82,8 +86,12 @@ def compile_epochs(files, save = True):
 			eps = get_epochs(X, y, mask)
 			log.print('{0} created {1} epochs'.format(filename, len(eps)))
 			epochs.extend(eps)
-			if save: #Save new version each step
+			if save and i > 0 and i % p == 0: # Backup saves
 				save_epochs(epochs)
+				log.print('-'*35)
+				log.print('Backup save of {} epochs'.format(len(epochs)))
+				log.print('-'*35)
+
 		except Exception as e:
 			log.print('{0} Exception: {1}'.format(filename, str(e)))
 	if save:
