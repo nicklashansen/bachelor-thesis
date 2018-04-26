@@ -20,18 +20,18 @@ def flow_fit():
 	return epochs
 
 def flow_all():
-	log, clock = Log('Features', echo=True), stopwatch()
+	#log, clock = Log('Features', echo=True), stopwatch()
 	files = fs.getAllSubjectFilenames(preprocessed=True)
-	log.print('Total files:         {0}'.format(len(files)))
+	#log.print('Total files:         {0}'.format(len(files)))
 	files = reliableFiles(files)
-	log.print('Files after removal: {0}'.format(len(files)))
-	clock.round()
+	#log.print('Files after removal: {0}'.format(len(files)))
+	#clock.round()
 	epochs = compile_epochs(files)
-	log.print('Initiating dataflow...')
-	clock.round()
+	#log.print('Initiating dataflow...')
+	#clock.round()
 	#dataflow(epochs)
-	clock.stop()
-	log.print('Successfully completed full dataflow.')
+	#clock.stop()
+	#log.print('Successfully completed full dataflow.')
 
 def reliableFiles(files):
 	log = Log('Discard', echo=False)
@@ -60,7 +60,7 @@ def reliableFiles(files):
 	b = list(arr[:,1]).count(False)
 	c = list(arr[:,2]).count(False)
 
-	log.print('Total files:               {0}'.format(len(files)))
+	log.print('Preprocessed files:        {0}'.format(len(files)))
 	log.print('Reliable files:            {0}'.format(len(reliableFiles)))
 	log.print('Removed by ai_all5 > 10.0: {0}'.format(a))
 	log.print('Removed by overall5 > 3.0: {0}'.format(b))
