@@ -3,6 +3,7 @@ from os.path import isfile, join
 from numpy import *
 import pyedflib
 import pandas as pd
+import pickle as pck
 import xml.etree.ElementTree as xmlTree
 
 """
@@ -149,6 +150,18 @@ def write_csv(filename, X, y):
 				s = s + str(val) + ','
 			s = s[:-1]
 			f.write(s + '\n')
+
+def load_epochs(name='epochs'):
+	file = Filepaths.SaveEpochs + name +'.pickle'
+	with open(file, 'rb') as f:
+		epochs = pck.load(f)
+	return epochs
+
+def write_epochs(epochs, name='epochs'):
+	os.makedirs(Filepaths.SaveEpochs, exist_ok=True)
+	file = Filepaths.SaveEpochs + name + '.pickle'
+	with open(file, 'wb') as handle:
+		pck.dump(epochs, handle, protocol=pck.HIGHEST_PROTOCOL)
 
 def write(directory, filename, line=None, wra='a'):
 	os.makedirs(directory, exist_ok=True)

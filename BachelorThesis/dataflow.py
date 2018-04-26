@@ -14,10 +14,7 @@ Michael Kirkegaard
 """
 
 def flow_fit():
-	file = fs.Filepaths.SaveEpochs + 'epochs.pickle'
-	with open(file, 'rb') as f:
-		epochs = pck.load(f)
-	return epochs
+	return fs.load_epochs()
 
 def flow_all():
 	#log, clock = Log('Features', echo=True), stopwatch()
@@ -84,18 +81,20 @@ def compile_epochs(files, save = True):
 			X,y = fs.load_csv(filename)
 			X,y,mask = make_features(X, y)
 			eps = get_epochs(X, y, mask)
-			log.print('{0} created {1} epochs'.format(filename, len(eps)))
 			epochs.extend(eps)
+			log.print('{0} created {1} epochs'.format(filename, len(eps)))
 			if save and i > 0 and i % p == 0: # Backup saves
 				save_epochs(epochs)
 				log.print('-'*35)
-				log.print('Backup save of {} epochs'.format(len(epochs)))
+				log.print('Backup save of {0} epochs'.format(len(epochs)))
 				log.print('-'*35)
-
 		except Exception as e:
 			log.print('{0} Exception: {1}'.format(filename, str(e)))
 	if save:
 		save_epochs(epochs)
+		log.print('-'*35)
+		log.print('Final save of {0} epochs'.format(len(epochs)))
+		log.print('-'*35)
 	return epochs
 
 def dataflow(epochs):

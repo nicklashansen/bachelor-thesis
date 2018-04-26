@@ -1,6 +1,5 @@
 from numpy import *
 from filters import quantile_norm
-import pickle as pck
 import filesystem as fs
 from log import *
 
@@ -47,10 +46,7 @@ def filter_epochs(epochs):
 	return filtered
 
 def save_epochs(epochs):
-	os.makedirs(fs.Filepaths.SaveEpochs, exist_ok=True)
-	file = fs.Filepaths.SaveEpochs + 'epochs.pickle'
-	with open(file, 'wb') as handle:
-		pck.dump(epochs, handle, protocol=pck.HIGHEST_PROTOCOL)
+	fs.write_epochs(epochs)
 
 class epoch(object):
 	def __init__(self, X, y, timecol, mask = None):
