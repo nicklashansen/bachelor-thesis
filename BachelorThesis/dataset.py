@@ -44,7 +44,7 @@ class dataset:
 		return trainX, trainY, testX, testY
 
 	def load_mesa(self, summary = False):
-		setlist,_ = fs.getAllSubjectFilenames(preprocessed=True)
+		setlist = fs.getAllSubjectFilenames(preprocessed=True)
 		self.load_external(setlist, summary)
 
 	def load_physionet(self, summary = False):

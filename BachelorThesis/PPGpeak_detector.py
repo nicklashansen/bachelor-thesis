@@ -1,6 +1,7 @@
 from scipy.signal import butter, filtfilt
 from peakutils.peak import indexes
 import numpy as np
+from plots import plot_data
 
 """
 WRITTEN BY:
@@ -24,7 +25,7 @@ def PPG_Peaks(data, freq, plot=False):
 	peaks, amps = zip(*[getMax(data, i, freq) for i in peaks])
 
 	if plot:
-		plotData(data, _data, peaks)
+		plot_data([data, _data], peaksIndexs=[peaks], labels=['Signal','Filtered'], normalization=True)
 
 	return peaks, amps
 
@@ -35,24 +36,3 @@ def getMax(data, i, freq):
 	k = h + np.argmax(data[h:j])
 	amp = data[k]
 	return k, amp
-
-# Plot
-import matplotlib.pyplot as plt
-from sklearn.preprocessing import MinMaxScaler
-import features as feat
-
-def plotData(data, _data, peaks, i=0, j=45000):
-
-	def normalize(X, scaler=MinMaxScaler()):
-		return np.squeeze(scaler.fit_transform(X.reshape(X.shape[0], 1)))
-
-	i,j = int(max(i,0)),int(min(len(data),j))
-	x = range(i,j)
-	plt.figure(figsize=(6.5, 4))
-	nd = normalize(data[i:j]) ; plt.plot(x, nd, 'b-', label='data')
-	nx = normalize(_data[i:j]) ; plt.plot(x, nx, 'g-', label='filter')
-	ns = [ix for ix in peaks if i <= ix < j]
-	plt.plot(ns, [nd[ix] for ix in ns], 'rx', label='peak')
-	plt.legend()
-	plt.show()
-

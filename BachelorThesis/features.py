@@ -24,29 +24,28 @@ def make_masks(X):
 
 	# Outlier detection
 	def threeSigmaRule(data):
-		_data = [x for x in data if x != 1]
+		_data = [x for x in data if x != -1]
 		mu = mean(_data)
 		std3 = std(_data)*3
 		# if datapoint's distance from mu is above 3 times the standard deviation
 		# or value is -1 (i.e. no PTT value)
-		return [(1 if x < 0 or abs(mu-x) > std3 else 0) for x in data]
+		return [(1 if x == -1 or abs(mu-x) > std3 else 0) for x in data]
 
 	masklist = [threeSigmaRule(x_feat) for x_feat in Xt[1:5]] # DR, RPA, PTT, PWA
 	mask = [sum(tub) for tub in zip(*masklist)]
 
 	return masklist, mask
 
-def cubic_spline(X, masks):
+def cubic_spline(X, masks, plot=False):
 	Xt = transpose(X)
 
 	def spline(maskid, data):
 		mask = masks[maskid]
-		x = [i for i,m in enumerate(mask) if m == 0]
-		datamask = [data[i] for i in x]
-		cs = CubicSpline(x,datamask)
-		xs = range(len(mask))
-		datacs = cs(xs)
-		#plot_data([data, datacs], labels=['Signal','Correction'], normalization=False)
+		datamask = [data[i] for i,m in enumerate(mask) if m == 0]
+		cs = CubicSpline(range(len(datamask)),datamask)
+		datacs = cs(range(len(mask)))
+		if plot:
+			plot_data([data, datacs], labels=['Signal','Spline Correctoin'])
 		return array(datacs)
 
 	Xt = array([Xt[0]] + [spline(id,x) for id,x in enumerate(Xt[1:5])] + [Xt[5]]) # Spline DR,RPA,PTT,PWA

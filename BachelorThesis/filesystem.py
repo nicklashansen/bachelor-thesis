@@ -117,10 +117,12 @@ def getAllSubjectFilenames(preprocessed=False):
 		path = Filepaths.SaveSubject
 	else:
 		path = Filepaths.LoadPsg
-	datasetCSV = pd.read_csv(Filepaths.LoadDatabaseCsv)
 	os.makedirs(path, exist_ok=True)
 	filenames = [f[:-4] for f in os.listdir(path) if isfile(join(path, f))]
-	return filenames, datasetCSV
+	return filenames
+
+def getDataset_csv():
+	return pd.read_csv(Filepaths.LoadDatabaseCsv)
 
 def load_csv(filename):
 	path = Filepaths.SaveSubject + filename + '.csv'

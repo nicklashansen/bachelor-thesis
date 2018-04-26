@@ -35,8 +35,8 @@ def generate_epochs(X, y, mask):
 		if e.continuous() and e.acceptable() and e.no_cut():
 			epochs.append(e)
 		index += EPOCH_LENGTH/OVERLAP_FACTOR
-	print(a,b,c)
-	print(len(epochs))
+	#print(a,b,c)
+	#print(len(epochs))
 	return epochs
 
 def filter_epochs(epochs):
@@ -47,6 +47,7 @@ def filter_epochs(epochs):
 	return filtered
 
 def save_epochs(epochs):
+	os.makedirs(fs.Filepaths.SaveEpochs, exist_ok=True)
 	file = fs.Filepaths.SaveEpochs + 'epochs.pickle'
 	with open(file, 'wb') as handle:
 		pck.dump(epochs, handle, protocol=pck.HIGHEST_PROTOCOL)
