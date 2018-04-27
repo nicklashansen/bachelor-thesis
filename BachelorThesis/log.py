@@ -7,6 +7,16 @@ WRITTEN BY
 Nicklas Hansen
 """
 
+TABLE = dict()
+
+def getLog(directory = 'Evaluation', echo = False):
+	if directory not in TABLE:
+		TABLE[directory] = Log(directory, echo)
+	else:
+		TABLE[directory].printHL()
+	TABLE[directory].echo = echo
+	return TABLE[directory]
+
 class Log:
 	def __init__(self, directory = 'Evaluation', echo = False):
 		self.filename = strftime("%Y-%m-%d_%H-%M", gmtime()) + '_log.txt'
@@ -22,3 +32,6 @@ class Log:
 				print(line)
 			except e:
 				None #Do nothing quick-n-dirty fix for print errors
+
+	def printHL(self):
+		self.print('-'*35)

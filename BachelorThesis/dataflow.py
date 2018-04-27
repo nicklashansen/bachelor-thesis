@@ -13,8 +13,11 @@ Nicklas Hansen
 Michael Kirkegaard
 """
 
+def flow_fit():
+	return fs.load_epochs()
+
 def flow_all():
-	#log, clock = Log('Features', echo=True), stopwatch()
+	#log, clock = getLog('Features', echo=True), stopwatch()
 	files = fs.getAllSubjectFilenames(preprocessed=True)
 	#log.print('Total files:         {0}'.format(len(files)))
 	files = reliableFiles(files)
@@ -23,12 +26,12 @@ def flow_all():
 	epochs = compile_epochs(files)
 	#log.print('Initiating dataflow...')
 	#clock.round()
-	dataflow(epochs)
+	#dataflow(epochs)
 	#clock.stop()
 	#log.print('Successfully completed full dataflow.')
 
 def reliableFiles(files):
-	log = Log('Discard', echo=False)
+	log = getLog('Discard', echo=False)
 	datasetCsv = fs.getDataset_csv()
 
 	def isReliable(filename):
@@ -59,21 +62,21 @@ def reliableFiles(files):
 	log.print('Removed by ai_all5 > 10.0: {0}'.format(a))
 	log.print('Removed by overall5 > 3.0: {0}'.format(b))
 	log.print('Removed by slewake5 = 1.0: {0}'.format(c))
-	log.print('-'*35)
+	log.printHL()
 	for fn in [f for f in files if f not in reliableFiles]:
 		log.print(fn)
 
 	return reliableFiles
 
 def compile_epochs(files, save = True):
-	log = Log('Epochs', True)
+	log = getLog('Epochs', True)
 
 	log.print('Total files: {0}'.format(len(files)))
-	log.print('-'*35)
+	log.printHL()
 
 	p = int(len(files)/15)
 	epochs = []
-	for i, filename in enumerate(files[0:3]):
+	for i, filename in enumerate(files):
 		try:
 			X,y = fs.load_csv(filename)
 			X,y,mask = make_features(X, y)
@@ -82,32 +85,31 @@ def compile_epochs(files, save = True):
 			log.print('{0} created {1} epochs'.format(filename, len(eps)))
 			if save and i > 0 and i % p == 0: # Backup saves
 				save_epochs(epochs)
-				log.print('-'*35)
+				log.printHL()
 				log.print('Backup save of {0} epochs'.format(len(epochs)))
-				log.print('-'*35)
+				log.printHL()
 		except Exception as e:
 			log.print('{0} Exception: {1}'.format(filename, str(e)))
 	if save:
 		save_epochs(epochs)
-		log.print('-'*35)
+		log.printHL()
 		log.print('Final save of {0} epochs'.format(len(epochs)))
-		log.print('-'*35)
+		log.printHL()
 	return epochs
 
-def dataflow():
-	model, test = fit()
+def dataflow(epochs):
+	print('Generated a total of {0} epochs'.format(len(epochs)))
+	data = dataset(epochs)
+	train,test = data.holdout(0.9)
+	print('train:', len(train), ' test:', len(test))
+	n_cells = epochs[0].timesteps
+	model = gru(data, n_cells)
+	print('Fitting...')
+	model.fit(train, 8)
 	print('Evaluating...')
 	score = model.evaluate(test)
 	print(score)
 	#print(metrics.compute_score(score, metrics.TPR_FNR).items())
-
-def fit():
-	data = dataset(fs.load_epochs());
-	train,test = data.holdout(0.9)
-	print('train:', len(train), ' test:', len(test))
-	model = gru(data)
-	model.fit(train)
-	return model, test
 
 class dataset:
 	def __init__(self, epochs, shuffle=True):

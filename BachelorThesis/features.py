@@ -1,7 +1,7 @@
 from numpy import *
 from filters import quantile_norm, median_filt
 from scipy.interpolate import CubicSpline
-from log import Log
+from log import getLog
 from stopwatch import stopwatch
 from plots import plot_data
 
