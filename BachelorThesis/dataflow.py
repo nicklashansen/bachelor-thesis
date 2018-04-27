@@ -17,7 +17,7 @@ def flow_fit():
 	return fs.load_epochs()
 
 def flow_all():
-	#log, clock = Log('Features', echo=True), stopwatch()
+	#log, clock = getLog('Features', echo=True), stopwatch()
 	files = fs.getAllSubjectFilenames(preprocessed=True)
 	#log.print('Total files:         {0}'.format(len(files)))
 	files = reliableFiles(files)
@@ -31,7 +31,7 @@ def flow_all():
 	#log.print('Successfully completed full dataflow.')
 
 def reliableFiles(files):
-	log = Log('Discard', echo=False)
+	log = getLog('Discard', echo=False)
 	datasetCsv = fs.getDataset_csv()
 
 	def isReliable(filename):
@@ -69,7 +69,7 @@ def reliableFiles(files):
 	return reliableFiles
 
 def compile_epochs(files, save = True):
-	log = Log('Epochs', True)
+	log = getLog('Epochs', True)
 
 	log.print('Total files: {0}'.format(len(files)))
 	log.print('-'*35)

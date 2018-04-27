@@ -7,6 +7,14 @@ WRITTEN BY
 Nicklas Hansen
 """
 
+TABLE = dict()
+
+def getLog(directory = 'Evaluation', echo = False):
+	if directory not in TABLE:
+		TABLE[directory] = Log(directory, echo)
+	TABLE[directory].echo = echo
+	return TABLE[directory]
+
 class Log:
 	def __init__(self, directory = 'Evaluation', echo = False):
 		self.filename = strftime("%Y-%m-%d_%H-%M", gmtime()) + '_log.txt'
