@@ -76,7 +76,7 @@ def compile_epochs(files, save = True):
 
 	p = int(len(files)/15)
 	epochs = []
-	for i, filename in enumerate(files):
+	for i, filename in enumerate(files[0:30]):
 		try:
 			X,y = fs.load_csv(filename)
 			X,y,mask = make_features(X, y)
@@ -105,7 +105,7 @@ def dataflow(epochs):
 	n_cells = epochs[0].timesteps
 	model = gru(data, n_cells)
 	print('Fitting...')
-	model.fit(train, 60)
+	model.fit(train, 8)
 	print('Evaluating...')
 	score = model.evaluate(test)
 	print(score)
