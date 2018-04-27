@@ -1,7 +1,7 @@
 from stopwatch import *
 from preprocessing import *
 from features import *
-from dataflow import flow_all
+from dataflow import *
 import filesystem as fs
 
 """
@@ -11,7 +11,8 @@ Michael Kirkegaard
 """
 
 if __name__ == '__main__':
-	flow_all()
+	dataflow()
+	#flow_all()
 	#filename = 'mesa-sleep-0002'
 	#X, y = prepSingle(filename)
 	#X_, y_ = fs.load_csv(filename)

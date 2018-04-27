@@ -13,9 +13,6 @@ Nicklas Hansen
 Michael Kirkegaard
 """
 
-def flow_fit():
-	return fs.load_epochs()
-
 def flow_all():
 	#log, clock = Log('Features', echo=True), stopwatch()
 	files = fs.getAllSubjectFilenames(preprocessed=True)
@@ -26,7 +23,7 @@ def flow_all():
 	epochs = compile_epochs(files)
 	#log.print('Initiating dataflow...')
 	#clock.round()
-	#dataflow(epochs)
+	dataflow(epochs)
 	#clock.stop()
 	#log.print('Successfully completed full dataflow.')
 
@@ -76,7 +73,7 @@ def compile_epochs(files, save = True):
 
 	p = int(len(files)/15)
 	epochs = []
-	for i, filename in enumerate(files[0:30]):
+	for i, filename in enumerate(files[0:3]):
 		try:
 			X,y = fs.load_csv(filename)
 			X,y,mask = make_features(X, y)
@@ -97,19 +94,20 @@ def compile_epochs(files, save = True):
 		log.print('-'*35)
 	return epochs
 
-def dataflow(epochs):
-	print('Generated a total of {0} epochs'.format(len(epochs)))
-	data = dataset(epochs)
-	train,test = data.holdout(0.9)
-	print('train:', len(train), ' test:', len(test))
-	n_cells = epochs[0].timesteps
-	model = gru(data, n_cells)
-	print('Fitting...')
-	model.fit(train, 8)
+def dataflow():
+	model, test = fit()
 	print('Evaluating...')
 	score = model.evaluate(test)
 	print(score)
 	#print(metrics.compute_score(score, metrics.TPR_FNR).items())
+
+def fit():
+	data = dataset(fs.load_epochs());
+	train,test = data.holdout(0.9)
+	print('train:', len(train), ' test:', len(test))
+	model = gru(data)
+	model.fit(train)
+	return model, test
 
 class dataset:
 	def __init__(self, epochs, shuffle=True):

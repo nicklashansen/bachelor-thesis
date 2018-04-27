@@ -1,10 +1,12 @@
 from numpy import *
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, LSTM, Embedding, TimeDistributed, Bidirectional, GRU
+from keras.layers import Dense, Embedding, TimeDistributed, Bidirectional, GRU
+from keras.callbacks import EarlyStopping, LearningRateScheduler, ModelCheckpoint, TensorBoard
 import metrics
 from stopwatch import *
 import sys
 from plots import *
+import filesystem as fs
 
 """
 WRITTEN BY:
@@ -12,19 +14,34 @@ Nicklas Hansen
 """
 
 class gru:
-	def __init__(self, data, neurons = 10):
+	def __init__(self, data, batch_size = 100):
 		self.data = data
-		self.neurons = neurons
+		self.neurons = data.timesteps
 		self.graph = None
+		self.batch_size = batch_size
 		self.build()
 
 	def build(self):
 		graph = Sequential()
-		graph.add(Bidirectional(GRU(self.neurons, return_sequences=True), input_shape=(self.data.timesteps, self.data.features), merge_mode='concat'))
-		#graph.add(GRU(self.neurons, return_sequences=True, input_shape=(self.data.timesteps, self.data.features)))
+		#graph.add(Bidirectional(GRU(self.neurons, return_sequences=True), input_shape=(self.data.timesteps, self.data.features), merge_mode='concat'))
+		graph.add(GRU(self.neurons, return_sequences=True, input_shape=(self.data.timesteps, self.data.features)))
 		graph.add(TimeDistributed(Dense(1, activation='sigmoid')))
 		graph.compile(loss='binary_crossentropy', optimizer='adam')
 		self.graph = graph
+
+	def get_callbacks(self):
+		drop, iteration_drop, init_lr = 0.5, 1.0, 0.1
+
+		def step_decay(iteration):
+			lr = init_lr * math.pow(drop, math.floor((1+iteration)/iteration_drop))
+			print(iteration, lr)
+			return lr
+
+		early_stop = EarlyStopping(monitor='loss', patience=5, mode='auto', verbose=1)
+		#learning_rate = LearningRateScheduler(step_decay)
+		#checkpoint = ModelCheckpoint(fs.Filepaths.Model + '', monitor='val_loss', verbose=0, save_best_only=False, save_weights_only=False, mode='auto', period=1)
+		tensorboard = TensorBoard(log_dir=fs.Filepaths.Logs + 'TensorBoard', histogram_freq=0, batch_size=self.batch_size, write_graph=True, write_grads=False, write_images=False, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
+		return [early_stop]
 
 	def shape_epochs(self, epochs):
 		X = empty((len(epochs), self.data.timesteps, self.data.features))
@@ -34,11 +51,9 @@ class gru:
 			y[i] = reshape(epoch.y, (epoch.y.size, 1))
 		return X,y
 
-	def fit(self, epochs, iterations):
-		loss = []
+	def fit(self, epochs, iterations=1000):
 		X,y = self.shape_epochs(epochs)
-		hist = self.graph.fit(X, y, epochs=iterations, batch_size=100, verbose=1)
-		loss.append(hist.history['loss'])
+		hist = self.graph.fit(X, y, epochs=iterations, batch_size=self.batch_size, verbose=1, callbacks=self.get_callbacks())
 		#plot_data([loss])
 
 	# fix data pass format

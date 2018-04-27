@@ -26,6 +26,7 @@ class Filepaths(object):
 	# Folder 
 	Folder = directory() + 'Files\\'
 	Matlab = directory() + 'Matlab\\'
+	Model = directory() + 'Model\\'
 	Logs = directory() + 'Logs\\'
 
 	# Save paths
