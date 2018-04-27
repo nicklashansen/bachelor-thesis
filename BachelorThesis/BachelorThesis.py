@@ -11,12 +11,7 @@ Michael Kirkegaard
 """
 
 if __name__ == '__main__':
-	dataflow()
+	fit_eval()
 	#flow_all()
-	#filename = 'mesa-sleep-0002'
-	#X, y = prepSingle(filename)
-	#X_, y_ = fs.load_csv(filename)
-	#epochs = make_features(X_, y_)
-	#data = dataset()
 	#prepAll(force=False)
 	breakpoint = 0

@@ -13,9 +13,6 @@ Nicklas Hansen
 Michael Kirkegaard
 """
 
-def flow_fit():
-	return fs.load_epochs()
-
 def flow_all():
 	#log, clock = getLog('Features', echo=True), stopwatch()
 	files = fs.getAllSubjectFilenames(preprocessed=True)
@@ -97,19 +94,19 @@ def compile_epochs(files, save = True):
 		log.printHL()
 	return epochs
 
-def dataflow(epochs):
-	print('Generated a total of {0} epochs'.format(len(epochs)))
-	data = dataset(epochs)
-	train,test = data.holdout(0.9)
-	print('train:', len(train), ' test:', len(test))
-	n_cells = epochs[0].timesteps
-	model = gru(data, n_cells)
-	print('Fitting...')
-	model.fit(train, 8)
+def fit_eval():
+	model, test = fit()
 	print('Evaluating...')
 	score = model.evaluate(test)
 	print(score)
 	#print(metrics.compute_score(score, metrics.TPR_FNR).items())
+
+def fit(split = 0.9):
+	data = dataset(fs.load_epochs())
+	train,test = data.holdout(split)
+	model = gru(data)
+	model.fit(train)
+	return model, test
 
 class dataset:
 	def __init__(self, epochs, shuffle=True):
