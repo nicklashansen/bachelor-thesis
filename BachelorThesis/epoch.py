@@ -21,22 +21,13 @@ def generate_epochs(X, y, mask):
 	epochs, index, length = [], int(0), len(y)-EPOCH_LENGTH
 	timecol = transpose(X)[0]
 	X = delete(X, 0, axis=1)
-	a=b=c=OVERLAP_FACTOR*(length/EPOCH_LENGTH)
 	while (index < length):
 		index = int(index)
 		end = int(index+EPOCH_LENGTH)
 		e = epoch(X[index:end], y[index:end], timecol[index:end], mask[index:end])
-		#if (e.continuous()):
-		#	a -= 1
-		#if (e.acceptable()):
-		#	b -= 1
-		#if (e.no_cut()):
-		#	c -= 1
 		if e.continuous() and e.acceptable() and e.no_cut():
 			epochs.append(e)
 		index += EPOCH_LENGTH/OVERLAP_FACTOR
-	print(a,b,c)
-	print(len(epochs))
 	return epochs
 
 def filter_epochs(epochs):

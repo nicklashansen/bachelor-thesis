@@ -39,7 +39,7 @@ class gru:
 		X,y = self.shape_epochs(epochs)
 		hist = self.graph.fit(X, y, epochs=iterations, batch_size=100, verbose=1)
 		loss.append(hist.history['loss'])
-		plot_data([loss])
+		#plot_data([loss])
 
 	# fix data pass format
 	def cross_val(self, tuple: tuple, trainX=None, trainY=None, testX=None, testY=None, metric=metrics.TPR_FNR):
@@ -67,6 +67,8 @@ class gru:
 	def evaluate(self, epochs, metric=metrics.TPR_TNR):
 		TPR=FNR=0
 		for epoch in epochs:
+			#if (sum(epoch.y) == 0):
+			#	continue
 			yhat = self.graph.predict_classes(self.shape_X(epoch), verbose=0)
 			p, n = metric(epoch.y, yhat)
 			TPR += p
