@@ -18,4 +18,7 @@ class Log:
 	def print(self, line):
 		fs.write(self.directory, self.filename, line)
 		if self.echo:
-			print(line)
+			try:
+				print(line)
+			except e:
+				None #Do nothing quick-n-dirty fix for print errors

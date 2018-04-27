@@ -1,6 +1,5 @@
 from numpy import *
 from filters import quantile_norm
-import pickle as pck
 import filesystem as fs
 from log import *
 
@@ -21,13 +20,22 @@ def generate_epochs(X, y, mask):
 	epochs, index, length = [], int(0), len(y)-EPOCH_LENGTH
 	timecol = transpose(X)[0]
 	X = delete(X, 0, axis=1)
+	a=b=c=OVERLAP_FACTOR*(length/EPOCH_LENGTH)
 	while (index < length):
 		index = int(index)
 		end = int(index+EPOCH_LENGTH)
 		e = epoch(X[index:end], y[index:end], timecol[index:end], mask[index:end])
+		#if (e.continuous()):
+		#	a -= 1
+		#if (e.acceptable()):
+		#	b -= 1
+		#if (e.no_cut()):
+		#	c -= 1
 		if e.continuous() and e.acceptable() and e.no_cut():
 			epochs.append(e)
 		index += EPOCH_LENGTH/OVERLAP_FACTOR
+	#print(a,b,c)
+	#print(len(epochs))
 	return epochs
 
 def filter_epochs(epochs):
@@ -38,9 +46,7 @@ def filter_epochs(epochs):
 	return filtered
 
 def save_epochs(epochs):
-	file = fs.Filepaths.SaveEpochs + 'epochs.pickle'
-	with open(file, 'wb') as handle:
-		pck.dump(epochs, handle, protocol=pck.HIGHEST_PROTOCOL)
+	fs.write_epochs(epochs)
 
 class epoch(object):
 	def __init__(self, X, y, timecol, mask = None):

@@ -3,6 +3,7 @@ from os.path import isfile, join
 from numpy import *
 import pyedflib
 import pandas as pd
+import pickle as pck
 import xml.etree.ElementTree as xmlTree
 
 """
@@ -117,10 +118,12 @@ def getAllSubjectFilenames(preprocessed=False):
 		path = Filepaths.SaveSubject
 	else:
 		path = Filepaths.LoadPsg
-	datasetCSV = pd.read_csv(Filepaths.LoadDatabaseCsv)
 	os.makedirs(path, exist_ok=True)
 	filenames = [f[:-4] for f in os.listdir(path) if isfile(join(path, f))]
-	return filenames, datasetCSV
+	return filenames
+
+def getDataset_csv():
+	return pd.read_csv(Filepaths.LoadDatabaseCsv)
 
 def load_csv(filename):
 	path = Filepaths.SaveSubject + filename + '.csv'
@@ -147,6 +150,18 @@ def write_csv(filename, X, y):
 				s = s + str(val) + ','
 			s = s[:-1]
 			f.write(s + '\n')
+
+def load_epochs(name='epochs'):
+	file = Filepaths.SaveEpochs + name +'.pickle'
+	with open(file, 'rb') as f:
+		epochs = pck.load(f)
+	return epochs
+
+def write_epochs(epochs, name='epochs'):
+	os.makedirs(Filepaths.SaveEpochs, exist_ok=True)
+	file = Filepaths.SaveEpochs + name + '.pickle'
+	with open(file, 'wb') as handle:
+		pck.dump(epochs, handle, protocol=pck.HIGHEST_PROTOCOL)
 
 def write(directory, filename, line=None, wra='a'):
 	os.makedirs(directory, exist_ok=True)

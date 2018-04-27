@@ -22,29 +22,10 @@ def prepSingle(filename):
 
 def prepAll(force=False):
 	log, clock = Log('Preprocessing', echo=True), stopwatch()
-	files,datasetCSV = fs.getAllSubjectFilenames()
-	#files.reverse() # Michael Start from bottom
-
-	# Database criteria
-	reliablility = [reliable(fn, datasetCSV) for fn in files]
-	arr = array(reliablility)
-	a = list(arr[:,0]).count(False)
-	b = list(arr[:,1]).count(False)
-	c = list(arr[:,2]).count(False)
-
-	# Cut files
-	filenames = [files[i] for i,r in enumerate(reliablility) if all(r)]
-
-	# Log Status
-	log.print('Total files:               {0}'.format(len(files)))
-	log.print('Reliable files:            {0}'.format(len(filenames)))
-	log.print('Removed by ai_all5 > 10.0: {0}'.format(a))
-	log.print('Removed by overall5 > 3.0: {0}'.format(b))
-	log.print('Removed by slewake5 = 1.0: {0}'.format(c))
-	log.print('-'*35)
+	filenames = fs.getAllSubjectFilenames(preprocessed=False)
 
 	# already completed files
-	oldFiles,_ = fs.getAllSubjectFilenames(preprocessed=True)
+	oldFiles = fs.getAllSubjectFilenames(preprocessed=True)
 	if not force:
 		filenames = [fn for fn in filenames if fn not in oldFiles]
 		log.print('Files already completed:   {0}'.format(len(oldFiles)))
@@ -69,25 +50,7 @@ def prepAll(force=False):
 		except Exception as e:
 			log.print('{0} Exception: {1}'.format(filename, str(e)))
 			clock.round()
-
-def reliable(filename, datasetCsv):
-
-	mesaid = int(filename[-4:])
-	filter = ['ai_all5','overall5','slewake5',]
-	# ai_all5  = arousal index
-	# overall5 = overall study quality 
-	# slewake5 = poor quailty EEG (sleep stage)
-
-	# Check if it is too uncertain
-	df = datasetCsv[datasetCsv['mesaid'] == mesaid][filter].iloc[0]
-
-	criteria = [
-		df[0] > 10.0,	# low ai index
-		df[1] > 3.0,	# low overall quality
-		df[2] == 0.0	# poor EEG (sleep stage scoring)
-		]	
-
-	return criteria
+	clock.stop()
 
 def preprocess(subject):
 	sig_ECG = subject.ECG_signal
