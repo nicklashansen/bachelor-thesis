@@ -62,7 +62,7 @@ def reliableFiles(files):
 	log.print('Removed by ai_all5 > 10.0: {0}'.format(a))
 	log.print('Removed by overall5 > 3.0: {0}'.format(b))
 	log.print('Removed by slewake5 = 1.0: {0}'.format(c))
-	log.print('-'*35)
+	log.printHL()
 	for fn in [f for f in files if f not in reliableFiles]:
 		log.print(fn)
 
@@ -72,11 +72,11 @@ def compile_epochs(files, save = True):
 	log = getLog('Epochs', True)
 
 	log.print('Total files: {0}'.format(len(files)))
-	log.print('-'*35)
+	log.printHL()
 
 	p = int(len(files)/15)
 	epochs = []
-	for i, filename in enumerate(files[0:30]):
+	for i, filename in enumerate(files):
 		try:
 			X,y = fs.load_csv(filename)
 			X,y,mask = make_features(X, y)
@@ -85,16 +85,16 @@ def compile_epochs(files, save = True):
 			log.print('{0} created {1} epochs'.format(filename, len(eps)))
 			if save and i > 0 and i % p == 0: # Backup saves
 				save_epochs(epochs)
-				log.print('-'*35)
+				log.printHL()
 				log.print('Backup save of {0} epochs'.format(len(epochs)))
-				log.print('-'*35)
+				log.printHL()
 		except Exception as e:
 			log.print('{0} Exception: {1}'.format(filename, str(e)))
 	if save:
 		save_epochs(epochs)
-		log.print('-'*35)
+		log.printHL()
 		log.print('Final save of {0} epochs'.format(len(epochs)))
-		log.print('-'*35)
+		log.printHL()
 	return epochs
 
 def dataflow(epochs):

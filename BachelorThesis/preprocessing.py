@@ -31,13 +31,13 @@ def prepAll(force=False):
 		log.print('Files already completed:   {0}'.format(len(oldFiles)))
 		log.print('Files remaining:           {0}'.format(len(filenames)))
 		if(len(oldFiles) > 0):
-			log.print('-'*35)
+			log.printHL()
 			for fn in oldFiles:
 				log.print('{0} already completed'.format(fn))
 	else:
 		log.print('Files re-preprocessing:    {0}'.format(len(oldFiles)))
 		log.print('Files remaining:           {0}'.format(len(filenames)))
-	log.print('-'*35)
+	log.printHL()
 
 	# extract all subjects
 	clock.round()

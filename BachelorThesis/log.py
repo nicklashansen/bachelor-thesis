@@ -12,6 +12,8 @@ TABLE = dict()
 def getLog(directory = 'Evaluation', echo = False):
 	if directory not in TABLE:
 		TABLE[directory] = Log(directory, echo)
+	else:
+		TABLE[directory].printHL()
 	TABLE[directory].echo = echo
 	return TABLE[directory]
 
@@ -30,3 +32,6 @@ class Log:
 				print(line)
 			except e:
 				None #Do nothing quick-n-dirty fix for print errors
+
+	def printHL(self):
+		self.print('-'*35)
