@@ -1,7 +1,7 @@
 from numpy import *
 from keras.models import Sequential
 from keras.layers import Dense, Embedding, TimeDistributed, Bidirectional, GRU
-from keras.callbacks import EarlyStopping, LearningRateScheduler, ModelCheckpoint, TensorBoard
+from keras.callbacks import EarlyStopping, TensorBoard
 import metrics
 from stopwatch import *
 import sys
@@ -29,16 +29,11 @@ class gru:
 		graph.compile(loss='binary_crossentropy', optimizer='adam')
 		self.graph = graph
 
+	def save(self):
+		self.graph.save(fs.Filepaths.Model)
+
 	def get_callbacks(self):
-		drop, iteration_drop, init_lr = 0.5, 1.0, 0.1
-
-		def step_decay(iteration):
-			lr = init_lr * math.pow(drop, math.floor((1+iteration)/iteration_drop))
-			print(iteration, lr)
-			return lr
-
 		early_stop = EarlyStopping(monitor='loss', patience=5, mode='auto', verbose=1)
-		#learning_rate = LearningRateScheduler(step_decay)
 		#checkpoint = ModelCheckpoint(fs.Filepaths.Model + '', monitor='val_loss', verbose=0, save_best_only=False, save_weights_only=False, mode='auto', period=1)
 		tensorboard = TensorBoard(log_dir=fs.Filepaths.Logs + 'TensorBoard', histogram_freq=0, batch_size=self.batch_size, write_graph=True, write_grads=False, write_images=False, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
 		return [early_stop]
@@ -58,16 +53,13 @@ class gru:
 
 	# fix data pass format
 	def cross_val(self, tuple: tuple, trainX=None, trainY=None, testX=None, testY=None, metric=metrics.TPR_FNR):
-		print('Cross-validating...')
 		if (tuple != None):
 			trainX, trainY, testX, testY = tuple[0], tuple[1], tuple[2], tuple[3]
 		timer, score = stopwatch(), []
 		for fold in range(len(trainX)):
 			self.build()
 			X,y,_X,_y = trainX[fold], trainY[fold], testX[fold], testY[fold]
-			#print('Fitting ', len(X), ' sequences...')
 			self.fit(X, y, 1)
-			#print('Evaluating ', len(_X), ' sequences...')
 			score.append(self.evaluate(_X, _y, metric=metric))
 			print(fold+1, '/', len(trainX), 'folds completed...')
 		print('Duration: ', timer.stop(), 's')
@@ -80,14 +72,12 @@ class gru:
 		return reshape(epoch.y, (1, epoch.y.size, 1))
 
 	def evaluate(self, epochs, metric=metrics.TPR_TNR):
-		TPR=FNR=0
+		TPR=TNR=0
 		for epoch in epochs:
-			#if (sum(epoch.y) == 0):
-			#	continue
 			yhat = self.graph.predict_classes(self.shape_X(epoch), verbose=0)
 			p, n = metric(epoch.y, yhat)
 			TPR += p
-			FNR += n
+			TNR += n
 		TPR /= len(epochs)
-		FNR /= len(epochs)
-		return TPR, FNR
+		TNR /= len(epochs)
+		return TPR, TNR

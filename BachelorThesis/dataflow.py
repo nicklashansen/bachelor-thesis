@@ -13,19 +13,10 @@ Nicklas Hansen
 Michael Kirkegaard
 """
 
-def flow_all():
-	#log, clock = getLog('Features', echo=True), stopwatch()
+def process_epochs():
 	files = fs.getAllSubjectFilenames(preprocessed=True)
-	#log.print('Total files:         {0}'.format(len(files)))
 	files = reliableFiles(files)
-	#log.print('Files after removal: {0}'.format(len(files)))
-	#clock.round()
 	epochs = compile_epochs(files)
-	#log.print('Initiating dataflow...')
-	#clock.round()
-	#dataflow(epochs)
-	#clock.stop()
-	#log.print('Successfully completed full dataflow.')
 
 def reliableFiles(files):
 	log = getLog('Discard', echo=False)
@@ -94,17 +85,18 @@ def compile_epochs(files, save = True):
 		log.printHL()
 	return epochs
 
-def fit_eval():
-	model, test = fit()
-	print('Evaluating...')
+def fit_eval(gpu = True):
+	batch_size = 512 if gpu else 128
+	model, test = fit(batch_size)
+	model.save()
 	score = model.evaluate(test)
 	print(score)
 	#print(metrics.compute_score(score, metrics.TPR_FNR).items())
 
-def fit(split = 0.9):
+def fit(batch_size = 100):
 	data = dataset(fs.load_epochs())
-	train,test = data.holdout(split)
-	model = gru(data)
+	train,test = data.holdout(data.get_split())
+	model = gru(data, batch_size)
 	model.fit(train)
 	return model, test
 
@@ -117,10 +109,17 @@ class dataset:
 		if shuffle:
 			self.shuffle_epochs()
 
-	def shuffle_epochs(self):
-		shuffle(self.epochs)
+	# todo: shuffle with seed in order to make training redoable
+	def shuffle_epochs(self, seed = 1):
+		shuffle(self.epochs, seed)
 
-	def holdout(self, split = 0.67):
+	def get_split(self):
+		split = 0.9
+		if self.size * split >= 10 ** 5:
+			return 100 * (self.size - 10 ** 4) / self.size
+		return split
+
+	def holdout(self, split = 0.9):
 		cut = int(self.size * split)
 		return self.epochs[:cut], self.epochs[cut:]
 

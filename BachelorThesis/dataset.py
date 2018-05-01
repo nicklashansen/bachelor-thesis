@@ -27,13 +27,13 @@ class dataset:
 		#	self.timesteps = -1
 		#	self.features = -1
 
-	def holdout(self, split = 0.67):
+	def holdout(self, split = 0.9):
 		train_size = int(self.size * split)
 		test_size = self.size - train_size
 		trainX, trainY, testX, testY = self.X[:train_size], self.y[:train_size], self.X[train_size:], self.y[train_size:]
 		return trainX, trainY, testX, testY
 
-	def kfold(self, folds = 5):
+	def kfold(self, folds = 10):
 		kf = KFold(folds)
 		trainX, trainY, testX, testY = [],[],[],[]
 		for train_index, test_index in kf.split(self.X):
