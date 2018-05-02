@@ -1,3 +1,8 @@
+# Import GUI
+import sys
+sys.path.insert(0, './GUI')
+from BachelorGUI import BachelorGUI
+
 from preprocessing import prepAll
 from dataflow import fit_eval, process_epochs
 
@@ -8,6 +13,7 @@ Michael Kirkegaard
 """
 
 if __name__ == '__main__':
-	fit_eval()
+	BachelorGUI()
+	#fit_eval()
 	#process_epochs()
 	#prepAll(force=False)

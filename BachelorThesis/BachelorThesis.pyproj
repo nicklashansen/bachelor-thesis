@@ -5,14 +5,14 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>53825e16-9ac2-46ea-a8c4-9c4832add750</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>BachelorThesis.py</StartupFile>
+    <StartupFile>GUI\BachelorGUI.pyw</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>BachelorThesis</Name>
     <RootNamespace>BachelorThesis</RootNamespace>
-    <InterpreterId>{5b3125f7-a263-401e-bb7b-06293404ee6e}</InterpreterId>
+    <InterpreterId>{eeaa2aaa-8303-48ac-bcb8-05bf91db1da3}</InterpreterId>
     <InterpreterVersion>3.5</InterpreterVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -25,9 +25,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="BachelorThesis.py" />
-    <Compile Include="dataset.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="epoch.py">
       <SubType>Code</SubType>
     </Compile>
@@ -41,6 +38,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="gru.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="GUI\BachelorGUI.pyw">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="log.py">
@@ -72,6 +72,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Mads\" />
+    <Folder Include="GUI\" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="{5b3125f7-a263-401e-bb7b-06293404ee6e}\3.5" />
