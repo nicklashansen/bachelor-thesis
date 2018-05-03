@@ -12,12 +12,11 @@ Nicklas Hansen,
 Michael Kirkegaard
 """
 
-def prepSingle(filename):
-	#log, clock = getLog('Preprocessing', True), stopwatch()
+def prepSingle(filename, save = True):
 	sub = fs.Subject(filename)
 	X, y = preprocess(sub)
-	fs.write_csv(filename, X, y)
-	#log.print('Preprocessed {0} in {1}s'.format(filename, clock.round()))
+	if save:
+		fs.write_csv(filename, X, y)
 	return X, y
 
 def prepAll(force=False):

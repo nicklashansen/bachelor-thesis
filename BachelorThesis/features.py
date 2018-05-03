@@ -11,10 +11,11 @@ Micheal Kirkegaard,
 Nicklas Hansen
 """
 
-def make_features(X, y):
+def make_features(X, y, removal = True):
 	masklist, mask = make_masks(X)
 	X = cubic_spline(X, masklist)
-	X,y = sleep_removal(X, y)
+	if removal:
+		X,y = sleep_removal(X, y)
 	X = median_filt(X)
 	X = quantile_norm(X, 10)
 	return X, y, mask

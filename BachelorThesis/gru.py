@@ -13,6 +13,9 @@ WRITTEN BY:
 Nicklas Hansen
 """
 
+#def load_model():
+#	model = ''
+
 class gru:
 	def __init__(self, data, batch_size = 100):
 		self.data = data
@@ -30,12 +33,12 @@ class gru:
 		self.graph = graph
 
 	def save(self):
-		self.graph.save(fs.Filepaths.Model)
+		self.graph.save('gru.h5')
 
 	def get_callbacks(self):
 		early_stop = EarlyStopping(monitor='loss', patience=5, mode='auto', verbose=1)
 		#checkpoint = ModelCheckpoint(fs.Filepaths.Model + '', monitor='val_loss', verbose=0, save_best_only=False, save_weights_only=False, mode='auto', period=1)
-		tensorboard = TensorBoard(log_dir=fs.Filepaths.Logs + 'TensorBoard', histogram_freq=0, batch_size=self.batch_size, write_graph=True, write_grads=False, write_images=False, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
+		#tensorboard = TensorBoard(log_dir=fs.Filepaths.Logs + 'TensorBoard', histogram_freq=0, batch_size=self.batch_size, write_graph=True, write_grads=False, write_images=False, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
 		return [early_stop]
 
 	def shape_epochs(self, epochs):
@@ -71,10 +74,17 @@ class gru:
 	def shape_y(self, epoch):
 		return reshape(epoch.y, (1, epoch.y.size, 1))
 
+	def predict(self, epochs):
+		predictions = []
+		for epoch in epochs:
+			yhat = self.graph.predict_classes(self.shape_X(epoch))
+			epoch.yhat = squeeze(yhat)
+		return epochs
+
 	def evaluate(self, epochs, metric=metrics.TPR_TNR):
 		TPR=TNR=0
 		for epoch in epochs:
-			yhat = self.graph.predict_classes(self.shape_X(epoch), verbose=0)
+			yhat = self.graph.predict_classes(self.shape_X(epoch))
 			p, n = metric(epoch.y, yhat)
 			TPR += p
 			TNR += n

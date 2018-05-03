@@ -12,18 +12,21 @@ EPOCH_LENGTH = 120
 OVERLAP_FACTOR = 2
 MASK_THRESHOLD = 0.125
 
-def get_epochs(X, y, mask):
-	epochs = generate_epochs(quantile_norm(X), y, mask)
-	return filter_epochs(epochs)
+def get_epochs(X, y, mask, epoch_length = EPOCH_LENGTH, overlap_factor = OVERLAP_FACTOR, filter = True):
+	return generate_epochs(quantile_norm(X), y, mask, epoch_length, overlap_factor, filter)
 
-def generate_epochs(X, y, mask):
-	epochs, index, length = [], int(0), len(y)-EPOCH_LENGTH
+def extract_timecol(X):
 	timecol = transpose(X)[0]
 	X = delete(X, 0, axis=1)
-	a=b=c=OVERLAP_FACTOR*(length/EPOCH_LENGTH)
+	return X, timecol
+
+def generate_epochs(X, y, mask, epoch_length, overlap_factor, filter = True):
+	epochs, index, length = [], int(0), len(y)-epoch_length
+	X, timecol = extract_timecol(X)
+	#a=b=c=overlap_factor*(length/epoch_length)
 	while (index < length):
 		index = int(index)
-		end = int(index+EPOCH_LENGTH)
+		end = int(index+epoch_length)
 		e = epoch(X[index:end], y[index:end], timecol[index:end], mask[index:end])
 		#if (e.continuous()):
 		#	a -= 1
@@ -31,26 +34,19 @@ def generate_epochs(X, y, mask):
 		#	b -= 1
 		#if (e.no_cut()):
 		#	c -= 1
-		if e.continuous() and e.acceptable() and e.no_cut():
+		if not filter or (e.continuous() and e.acceptable() and e.no_cut()):
 			epochs.append(e)
-		index += EPOCH_LENGTH/OVERLAP_FACTOR
+		index += epoch_length/overlap_factor
 	#print(a,b,c)
 	#print(len(epochs))
 	return epochs
-
-def filter_epochs(epochs):
-	filtered = []
-	for i,e in enumerate(epochs):
-		if (e.index_start > 0):
-			filtered.append(e)
-	return filtered
 
 def save_epochs(epochs):
 	fs.write_epochs(epochs)
 
 class epoch(object):
 	def __init__(self, X, y, timecol, mask = None):
-		self.X, self.y = X, y
+		self.X, self.y, self.yhat = X, y, None
 		self.timecol, self.mask, self.timesteps, self.features = timecol, mask, X.shape[0], X.shape[1]
 		self.index_start, self.index_stop = int(timecol[0]), int(timecol[len(timecol)-1])
 
@@ -65,7 +61,6 @@ class epoch(object):
 			return False
 		num = sum(self.mask)
 		if (num > MASK_THRESHOLD * EPOCH_LENGTH):
-			#print('unacceptable')
 			return False
 		return True
 
