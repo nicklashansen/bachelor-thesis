@@ -4,23 +4,26 @@ from sklearn.preprocessing import MinMaxScaler
 
 """
 WRITTEN BY:
-Michael Kirkegaard,
-Nicklas Hansen
+Nicklas Hansen,
+Michael Kirkegaard
 """
 
-COLOR = ['b-', 'g-', 'r-']
+COLOR = ['black', 'green', 'red']
 
-def plot_results(signals, wake_states, illegals, arousals, duration = None):
-	show_signals(signals, None, COLOR, duration)
+def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals, duration = None):
+	show_signals(timecol, signals, labels, COLOR, duration)
 	show_spans(wake_states, '0.5')
+	show_spans(rem, 'purple')
 	show_spans(illegals, 'red')
-	show_spans(arousals, 'green')
+	show_spans(arousals, 'green', 0.75)
 
+	plt.xlim(0, duration/60)
+	plt.ylim(-1,3)
 	plt.xlabel('Minutes')
-	#plt.legend()
+	plt.legend()
 	plt.show()
 
-def show_signals(array, labels = None, colors = COLOR, duration = None):
+def show_signals(timecol, array, labels = None, colors = COLOR, duration = None):
 	if array is None:
 		return
 	if duration is None:
@@ -28,9 +31,9 @@ def show_signals(array, labels = None, colors = COLOR, duration = None):
 		for i,signal in enumerate(array):
 			if len(signal) > duration:
 				duration = len(signal)
-	x = [i/60 for i in range(duration)]
+	x = timecol/60
 	for i,signal in enumerate(array):
-		plt.plot(x, signal[:duration], colors[i], label='signal'+str(i+1))
+		plt.plot(x, signal, colors[i], label=labels[i])
 
 def show_spans(array, color, alpha = 0.3):
 	if array is None:

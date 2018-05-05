@@ -1,7 +1,7 @@
 from numpy import *
 from keras.models import Sequential
 from keras.layers import Dense, Embedding, TimeDistributed, Bidirectional, GRU
-from keras.callbacks import EarlyStopping, TensorBoard
+from keras.callbacks import EarlyStopping, TensorBoard, History
 import metrics
 from stopwatch import *
 import sys
@@ -12,9 +12,6 @@ import filesystem as fs
 WRITTEN BY:
 Nicklas Hansen
 """
-
-#def load_model():
-#	model = ''
 
 class gru:
 	def __init__(self, data, batch_size = 100):
@@ -36,10 +33,11 @@ class gru:
 		self.graph.save('gru.h5')
 
 	def get_callbacks(self):
-		early_stop = EarlyStopping(monitor='loss', patience=5, mode='auto', verbose=1)
+		early_stop = EarlyStopping(monitor='loss', patience=3, mode='auto', verbose=1)
+		history = History()
 		#checkpoint = ModelCheckpoint(fs.Filepaths.Model + '', monitor='val_loss', verbose=0, save_best_only=False, save_weights_only=False, mode='auto', period=1)
 		#tensorboard = TensorBoard(log_dir=fs.Filepaths.Logs + 'TensorBoard', histogram_freq=0, batch_size=self.batch_size, write_graph=True, write_grads=False, write_images=False, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
-		return [early_stop]
+		return [early_stop, history]
 
 	def shape_epochs(self, epochs):
 		X = empty((len(epochs), self.data.timesteps, self.data.features))
@@ -49,12 +47,17 @@ class gru:
 			y[i] = reshape(epoch.y, (epoch.y.size, 1))
 		return X,y
 
-	def fit(self, epochs, iterations=1000):
+	def fit(self, epochs, iterations=256):
 		X,y = self.shape_epochs(epochs)
-		hist = self.graph.fit(X, y, epochs=iterations, batch_size=self.batch_size, verbose=1, callbacks=self.get_callbacks())
-		#plot_data([loss])
+		callbacks = self.get_callbacks()
+		hist = self.graph.fit(X, y, epochs=iterations, batch_size=self.batch_size, verbose=1, callbacks=callbacks)
+		savetxt('hist.csv', self.return_loss(callbacks[1]), delimiter=',')
 
-	# fix data pass format
+	def return_loss(self, history):
+		items = history.history.items()
+		return [item[1] for item in items]
+
+	# TODO: fix data pass format
 	def cross_val(self, tuple: tuple, trainX=None, trainY=None, testX=None, testY=None, metric=metrics.TPR_FNR):
 		if (tuple != None):
 			trainX, trainY, testX, testY = tuple[0], tuple[1], tuple[2], tuple[3]

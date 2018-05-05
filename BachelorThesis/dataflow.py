@@ -6,6 +6,7 @@ from features import *
 from epoch import *
 from gru import *
 from preprocessing import prepSingle
+import random
 import filesystem as fs
 import epoch
 
@@ -15,7 +16,7 @@ Nicklas Hansen
 Michael Kirkegaard
 """
 
-def dataflow(filename = 'mesa-sleep-0002'):
+def dataflow(filename = 'mesa-sleep-0050'):
 	epoch_length, overlap_factor, sample_rate = 120, 2, 256
 	#X,y = prepSingle(filename, save=False)
 	X,y = fs.load_csv(filename)
@@ -26,11 +27,12 @@ def dataflow(filename = 'mesa-sleep-0002'):
 	epochs = model.predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
 	full.sort(key=lambda x: x.index_start, reverse=False)
-	yhat, wake, illegal = timeseries(epochs, full, epoch_length, overlap_factor, sample_rate)
+	yhat, wake, rem, illegal = timeseries(epochs, full, epoch_length, overlap_factor, sample_rate)
 	print('Evaluated from time index', epochs[0].index_start, 'to', epochs[-1].index_stop)
 	ill = region(illegal)
 	ill.append([0, int(full[0].index_start/sample_rate)])
-	plot_results([transpose(X)[1]], region(wake), ill, region(yhat), int(full[-1].index_stop/sample_rate))
+	X = transpose(X)
+	plot_results(X[0]/sample_rate, [X[1]], ['RR'], region(wake), region(rem), ill, region(yhat), int(full[-1].index_stop/sample_rate))
 
 def epochs_from_prep(X, y, epoch_length, overlap_factor, filter = False, removal = True):
 	X,y,mask = make_features(X, y, removal)
@@ -39,12 +41,13 @@ def epochs_from_prep(X, y, epoch_length, overlap_factor, filter = False, removal
 def timeseries(epochs, full, epoch_length, overlap_factor, sample_rate):
 	window = int(epoch_length - ( epoch_length / overlap_factor))
 	length = int(full[-1].index_stop/sample_rate)
-	yhat, wake, illegal = zeros(length), zeros(length), zeros(length)
+	yhat, wake, rem, illegal = zeros(length), zeros(length), zeros(length), zeros(length)
 	for i,obj in enumerate(epochs):
 		yhat = modify_timeseries(yhat, obj.yhat, 1, obj.timecol, window, sample_rate)
 	for i,obj in enumerate(full):
 		sleep = transpose(obj.X)[-1]
 		wake = modify_timeseries(wake, sleep, -1, obj.timecol, window, sample_rate)
+		rem = modify_timeseries(rem, sleep, 1, obj.timecol, window, sample_rate)
 	for i,obj in enumerate(full):
 		illegal = modify_timeseries(illegal, obj.mask, 1, obj.timecol, window, sample_rate)
 	for i in range(len(wake)):
@@ -52,7 +55,7 @@ def timeseries(epochs, full, epoch_length, overlap_factor, sample_rate):
 			yhat[i] = 0
 		if illegal[i] == 1 and wake[i] == 1:
 			illegal[i] = 0
-	return yhat, wake, illegal
+	return yhat, wake, rem, illegal
 
 def modify_timeseries(ts, values, criteria, timecol, window, sample_rate):
 	for i,y in enumerate(values[window:]):
@@ -73,6 +76,8 @@ def region(array):
 		elif bin:
 			bin = False
 			regions.append([start, i-1])
+	if bin:
+		regions.append([start, i-1])
 	return regions
 
 def process_epochs():
@@ -147,7 +152,7 @@ def compile_epochs(files, save = True):
 	return epochs
 
 def fit_eval(gpu = True):
-	batch_size = 2 ** 10 if gpu else 2 ** 8
+	batch_size = 2 ** 10 if gpu else 2 ** 7
 	model, test = fit(batch_size)
 	model.save()
 	score = model.evaluate(test)
@@ -155,29 +160,35 @@ def fit_eval(gpu = True):
 
 def fit(batch_size = 100):
 	data = dataset(fs.load_epochs())
+	save_epochs(data.epochs)
 	train,test = data.holdout(data.get_split())
 	model = gru(data, batch_size)
-	# TODO: reset to 1000
 	model.fit(train)
 	return model, test
 
 class dataset:
-	def __init__(self, epochs, shuffle=True):
+	def __init__(self, epochs, shuffle=True, balance=False):
 		self.epochs = epochs
 		self.size = len(epochs)
 		self.timesteps = epochs[0].timesteps
 		self.features = epochs[0].features
 		if shuffle:
-			self.shuffle_epochs()
+			self.shuffle()
+		if balance:
+			self.balance()
 
-	# todo: shuffle with seed in order to make training redoable
-	def shuffle_epochs(self, seed = 1):
-		shuffle(self.epochs)
+	def shuffle(self, seed = 22):
+		random.Random(seed).shuffle(self.epochs)
+
+	def balance(self):
+		for _,obj in enumerate(self.epochs):
+			if sum(obj.y) > 0:
+				self.epochs.remove(obj)
 
 	def get_split(self):
 		split = 0.9
 		if self.size * split >= 10 ** 5:
-			return 100 * (self.size - 10 ** 4) / self.size
+			return (self.size - 2.5 * (10 ** 4)) / self.size
 		return split
 
 	def holdout(self, split = 0.9):
