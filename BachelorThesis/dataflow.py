@@ -83,7 +83,8 @@ def region(array):
 def process_epochs():
 	files = fs.getAllSubjectFilenames(preprocessed=True)
 	files = reliableFiles(files)
-	epochs = compile_epochs(files)
+	train, _, _ = train_test_eval_split(files) # = train,test,eval
+	epochs = compile_epochs(train)
 
 def reliableFiles(files):
 	log = getLog('Discard', echo=False)
@@ -122,6 +123,14 @@ def reliableFiles(files):
 		log.print(fn)
 
 	return reliableFiles
+
+def train_test_eval_split(files, testsize=0.05, evalsize=0.05):
+	shuffle(files)
+	te = int(len(files)*(1.0-testsize))
+	tt = int(len(files)*(1.0-testsize-evalsize))
+	train,test,eval =  files[:tt], files[tt:te], files[te:]
+	fs.write_splits(train,test,eval)
+	return train,test,eval
 
 def compile_epochs(files, save = True):
 	log = getLog('Epochs', True)

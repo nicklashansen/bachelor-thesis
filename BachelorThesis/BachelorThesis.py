@@ -16,6 +16,6 @@ Michael Kirkegaard
 if __name__ == '__main__':
 	#dataflow()
 	#BachelorGUI()
-	fit_eval(gpu=False)
-	#process_epochs()
+	#fit_eval(gpu=False)
+	process_epochs()
 	#prepAll(force=False)
