@@ -20,7 +20,7 @@ def extract_timecol(X):
 	X = delete(X, 0, axis=1)
 	return X, timecol
 
-def generate_epochs(X, y, mask, epoch_length, overlap_factor, filter = True):
+def generate_epochs(X, y, mask, epoch_length, overlap_factor, filter):
 	epochs, index, length = [], int(0), len(y)-epoch_length
 	X, timecol = extract_timecol(X)
 	#a=b=c=overlap_factor*(length/epoch_length)

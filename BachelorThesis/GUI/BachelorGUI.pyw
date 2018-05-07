@@ -4,6 +4,11 @@ from tkinter.ttk import Progressbar
 import time
 import threading
 
+"""
+WRITTEN BY
+Micheal Kirkegaard
+"""
+
 FILETAG = '.aplot'
 
 class AppUI(Tk):
@@ -24,7 +29,7 @@ class AppUI(Tk):
 		self.bind('<Shift-N>', lambda e: self.main_window.New_File())
 		self.bind('<Shift-O>', lambda e: self.main_window.Open_File())
 		self.bind('<Shift-S>', lambda e: self.main_window.Save_File())
-		self.bind('<Shift-Enter>', lambda e: self.main_window.Close_File())
+		self.bind('<Shift-Return>', lambda e: self.main_window.Close_File())
 		self.bind('<Shift-Escape>', lambda e: self.quit())
 
 		# Init
@@ -40,7 +45,7 @@ class AppUI(Tk):
 		filemenu.add_command(label="Save", command=self.main_window.Save_File, accelerator='<Shift-S>')
 		filemenu.add_command(label="Close", command=self.main_window.Close_File, accelerator='<Shift-Enter>')
 		filemenu.add_separator()
-		filemenu.add_command(label="Exit", command=self.quit, accelerator='<Shift-Esc>')
+		filemenu.add_command(label="Exit", command=self.quit, accelerator='<Shift-Escape>')
 		menubar.add_cascade(label="File", menu=filemenu)
 
 		# Helpmenu
@@ -57,11 +62,11 @@ class AppUI(Tk):
 		
 		COMMANDS_TEXT =	[	"Commands",
 							"-"*50,
-							"- New	    <Shift-N>:         Open a PSG file for analysis.",
-							"- Open	    <Shift-O>:         Open an arousal plot file (i.e. an already analysed PSG file).",
-							"- Save	    <Shift-S>:         Save an arousal plot file.",
-							"- Close    <Shift-Enter> :    Close currently opened arousal plot file.",
-							"- Exit	    <Shift-Escape>:    Close application."
+							"- New	    <Shift-N>:              Open a PSG file for analysis.",
+							"- Open	    <Shift-O>:              Open an arousal plot file (i.e. an already analysed PSG file).",
+							"- Save	    <Shift-S>:              Save an arousal plot file.",
+							"- Close    <Shift-Espace>:         Close currently opened arousal plot file.",
+							"- Exit	    <Shift-Escape-Enter>:   Close application."
 							]
 
 		def popup(text):
@@ -73,6 +78,7 @@ class AppUI(Tk):
 				label.grid(row=i, column=0)
 			# Focus grab
 			toplevel.bind('<Escape>', lambda e: toplevel.destroy())
+			toplevel.bind('<Return>', lambda e: toplevel.destroy())
 			toplevel.lift()
 			toplevel.focus_force()
 			toplevel.grab_set()
@@ -155,7 +161,10 @@ class Main_Window(Frame):
 
 			# Cancel Button
 			b = Button(self, text='Cancel')
+			orig_color = b.cget("background")
 			b.bind('<Button-1>', lambda event: cancel())
+			b.bind('<Enter>', lambda e: b.configure(state = "normal", relief="raised", bg = 'SystemButtonHighlight'))
+			b.bind('<Leave>', lambda e: b.configure(state = "normal", relief="raised", bg = orig_color))
 			b.grid(row=0, column=1)
 			
 			# ProgbarThread

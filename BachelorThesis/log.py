@@ -30,7 +30,7 @@ class Log:
 		if self.echo:
 			try:
 				print(line)
-			except e:
+			except Exception as e:
 				None #Do nothing quick-n-dirty fix for print errors
 
 	def printHL(self):

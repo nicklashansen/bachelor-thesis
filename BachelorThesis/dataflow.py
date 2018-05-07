@@ -20,8 +20,8 @@ def dataflow(filename = 'mesa-sleep-0050'):
 	epoch_length, overlap_factor, sample_rate = 120, 2, 256
 	#X,y = prepSingle(filename, save=False)
 	X,y = fs.load_csv(filename)
-	epochs = epochs_from_prep(X, y, epoch_length, overlap_factor, removal=True)
-	full = epochs_from_prep(X, y, epoch_length, overlap_factor, removal=False)
+	epochs = epochs_from_prep(X, y, epoch_length, overlap_factor, filter = True, removal=True)
+	full = epochs_from_prep(X, y, epoch_length, overlap_factor, filter = False, removal=False)
 	model = gru(dataset(epochs))
 	model.graph = load_model('gru.h5')
 	epochs = model.predict(epochs)
@@ -34,7 +34,7 @@ def dataflow(filename = 'mesa-sleep-0050'):
 	X = transpose(X)
 	plot_results(X[0]/sample_rate, [X[1]], ['RR'], region(wake), region(rem), ill, region(yhat), int(full[-1].index_stop/sample_rate))
 
-def epochs_from_prep(X, y, epoch_length, overlap_factor, filter = False, removal = True):
+def epochs_from_prep(X, y, epoch_length=epoch.EPOCH_LENGTH, overlap_factor=epoch.OVERLAP_FACTOR, filter = True, removal = True):
 	X,y,mask = make_features(X, y, removal)
 	return get_epochs(X, y, mask, epoch_length, overlap_factor, filter)
 
