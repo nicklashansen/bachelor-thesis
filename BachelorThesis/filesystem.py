@@ -19,24 +19,26 @@ def directory():
 		i = i-1
 		if path[i] == '\\':
 			j = j + 1
-	return path[0:i+1]
-	#return 'D:\\BachelorThesis\\' # Michael Path
+	#return path[0:i+1]
+	return 'D:\\BachelorThesis\\' # Michael Path
 
 class Filepaths(object):
 	# Folder 
-	Folder = directory() + 'Files\\'
+	Files = directory() + 'Files\\'
 	Matlab = directory() + 'Matlab\\'
 	Model = directory() + 'Model\\'
 	Logs = directory() + 'Logs\\'
 
 	# Save paths
-	SaveSubject = Folder + 'Subjects\\'
-	SaveEpochs = Folder + 'Epochs\\'
+	SaveSubject = Files + 'Subjects\\'
+	SaveSplits  = Files + 'Splits\\'
+	SaveEpochs = Files + 'Epochs\\'
+	
 
 	# Load paths
-	LoadDatabaseCsv = Folder + 'Data\\mesa\\datasets\\mesa-sleep-dataset-0.3.0.csv'
-	LoadPsg = Folder + 'Data\\mesa\\polysomnography\\edfs\\'
-	LoadAnno = Folder + 'Data\\mesa\\polysomnography\\annotations-events-nsrr\\'
+	LoadDatabaseCsv = Files + 'Data\\mesa\\datasets\\mesa-sleep-dataset-0.3.0.csv'
+	LoadPsg = Files + 'Data\\mesa\\polysomnography\\edfs\\'
+	LoadAnno = Files + 'Data\\mesa\\polysomnography\\annotations-events-nsrr\\'
 
 class Annotation(object):
 	def __init__(self, label, annolist, dur):
@@ -52,25 +54,28 @@ class Signal(object):
 		self.duration = dur
 
 class Subject(object):
-	def __init__(self, filename):
+	def __init__(self, filename, edfPath=None, annoPath=None, ArousalAnno=True):
 		self.id = int(filename[-4:])
 		self.filename = filename
+		self.edfPath = edfPath
+		self.annoPath = annoPath
 
 		self.ECG_signal = self.get_signal('EKG')
 		self.PPG_signal = self.get_signal('Pleth')
 		self.SleepStage_anno = self.get_anno('Stages')
-		self.Arousal_anno = self.get_anno('Arousal')
+		self.Arousal_anno = self.get_anno('Arousal') if ArousalAnno else None
 
 		assert(self.ECG_signal.duration == self.PPG_signal.duration)
 		assert(self.ECG_signal.duration <= self.SleepStage_anno.duration)
-		assert(self.ECG_signal.duration <= self.Arousal_anno.duration)
+		if ArousalAnno:
+			assert(self.ECG_signal.duration <= self.Arousal_anno.duration)
 		self.duration = self.ECG_signal.duration
 
 		assert(self.ECG_signal.sampleFrequency == self.PPG_signal.sampleFrequency)
 		self.frequency = self.ECG_signal.sampleFrequency
 
 	def get_signal(self, label):
-		filepath = Filepaths.LoadPsg + self.filename + ".edf"
+		filepath = Filepaths.LoadPsg + self.filename + ".edf" if not self.edfPath else self.edfPath
 		with pyedflib.EdfReader(filepath) as file:
 
 			id = file.getSignalLabels().index(label)
@@ -80,8 +85,8 @@ class Subject(object):
 
 		return Signal(label, sig, freq, dur)
 
-	def get_anno(self, label):	
-		filepath = Filepaths.LoadAnno + self.filename + "-nsrr.xml"
+	def get_anno(self, label):
+		filepath = Filepaths.LoadAnno + self.filename + "-nsrr.xml" if not self.annoPath else self.annoPath
 		xml = xmlTree.parse(filepath).getroot()
 
 		dict = self.make_dict_from_tree(xml)
@@ -151,6 +156,24 @@ def write_csv(filename, X, y):
 				s = s + str(val) + ','
 			s = s[:-1]
 			f.write(s + '\n')
+
+def load_splits(name='splits'):
+	file = Filepaths.SaveSplits + name + '.txt'
+	with open(file, 'r') as f:
+		tte = list(f.readlines())
+	train = tte[0].replace('\n','').split(',')
+	test = tte[1].replace('\n','').split(',')
+	eval = tte[2].replace('\n','').split(',')
+	return train,test,eval
+
+def write_splits(train, test, eval, name='splits'):
+	os.makedirs(Filepaths.SaveSplits, exist_ok=True)
+	file = Filepaths.SaveSplits + name + '.txt'
+	with open(file, 'w') as f:
+		f.write(','.join(train)+'\n')
+		f.write(','.join(test)+'\n')
+		f.write(','.join(eval))
+
 
 def load_epochs(name='epochs'):
 	file = Filepaths.SaveEpochs + name +'.pickle'
