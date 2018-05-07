@@ -8,7 +8,7 @@ Nicklas Hansen,
 Michael Kirkegaard
 """
 
-COLOR = ['black', 'green', 'red']
+COLOR = ['black', 'orange', 'green']
 
 def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals, duration = None):
 	show_signals(timecol, signals, labels, COLOR, duration)

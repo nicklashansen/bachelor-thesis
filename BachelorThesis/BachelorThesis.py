@@ -2,10 +2,9 @@
 #import sys
 #sys.path.insert(0, './GUI')
 #from BachelorGUI import BachelorGUI
-import h5py
-
-from preprocessing import prepAll
+#from preprocessing import prepAll
 from dataflow import dataflow, fit_eval, process_epochs
+import h5py
 
 """
 WRITTEN BY:
