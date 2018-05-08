@@ -16,7 +16,7 @@ Nicklas Hansen
 Michael Kirkegaard
 """
 
-def dataflow(filename = 'mesa-sleep-0050'):
+def dataflow(filename = 'mesa-sleep-0052'):
 	epoch_length, overlap_factor, sample_rate = 120, 2, 256
 	#X,y = prepSingle(filename, save=False)
 	X,y = fs.load_csv(filename)
@@ -32,7 +32,7 @@ def dataflow(filename = 'mesa-sleep-0050'):
 	ill = region(illegal)
 	ill.append([0, int(full[0].index_start/sample_rate)])
 	X = transpose(X)
-	plot_results(X[0]/sample_rate, [X[1]], ['RR'], region(wake), region(rem), ill, region(yhat), int(full[-1].index_stop/sample_rate))
+	plot_results(X[0]/sample_rate, [X[1], y], ['RR', 'arousal'], region(wake), region(rem), ill, region(yhat), int(full[-1].index_stop/sample_rate))
 
 def epochs_from_prep(X, y, epoch_length=epoch.EPOCH_LENGTH, overlap_factor=epoch.OVERLAP_FACTOR, filter = True, removal = True):
 	X,y,mask = make_features(X, y, removal)
@@ -169,14 +169,14 @@ def fit_eval(gpu = True):
 
 def fit(batch_size = 100):
 	data = dataset(fs.load_epochs())
-	save_epochs(data.epochs)
+	#save_epochs(data.epochs)
 	train,test = data.holdout(data.get_split())
 	model = gru(data, batch_size)
 	model.fit(train)
 	return model, test
 
 class dataset:
-	def __init__(self, epochs, shuffle=True, balance=False):
+	def __init__(self, epochs, shuffle=True, balance=True):
 		self.epochs = epochs
 		self.size = len(epochs)
 		self.timesteps = epochs[0].timesteps
@@ -191,8 +191,9 @@ class dataset:
 
 	def balance(self):
 		for _,obj in enumerate(self.epochs):
-			if sum(obj.y) > 0:
+			if sum(obj.y) == 0:
 				self.epochs.remove(obj)
+		self.size = len(self.epochs)
 
 	def get_split(self):
 		split = 0.9
