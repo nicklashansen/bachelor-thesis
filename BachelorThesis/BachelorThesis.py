@@ -13,8 +13,8 @@ Michael Kirkegaard
 """
 
 if __name__ == '__main__':
-	#dataflow()
+	dataflow()
 	#BachelorGUI()
-	fit_eval(gpu=False)
+	#fit_eval(gpu=False)
 	#process_epochs()
 	#prepAll(force=False)
