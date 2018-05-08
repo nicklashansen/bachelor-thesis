@@ -16,8 +16,33 @@ Nicklas Hansen
 Michael Kirkegaard
 """
 
+epoch_length, overlap_factor, overlap_score, sample_rate = 120, 2, 3, 256
+
+def test():
+	files = fs.load_splits()[1]
+	y, yhat, pad = [], [], [0] * (overlap_score * sample_rate)
+	for file in files:
+		try:
+			a, b = predict_file(file)
+			y.extend(a + pad)
+			yhat.extend(b + pad)
+		except Exception as e:
+			print(e)
+	results = metrics.compute_scores(y, yhat)
+
+def predict_file(filename):
+	X,y = fs.load_csv(filename)
+	epochs = epochs_from_prep(X, y, epoch_length, overlap_factor, filter = False, removal=True)
+	model = gru(dataset(epochs))
+	model.graph = load_model('gru.h5')
+	epochs = model.predict(epochs)
+	full = epochs_from_prep(X, y, epoch_length, overlap_factor, filter = False, removal=False)
+	epochs.sort(key=lambda x: x.index_start, reverse=False)
+	full.sort(key=lambda x: x.index_start, reverse=False)
+	y, yhat, wake, rem, illegal = timeseries(epochs, full, epoch_length, overlap_factor, 1)
+	return y, yhat
+
 def dataflow(filename = 'mesa-sleep-2084'):
-	epoch_length, overlap_factor, sample_rate = 120, 2, 256
 	#X,y = prepSingle(filename, save=False)
 	X,y = fs.load_csv(filename)
 	epochs = epochs_from_prep(X, y, epoch_length, overlap_factor, filter = False, removal=True)
@@ -27,7 +52,6 @@ def dataflow(filename = 'mesa-sleep-2084'):
 	epochs = model.predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
 	full.sort(key=lambda x: x.index_start, reverse=False)
-	results = model.evaluate(epochs)
 	ya, yhat, wake, rem, illegal = timeseries(epochs, full, epoch_length, overlap_factor, sample_rate)
 
 	results = metrics.compute_scores(ya, yhat)['cm_overlap']
@@ -44,8 +68,8 @@ def dataflow(filename = 'mesa-sleep-2084'):
 	X = transpose(X)
 	plot_results(X[0]/sample_rate, [X[1], y], ['RR', 'arousal'], region(wake), region(rem), ill, region(yhat), int(full[-1].index_stop/sample_rate))
 
-def epochs_from_prep(X, y, epoch_length=epoch.EPOCH_LENGTH, overlap_factor=epoch.OVERLAP_FACTOR, filter = True, removal = True):
-	X,y,mask = make_features(X, y, removal)
+def epochs_from_prep(X, y, epoch_length=epoch.EPOCH_LENGTH, overlap_factor=epoch.OVERLAP_FACTOR, sample_rate = sample_rate, filter = True, removal = True):
+	X,y,mask = make_features(X, y, sample_rate, removal)
 	return get_epochs(X, y, mask, epoch_length, overlap_factor, filter)
 
 def timeseries(epochs, full, epoch_length, overlap_factor, sample_rate):
@@ -185,12 +209,12 @@ def fit(batch_size = 100):
 	model.fit(train)
 	return model, test
 
-def eval():
-	model = gru(dataset(epochs))
-	model.graph = load_model('gru.h5')
-	results = model.evaluate(epochs)
-	print(results)
-	return results
+#def eval():
+#	model = gru(dataset(epochs))
+#	model.graph = load_model('gru.h5')
+#	results = model.evaluate(epochs)
+#	print(results)
+#	return results
 
 class dataset:
 	def __init__(self, epochs, shuffle=True, balance=True):

@@ -13,7 +13,7 @@ OVERLAP_FACTOR = 2
 MASK_THRESHOLD = 0.125
 
 def get_epochs(X, y, mask, epoch_length = EPOCH_LENGTH, overlap_factor = OVERLAP_FACTOR, filter = True):
-	return generate_epochs(quantile_norm(X), y, mask, epoch_length, overlap_factor, filter)
+	return generate_epochs(X, y, mask, epoch_length, overlap_factor, filter)
 
 def extract_timecol(X):
 	timecol = transpose(X)[0]

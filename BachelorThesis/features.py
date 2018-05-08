@@ -11,7 +11,7 @@ Micheal Kirkegaard,
 Nicklas Hansen
 """
 
-def make_features(X, y, removal = True):
+def make_features(X, y, sample_rate, removal = True):
 	masklist, mask = make_masks(X)
 	X = cubic_spline(X, masklist)
 	if removal:
