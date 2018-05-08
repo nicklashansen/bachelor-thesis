@@ -28,7 +28,7 @@ def dataflow(filename = 'mesa-sleep-0052'):
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
 	full.sort(key=lambda x: x.index_start, reverse=False)
 	yhat, wake, rem, illegal = timeseries(epochs, full, epoch_length, overlap_factor, sample_rate)
-	print('Evaluated from time index', epochs[0].index_start, 'to', epochs[-1].index_stop)
+	print('Evaluated from', int(epochs[0].index_start/sample_rate), ' s to', int(epochs[-1].index_stop/sample_rate), 's')
 	ill = region(illegal)
 	ill.append([0, int(full[0].index_start/sample_rate)])
 	X = transpose(X)
@@ -164,13 +164,14 @@ def fit_eval(gpu = True):
 	batch_size = 2 ** 10 if gpu else 2 ** 7
 	model, test = fit(batch_size)
 	model.save()
-	score = model.evaluate(test)
-	print(score)
+	#score = model.evaluate(test)
+	#print(score)
 
 def fit(batch_size = 100):
-	data = dataset(fs.load_epochs())
-	#save_epochs(data.epochs)
-	train,test = data.holdout(data.get_split())
+	data = dataset(fs.load_epochs(), balance = True)
+	fs.write_epochs(data.epochs, 'epochs_new')
+	train,test = data.epochs, []
+	#train,test = data.holdout(data.get_split())
 	model = gru(data, batch_size)
 	model.fit(train)
 	return model, test
