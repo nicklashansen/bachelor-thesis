@@ -58,18 +58,18 @@ class gru:
 		return [item[1] for item in items]
 
 	# TODO: fix data pass format
-	def cross_val(self, tuple: tuple, trainX=None, trainY=None, testX=None, testY=None, metric=metrics.TPR_FNR):
-		if (tuple != None):
-			trainX, trainY, testX, testY = tuple[0], tuple[1], tuple[2], tuple[3]
-		timer, score = stopwatch(), []
-		for fold in range(len(trainX)):
-			self.build()
-			X,y,_X,_y = trainX[fold], trainY[fold], testX[fold], testY[fold]
-			self.fit(X, y, 1)
-			score.append(self.evaluate(_X, _y, metric=metric))
-			print(fold+1, '/', len(trainX), 'folds completed...')
-		print('Duration: ', timer.stop(), 's')
-		return score
+	#def cross_val(self, tuple: tuple, trainX=None, trainY=None, testX=None, testY=None, metric=metrics.TPR_FNR):
+	#	if (tuple != None):
+	#		trainX, trainY, testX, testY = tuple[0], tuple[1], tuple[2], tuple[3]
+	#	timer, score = stopwatch(), []
+	#	for fold in range(len(trainX)):
+	#		self.build()
+	#		X,y,_X,_y = trainX[fold], trainY[fold], testX[fold], testY[fold]
+	#		self.fit(X, y, 1)
+	#		score.append(self.evaluate(_X, _y, metric=metric))
+	#		print(fold+1, '/', len(trainX), 'folds completed...')
+	#	print('Duration: ', timer.stop(), 's')
+	#	return score
 
 	def shape_X(self, epoch):
 		return reshape(epoch.X, (1, epoch.X.shape[0], epoch.X.shape[1]))
@@ -84,13 +84,21 @@ class gru:
 			epoch.yhat = squeeze(yhat)
 		return epochs
 
-	def evaluate(self, epochs, metric=metrics.TPR_TNR):
-		TPR=TNR=0
+	def evaluate(self, epochs):
+		results = []
+		self.predict(epochs)
 		for epoch in epochs:
-			yhat = self.graph.predict_classes(self.shape_X(epoch))
-			p, n = metric(epoch.y, yhat)
-			TPR += p
-			TNR += n
-		TPR /= len(epochs)
-		TNR /= len(epochs)
-		return TPR, TNR
+			scores = metrics.compute_scores(epoch.y, epoch.yhat)
+			results.append(scores)
+		return results
+
+	#def evaluate(self, epochs, metric=metrics.TPR_TNR):
+	#	TPR=TNR=0
+	#	for epoch in epochs:
+	#		yhat = self.graph.predict_classes(self.shape_X(epoch))
+	#		p, n = metric(epoch.y, yhat)
+	#		TPR += p
+	#		TNR += n
+	#	TPR /= len(epochs)
+	#	TNR /= len(epochs)
+	#	return TPR, TNR
