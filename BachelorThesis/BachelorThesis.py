@@ -14,6 +14,7 @@ Michael Kirkegaard
 
 if __name__ == '__main__':
 	test()
+	#dataflow()
 	#BachelorGUI()
 	#fit_eval(gpu=False)
 	#process_epochs()
