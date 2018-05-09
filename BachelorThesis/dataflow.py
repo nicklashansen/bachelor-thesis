@@ -21,29 +21,44 @@ epoch_length, overlap_factor, overlap_score, sample_rate = 120, 2, 3, 256
 def test():
 	files = fs.load_splits()[1]
 	TP=FP=TN=FN=0
-	for file in files:
-		try:
-			y, yhat = predict_file(file)
-			tp, fp, tn, fn = metrics.cm_overlap(y, yhat, overlap_score, sample_rate)
-			TP += tp
-			FP += fp
-			TN += tn
-			FN += fn
-		except Exception as e:
-			print(e)
-	results = metrics.compute_score(y, yhat)
+	model = None
+	for file in files[10:16]:
+		y, yhat, timecol, model = predict_file(file, model)
+		print(sum(y), sum(yhat))
+		tp, fp, tn, fn = metrics.cm_overlap(y, yhat, timecol, overlap_score, sample_rate)
+		TP += tp
+		FP += fp
+		TN += tn
+		FN += fn
+	results = metrics.compute_cm_score(TP, FP, TN, FN)['cm_overlap']
+	del results['mcc']
+	del results['specificity']
+	del results['TP_FP_TN_FN']
+	del results['accuracy']
+	print(results)
 
-def predict_file(filename):
+def predict_file(filename, model):
 	X,y = fs.load_csv(filename)
-	epochs = epochs_from_prep(X, y, epoch_length, overlap_factor, filter = False, removal=True)
-	model = gru(dataset(epochs))
-	model.graph = load_model('gru.h5')
+	epochs = epochs_from_prep(X, y, epoch_length, overlap_factor, filter = False, removal=False)
+	if not model:
+		model = gru(dataset(epochs))
+		model.graph = load_model('gru.h5')
 	epochs = model.predict(epochs)
-	full = epochs_from_prep(X, y, epoch_length, overlap_factor, filter = False, removal=False)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
-	full.sort(key=lambda x: x.index_start, reverse=False)
-	y, yhat, wake, rem, illegal = timeseries(epochs, full, epoch_length, overlap_factor, 1)
-	return y, yhat
+	yhat, timecol = reconstruct(X, y, epochs)
+	return y, yhat, timecol, model
+
+def reconstruct(X, y, epochs):
+	timecol = transpose(X)[0]
+	yhat, t = zeros(y.size), zeros(y.size)
+	for _,e in enumerate(epochs):
+		index = where(timecol == e.index_start)[0][0]
+		for i,val in enumerate(e.yhat):
+			yhat[index + i] = val
+			t[index + i] = index
+	return yhat, t
+
+# god fil: 'mesa-sleep-2084'
 
 def dataflow(filename = 'mesa-sleep-2084'):
 	#X,y = prepSingle(filename, save=False)
@@ -56,14 +71,12 @@ def dataflow(filename = 'mesa-sleep-2084'):
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
 	full.sort(key=lambda x: x.index_start, reverse=False)
 	ya, yhat, wake, rem, illegal = timeseries(epochs, full, epoch_length, overlap_factor, sample_rate)
-
-	results = metrics.compute_score(ya, yhat)['cm_overlap']
-	del results['mcc']
-	del results['precision']
-	del results['specificity']
-	del results['TP_FP_TN_FN']
-	del results['accuracy']
-	print(results)
+	#results = metrics.compute_score(ya, yhat)['cm_overlap']
+	#del results['mcc']
+	#del results['specificity']
+	#del results['TP_FP_TN_FN']
+	#del results['accuracy']
+	#print(results)
 
 	print('Evaluated from', int(epochs[0].index_start/sample_rate), ' s to', int(epochs[-1].index_stop/sample_rate), 's')
 	ill = region(illegal)
@@ -84,15 +97,15 @@ def timeseries(epochs, full, epoch_length, overlap_factor, sample_rate):
 		rem = modify_timeseries(rem, sleep, 1, obj.timecol, window, sample_rate)
 		illegal = modify_timeseries(illegal, obj.mask, 1, obj.timecol, window, sample_rate)
 	for i in range(len(wake)):
-		#if yhat[i] == 1 and wake[i] == 1:
-		#	yhat[i] = 0
 		if illegal[i] == 1 and wake[i] == 1:
 			illegal[i] = 0
 	return y, yhat, wake, rem, illegal
 
 def modify_timeseries(ts, values, criteria, timecol, window, sample_rate):
 	for i,y in enumerate(values[window:]):
-		enum = [int(timecol[window+i-3]/sample_rate),int(timecol[window+i]/sample_rate)]
+		enum = [int(timecol[window+i-3]/sample_rate),int(timecol[window+1]/sample_rate)]
+		if enum[0] > enum[1]:
+			enum[0] = 0
 		if y == criteria:
 			for j in range(enum[0],enum[1]):
 				ts[j] = 1
