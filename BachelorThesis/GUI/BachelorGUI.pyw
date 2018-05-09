@@ -17,13 +17,13 @@ Micheal Kirkegaard
 """
 
 class AppUI(Tk):
-	def __init__(self):
+	def __init__(self, w=1280, h=720):
 		Tk.__init__(self)
+		self.geometry("{0}x{1}".format(w,h))
 
 		# Var
 		self.plot_data = None
-		global progbarThread
-		progbarThread = None
+		self.progbarThread = None
 
 		# Slave Widgets 
 		self.main_frame = self.Main_Frame(self, self)
@@ -69,25 +69,14 @@ class AppUI(Tk):
 
 	# New File
 	def New_File(self):
-		global progbarThread
-		if not progbarThread:
-			# Get File
-			try:
-				filepath = filedialog.askopenfilename(title='Choose PSG Recording File', filetypes=[(res.ff_FILETITLE_e,'*'+res.ff_FILETAG_e)])
-				if not filepath or filepath == '':
-					raise()
-				# TODO: sleep stage anno file
-			except Exception as e:
-				return
-
-			def task(filepath, pb, b):
-				global progbarThread
+		if not self.progbarThread:
+			def task(toplevel, filepath_edf, filepath_anno, pb, b):
 				try:
 					# Mockup file
 					size = 1000
 					for _ in range(size):
 						# Soft Close
-						if progbarThread.getName() in ['cancel','close']: # Shutdown Flags
+						if self.progbarThread.getName() in ['cancel','close']: # Shutdown Flags
 							raise()
 						# Do files and stuff
 						time.sleep(1.0/size) 
@@ -96,45 +85,93 @@ class AppUI(Tk):
 
 					self.plot_Data = None
 					self.main_frame.open_plot(self.plot_data)
+					toplevel.destroy()
 				except Exception as e:
-					if progbarThread.getName() != 'close':
+					if self.progbarThread.getName() != 'close':
 						self.Close_File()
 				finally:
 					b.grid_forget()
 					pb.grid_forget()
-					progbarThread = None
+					self.progbarThread = None
 					self.unbind('<Escape>')
 
-			def cancel():
-				global progbarThread
-				if progbarThread and progbarThread.is_alive() and progbarThread.getName() != 'cancel':
-					progbarThread.setName('cancel') # Raise Flag
+			def canceltask():
+				if self.progbarThread and self.progbarThread.is_alive() and self.progbarThread.getName() != 'cancel':
+					self.progbarThread.setName('cancel') # Raise Flag
 
-			# Close Current
-			self.Close_File()
-
-			# Progbar
-			pb = Progressbar(self.main_frame)
-			pb.grid(row=0, column=0)
-			self.bind('<Escape>', lambda e: cancel())
-
-			# Cancel Button
-			b = Button(self.main_frame, text='Cancel')
-			orig_color = b.cget("background")
-			b.bind('<Button-1>', lambda event: cancel())
-			b.bind('<Enter>', lambda e: b.configure(bg = 'SystemButtonHighlight'))
-			b.bind('<Leave>', lambda e: b.configure(bg = orig_color))
-			b.grid(row=0, column=1)
+			def getFilePath(svar, filetitle, filetag, callback, callbackarg):
+				try:
+					filepath = filedialog.askopenfilename(title='Choose '+filetitle+' File', filetypes=[(filetitle,'*'+filetag)])
+					if not filepath or filepath == '':
+						raise()
+					svar.set(filepath)
+				except Exception as e:
+					svar.set("Error Loading File...")
+				finally:
+					callback(callbackarg)
 			
-			# ProgbarThread
-			progbarThread = threading.Thread(target=task, args=(filepath, pb, b))
-			progbarThread.setName('start')
-			progbarThread.start()
+			def starttask(toplevel, filepath_edf, filepath_anno):
+
+				#TODO: CHECK isfile(path)
+
+				self.Close_File()
+
+				# Progbar
+				pb = Progressbar(toplevel)
+				pb.grid(row=3, column=0)
+				self.bind('<Escape>', lambda e: cancel())
+
+				# Cancel Button
+				b = Button(toplevel, text='Cancel')
+				orig_color = b.cget("background")
+				b.bind('<Button-1>', lambda event: canceltask())
+				b.grid(row=3, column=1)
+
+				# Task
+				self.progbarThread = threading.Thread(target=task, args=(toplevel, filepath_edf, filepath_anno, pb, b))
+				self.progbarThread.setName('start')
+				self.progbarThread.start()
+
+			def focus(toplevel):
+				toplevel.lift()
+				toplevel.focus_force()
+				toplevel.grab_set()
+				toplevel.grab_release()
+
+			popup = Toplevel()
+			focus(popup)
+			# EDF file
+			filepath_edf = StringVar(value='Choose File...')
+			entry_edf = Entry(popup, textvariable=filepath_edf, width=80)
+			b_edf = Button(popup, text='Choose File')
+			b_edf.bind('<Button-1>', lambda e: getFilePath(filepath_edf, res.ff_FILETITLE_e, res.ff_FILETAG_e, focus, popup))
+
+			# ANN file
+			filepath_anno = StringVar(value='Choose File...')
+			entry_anno = Entry(popup, textvariable=filepath_anno, width=80)
+			b_anno = Button(popup, text='Choose File')
+			b_anno.bind('<Button-1>', lambda e: getFilePath(filepath_anno, res.ff_FILETITLE_a, res.ff_FILETAG_a, focus, popup))
+
+			# Go button
+			b = Button(popup, text='Go')
+
+			# Grids
+			entry_edf.grid(row=0, column=0)
+			b_edf.grid(row=0, column=1)
+
+			entry_anno.grid(row=1, column=0)
+			b_anno.grid(row=1, column=1)
+
+			b.grid(sticky=W+E)
+			b.bind('<Button-1>', lambda e: starttask(popup, filepath_edf.get(),filepath_anno.get()))
+
+			# Binds
+			popup.bind('<Escape>', lambda e: popup.destroy())
+			popup.bind('<Return>', lambda e: starttask(popup, filepath_edf.get(),filepath_anno.get()))			
 
 	# Open already formatted plots
 	def Open_File(self):
-		global progbarThread
-		if not progbarThread:
+		if not self.progbarThread:
 			try:
 				# TODO: Default dir
 				file = filedialog.askopenfile(title='Choose '+ res.ff_FILETITLE_a +' file', filetypes=[(res.ff_FILETITLE_a,'*'+res._FILETAG_a)])
@@ -154,9 +191,8 @@ class AppUI(Tk):
 
 	# Close/Cancel
 	def Close_File(self):
-		global progbarThread
-		if progbarThread and progbarThread.is_alive() and progbarThread.getName() != 'close':
-			progbarThread.setName('close') # Raise Flag
+		if self.progbarThread and self.progbarThread.is_alive() and self.progbarThread.getName() != 'close':
+			self.progbarThread.setName('close') # Raise Flag
 		self.main_frame.close_plot()
 		self.plot_Data = None
 
@@ -242,11 +278,22 @@ class AppUI(Tk):
 			# main plt
 			def __plot_main(self):
 				subframe = Frame(self)
-				Label(subframe, text='plot_main').grid()
-				# Raw
-				# Raw featues
-				# Final features
-				# arousals
+				Label(subframe, text='plot_main').pack(side=TOP)
+
+				# https://pythonprogramming.net/how-to-embed-matplotlib-graph-tkinter-gui/
+
+				f = Figure(figsize=(10,5), dpi=100)
+				a = f.add_subplot(111)
+				a.plot([1,2,3,4,5,6,7,8],[5,6,1,3,8,9,3,5])
+
+				canvas = FigureCanvasTkAgg(f, subframe)
+				canvas.show()
+				canvas.get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)
+
+				toolbar = NavigationToolbar2TkAgg(canvas, subframe)
+				toolbar.update()
+				canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=True)
+
 				return subframe
 
 		class Prop_Frame(Frame):

@@ -59,8 +59,8 @@ def cm_standard(y, yhat, secOverlap=None, sampleRate=None):
 		FN += int(b & (not a))
 	return TP,FP,TN,FN
 
-def cm_overlap(y, yhat, secOverlap, sampleRate):
-	assert(len(y) == len(yhat))
+def cm_overlap(y, yhat, timecol, secOverlap, sampleRate):
+	assert(len(y) == len(yhat) == len(timecol))
 	n = len(y)
 	
 	class Arousal:
@@ -69,13 +69,20 @@ def cm_overlap(y, yhat, secOverlap, sampleRate):
 			self.start = start
 			self.end = end
 			self.combined = end-start
+			self.min = self.__getVal(start, -1) ; self.min = 0 if self.min < 0 else self.min
+			self.max = self.__getVal(end, 1) ; self.max = n if self.max > n else self.max
 
+		def __getVal(self, init, inc):
+			dist = (secOverlap*sampleRate)
+			i = 0
+			while(0 <= i < n and abs(timecol[init]-timecol[init+i]) <= dist):
+				i += inc
+			return i+(inc*-1)
+			
 		def compareTo(self,other):
-			min = self.start-(secOverlap*sampleRate) ; min = 0 if min < 0 else min
-			max = self.end+(secOverlap*sampleRate) ; max = n if max > n else max
-			if min <= other.start <= max or min <= other.end <= max:
+			if self.min <= other.start <= self.max or self.min <= other.end <= self.max:
 				return 0
-			return 1 if min > other.end else -1
+			return 1 if self.min > other.end else -1
 
 	def transform(y, dontCombine):
 		ax = []
@@ -112,7 +119,7 @@ def cm_overlap(y, yhat, secOverlap, sampleRate):
 			FN += len(y)-i
 			i = len(y)
 		else:
-			co = y[i].compareTo(yhat[j])
+			co = yhat[j].compareTo(y[j])
 			# yy_i and yyhat_i overlaps => TP++, increase i,j
 			if co == 0:
 				yhat[j].combined -= y[i].combined
@@ -129,13 +136,3 @@ def cm_overlap(y, yhat, secOverlap, sampleRate):
 				j += 1
 
 	return TP,FP,TN,FN
-
-'''
-y =    [0,0,0,1,1,1,0,0,1,1,1,0,1,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0]
-yhat = [1,1,1,0,0,0,0,1,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1]
-
-std = 2,7,12,8
-ovl = 3,1,0 ,1
-scores = compute_scores(y,yhat,3,1)
-breakpoint = 0
-'''
