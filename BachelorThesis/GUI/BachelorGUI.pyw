@@ -8,8 +8,17 @@ import threading
 WRITTEN BY
 Micheal Kirkegaard
 """
-
-FILETAG = '.aplot'
+#
+_FILETITLE_a = 'Arousal Plot'
+_FILETAG_a = '.aplot'
+#
+_FILETITLE_e = 'European Data Format'
+_FILETAG_e = '.edf'
+#
+_FILETITLE_s = 'NSRR-formatted Sleep Stage Annotation'
+_FILETAG_s = '.xml'
+#
+_FONT = 'monospace 10'
 
 class AppUI(Tk):
 	def __init__(self):
@@ -77,12 +86,11 @@ class AppUI(Tk):
 							"<Escape> or <Enter> or <Shift-C>:     Close popup windows shortcuts.",
 							]
 
-		fontform = 'monospace 10'
 		def popup(text):
 			toplevel = Toplevel()
 			# Title
 			for s in text[:2]:
-				label = Label(toplevel, text=s, font=fontform)
+				label = Label(toplevel, text=s, font=_FONT)
 				label.grid(sticky=N)
 
 			# labels
@@ -91,11 +99,11 @@ class AppUI(Tk):
 				if isinstance(s, list):
 					subframe = Frame(toplevel)
 					for j,ss in enumerate(s):
-						label = Label(subframe, text=ss, width=gridsize[j] if j < len(gridsize) else None, font=fontform, anchor=W)
+						label = Label(subframe, text=ss, width=gridsize[j] if j < len(gridsize) else None, font=_FONT, anchor=W)
 						label.grid(row=0, column=j)
 					subframe.grid(sticky=N+W)
 				else:
-					label = Label(toplevel, text=s, font=fontform, anchor=W)
+					label = Label(toplevel, text=s, font=_FONT, anchor=W)
 					label.grid(sticky=N+W)
 
 			# Focus grab
@@ -140,7 +148,7 @@ class AppUI(Tk):
 			if not progbarThread:
 				# Get File
 				try:
-					filepath = filedialog.askopenfilename(title='Choose PSG Recording File', filetypes=[('European Data Format','*.edf')])
+					filepath = filedialog.askopenfilename(title='Choose PSG Recording File', filetypes=[(_FILETITLE_e,'*'+_FILETAG_e)])
 					if not filepath or filepath == '':
 						raise()
 				except Exception as e:
@@ -169,6 +177,7 @@ class AppUI(Tk):
 						b.grid_forget()
 						pb.grid_forget()
 						progbarThread = None
+						self.master.unbind('<Escape>')
 
 				def cancel():
 					global progbarThread
@@ -181,6 +190,7 @@ class AppUI(Tk):
 				# Progbar
 				pb = Progressbar(self)
 				pb.grid(row=0, column=0)
+				self.master.bind('<Escape>', lambda e: cancel())
 
 				# Cancel Button
 				b = Button(self, text='Cancel')
@@ -198,13 +208,15 @@ class AppUI(Tk):
 
 		# Open already formatted plots
 		def Open_File(self):
-			try:
-				file = filedialog.askopenfile(title='Choose Arousal Plot file', filetypes=[('Arousal Plot','*.aplot')])
-				self.plot_Data = None # pickle.dump(file)
-				file.close()
-			except Exception as e:
-				return
-			self.__Open_Plot()
+			global progbarThread
+			if not progbarThread:
+				try:
+					file = filedialog.askopenfile(title='Choose Arousal Plot file', filetypes=[(_FILETITLE_a,'*'+_FILETAG_a)])
+					self.plot_Data = None # pickle.dump(file)
+					file.close()
+				except Exception as e:
+					return
+				self.__Open_Plot()
 
 		# Show plotfile
 		def __Open_Plot(self):
@@ -217,7 +229,7 @@ class AppUI(Tk):
 		# Save plotfile
 		def Save_File(self):
 			if self.plot_Data:
-				file = filedialog.asksaveasfile(filetypes=[('Arousal Plot','*.aplot')])
+				file = filedialog.asksaveasfile(filetypes=[(_FILETITLE_a,'*'+_FILETAG_a)])
 				#pickle.dump(file, self.plot_Data)
 				file.close()
 

@@ -1,10 +1,10 @@
 from numpy import *
 from random import random, shuffle
-from sklearn.model_selection import KFold
-from keras.models import load_model
+#from sklearn.model_selection import KFold
+#from keras.models import load_model
 from features import *
 from epoch import *
-from gru import *
+#from gru import *
 from preprocessing import prepSingle
 import random
 import filesystem as fs
@@ -16,8 +16,9 @@ Nicklas Hansen
 Michael Kirkegaard
 """
 
+epoch_length, overlap_factor, sample_rate = 120, 2, 256
+'''
 def dataflow(filename = 'mesa-sleep-0052'):
-	epoch_length, overlap_factor, sample_rate = 120, 2, 256
 	#X,y = prepSingle(filename, save=False)
 	X,y = fs.load_csv(filename)
 	epochs = epochs_from_prep(X, y, epoch_length, overlap_factor, filter = True, removal=True)
@@ -33,9 +34,9 @@ def dataflow(filename = 'mesa-sleep-0052'):
 	ill.append([0, int(full[0].index_start/sample_rate)])
 	X = transpose(X)
 	plot_results(X[0]/sample_rate, [X[1], y], ['RR', 'arousal'], region(wake), region(rem), ill, region(yhat), int(full[-1].index_stop/sample_rate))
-
-def epochs_from_prep(X, y, epoch_length=epoch.EPOCH_LENGTH, overlap_factor=epoch.OVERLAP_FACTOR, filter = True, removal = True):
-	X,y,mask = make_features(X, y, removal)
+'''
+def epochs_from_prep(X, y, epoch_length=epoch.EPOCH_LENGTH, overlap_factor=epoch.OVERLAP_FACTOR, sample_rate=sample_rate, filter = True, removal = True):
+	X,y,mask = make_features(X, y, sample_rate, removal)
 	return get_epochs(X, y, mask, epoch_length, overlap_factor, filter)
 
 def timeseries(epochs, full, epoch_length, overlap_factor, sample_rate):
