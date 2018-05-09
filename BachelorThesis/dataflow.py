@@ -31,7 +31,7 @@ def test():
 			FN += fn
 		except Exception as e:
 			print(e)
-	results = metrics.compute_cm_scores(TP, FP, TN, FN)
+	results = metrics.compute_score(y, yhat)
 
 def predict_file(filename):
 	X,y = fs.load_csv(filename)
@@ -57,7 +57,7 @@ def dataflow(filename = 'mesa-sleep-2084'):
 	full.sort(key=lambda x: x.index_start, reverse=False)
 	ya, yhat, wake, rem, illegal = timeseries(epochs, full, epoch_length, overlap_factor, sample_rate)
 
-	results = metrics.compute_scores(ya, yhat)['cm_overlap']
+	results = metrics.compute_score(ya, yhat)['cm_overlap']
 	del results['mcc']
 	del results['precision']
 	del results['specificity']

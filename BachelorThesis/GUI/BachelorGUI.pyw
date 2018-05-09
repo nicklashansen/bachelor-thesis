@@ -4,235 +4,226 @@ from tkinter.ttk import Progressbar
 import time
 import threading
 
+import matplotlib
+matplotlib.use("TkAgg")
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.figure import Figure
+
+import resources as res
+
 """
 WRITTEN BY
 Micheal Kirkegaard
 """
 
-FILETAG = '.aplot'
-
 class AppUI(Tk):
 	def __init__(self):
 		Tk.__init__(self)
 
+		# Var
+		self.plot_data = None
+		global progbarThread
+		progbarThread = None
+
 		# Slave Widgets 
-		self.main_window = self.Main_Window(self)
+		self.main_frame = self.Main_Frame(self, self)
 
 		# Grid
-		self.main_window.grid(sticky=N+E+S+W)
+		self.main_frame.grid(sticky=N+E+S+W)
 
 		# Menu
 		self.menubar = self.__topmenubar()
 		self.config(menu=self.menubar)
 
 		# Shortcuts
-		self.bind('<Shift-N>', lambda e: self.main_window.New_File())
-		self.bind('<Shift-O>', lambda e: self.main_window.Open_File())
-		self.bind('<Shift-S>', lambda e: self.main_window.Save_File())
-		self.bind('<Shift-C>', lambda e: self.main_window.Close_File())
+		self.bind('<Shift-N>', lambda e: self.New_File())
+		self.bind('<Shift-O>', lambda e: self.Open_File())
+		self.bind('<Shift-S>', lambda e: self.Save_File())
+		self.bind('<Shift-C>', lambda e: self.Close_File())
 		self.bind('<Shift-Escape>', lambda e: self.quit())
 
 		# Init
 		self.mainloop()
-			
+	
 	def __topmenubar(self):
 		menubar = Menu(self)
 
 		# Filemenu
 		filemenu = Menu(menubar, tearoff=0)
-		filemenu.add_command(label="New", command=self.main_window.New_File, accelerator='Shift-N')
-		filemenu.add_command(label="Open", command=self.main_window.Open_File, accelerator='Shift-O')
-		filemenu.add_command(label="Save", command=self.main_window.Save_File, accelerator='Shift-S')
-		filemenu.add_command(label="Close", command=self.main_window.Close_File, accelerator='Shift-Enter')
+		filemenu.add_command(label="New", command=self.New_File, accelerator='Shift-N')
+		filemenu.add_command(label="Open", command=self.Open_File, accelerator='Shift-O')
+		filemenu.add_command(label="Save", command=self.Save_File, accelerator='Shift-S')
+		filemenu.add_command(label="Close", command=self.Close_File, accelerator='Shift-Enter')
 		filemenu.add_separator()
 		filemenu.add_command(label="Exit", command=self.quit, accelerator='Shift-Escape')
 		menubar.add_cascade(label="File", menu=filemenu)
 
 		# Helpmenu
-		ABOUT_TEXT = [	"About",
-						"-"*50,
-						"Copyright (C) Michael Kirkegaard, Nicklas Hansen."
-						]
-
-		FORMAT_TEXT = [	"File Formats",
-						"-"*50,
-						"- PSG files must be in European Data Format (*.edf file extension) and must contain PPG and ECG signals.",
-						"- Arousal Plots are saved with *.aplot file extension and must be created through this software."
-						]
-		
-		COMMANDS_TEXT =	[	"Application Commands",
-							"-"*50,
-							"-"*20,
-							"File Menu",
-							"-"*20,
-							["- New",	"<Shift-N>:",		"Make new arousal plot from a PSG file. Will start analysis automatically"],
-							["- Open",	"<Shift-O>:",		"Open an arousal plot file (i.e. an already analysed PSG file)."],
-							["- Save",	"<Shift-S>:",		"Save an arousal plot file."],
-							["- Close",	"<Shift-C>:",		"Close currently opened arousal plot file."],
-							["- Exit",	"<Shift-Escape>:",	"Close application."],
-							"",
-							"-"*20,
-							"Help Menu",
-							"-"*20,
-							"<Escape> or <Enter> or <Shift-C>:     Close popup windows shortcuts.",
-							]
-
-		fontform = 'monospace 10'
-		def popup(text):
-			toplevel = Toplevel()
-			# Title
-			for s in text[:2]:
-				label = Label(toplevel, text=s, font=fontform)
-				label.grid(sticky=N)
-
-			# labels
-			gridsize = [max([len(t) for t in tub]) for tub in zip(*[s for s in text if isinstance(s, list)])][:-1]
-			for i,s in enumerate(text[2:]):
-				if isinstance(s, list):
-					subframe = Frame(toplevel)
-					for j,ss in enumerate(s):
-						label = Label(subframe, text=ss, width=gridsize[j] if j < len(gridsize) else None, font=fontform, anchor=W)
-						label.grid(row=0, column=j)
-					subframe.grid(sticky=N+W)
-				else:
-					label = Label(toplevel, text=s, font=fontform, anchor=W)
-					label.grid(sticky=N+W)
-
-			# Focus grab
-			toplevel.bind('<Escape>', lambda e: toplevel.destroy())
-			toplevel.bind('<Return>', lambda e: toplevel.destroy())
-			toplevel.bind('<Shift-C>', lambda e: toplevel.destroy())
-			toplevel.lift()
-			toplevel.focus_force()
-			toplevel.grab_set()
-			toplevel.grab_release()
-
 		helpmenu = Menu(menubar, tearoff=0)
-		helpmenu.add_command(label="About", command=lambda: popup(ABOUT_TEXT))
-		helpmenu.add_command(label="File Formats", command=lambda: popup(FORMAT_TEXT))
-		helpmenu.add_command(label="Commands", command=lambda: popup(COMMANDS_TEXT))
+		helpmenu.add_command(label="About", command=lambda: self.popup(res.hm_ABOUT_TEXT))
+		helpmenu.add_command(label="File Formats", command=lambda: self.popup(res.hm_FORMAT_TEXT))
+		helpmenu.add_command(label="Commands", command=lambda: self.popup(res.hm_COMMANDS_TEXT))
 		menubar.add_cascade(label="Help", menu=helpmenu)
 
 		return menubar
 
-	class Main_Window(Frame):
-		def __init__(self, master=None):
-			Frame.__init__(self, master) # Super.__init__()
+	# New File
+	def New_File(self):
+		global progbarThread
+		if not progbarThread:
+			# Get File
+			try:
+				filepath = filedialog.askopenfilename(title='Choose PSG Recording File', filetypes=[(res.ff_FILETITLE_e,'*'+res.ff_FILETAG_e)])
+				if not filepath or filepath == '':
+					raise()
+				# TODO: sleep stage anno file
+			except Exception as e:
+				return
 
-			self.plot_Data = None
+			def task(filepath, pb, b):
+				global progbarThread
+				try:
+					# Mockup file
+					size = 1000
+					for _ in range(size):
+						# Soft Close
+						if progbarThread.getName() in ['cancel','close']: # Shutdown Flags
+							raise()
+						# Do files and stuff
+						time.sleep(1.0/size) 
+						# step out of 100%
+						pb.step(100/size)
 
-			# Slaves
-			self.plot_window = self.Plot_Window(self)
-			self.prop_window = self.Prop_Window(self)
+					self.plot_Data = None
+					self.main_frame.open_plot(self.plot_data)
+				except Exception as e:
+					if progbarThread.getName() != 'close':
+						self.Close_File()
+				finally:
+					b.grid_forget()
+					pb.grid_forget()
+					progbarThread = None
+					self.unbind('<Escape>')
 
-			# Grid
-			self.plot_window.grid(row=0, column=0)
-			self.prop_window.grid(row=1, column=0)
+			def cancel():
+				global progbarThread
+				if progbarThread and progbarThread.is_alive() and progbarThread.getName() != 'cancel':
+					progbarThread.setName('cancel') # Raise Flag
 
-			# Default 
+			# Close Current
 			self.Close_File()
 
-		# New EDF File
+			# Progbar
+			pb = Progressbar(self.main_frame)
+			pb.grid(row=0, column=0)
+			self.bind('<Escape>', lambda e: cancel())
+
+			# Cancel Button
+			b = Button(self.main_frame, text='Cancel')
+			orig_color = b.cget("background")
+			b.bind('<Button-1>', lambda event: cancel())
+			b.bind('<Enter>', lambda e: b.configure(bg = 'SystemButtonHighlight'))
+			b.bind('<Leave>', lambda e: b.configure(bg = orig_color))
+			b.grid(row=0, column=1)
+			
+			# ProgbarThread
+			progbarThread = threading.Thread(target=task, args=(filepath, pb, b))
+			progbarThread.setName('start')
+			progbarThread.start()
+
+	# Open already formatted plots
+	def Open_File(self):
 		global progbarThread
-		progbarThread = None
-		def New_File(self):
-			global progbarThread
-			if not progbarThread:
-				# Get File
-				try:
-					filepath = filedialog.askopenfilename(title='Choose PSG Recording File', filetypes=[('European Data Format','*.edf')])
-					if not filepath or filepath == '':
-						raise()
-				except Exception as e:
-					return
-
-				def task(filepath, pb, b):
-					global progbarThread
-					try:
-						# Mockup file
-						size = 1000
-						for _ in range(size):
-							# Soft Close
-							if progbarThread.getName() in ['cancel','close']: # Shutdown Flags
-								raise()
-							# Do files and stuff
-							time.sleep(1.0/size) 
-							# step out of 100%
-							pb.step(100/size)
-
-						self.plot_Data = None
-						self.__Open_Plot()
-					except Exception as e:
-						if progbarThread.getName() != 'close':
-							self.Close_File()
-					finally:
-						b.grid_forget()
-						pb.grid_forget()
-						progbarThread = None
-
-				def cancel():
-					global progbarThread
-					if progbarThread and progbarThread.is_alive() and progbarThread.getName() != 'cancel':
-						progbarThread.setName('cancel') # Raise Flag
-
-				# Close Current
-				self.Close_File()
-
-				# Progbar
-				pb = Progressbar(self)
-				pb.grid(row=0, column=0)
-
-				# Cancel Button
-				b = Button(self, text='Cancel')
-				orig_color = b.cget("background")
-				b.bind('<Button-1>', lambda event: cancel())
-				b.bind('<Enter>', lambda e: b.configure(bg = 'SystemButtonHighlight'))
-				b.bind('<Leave>', lambda e: b.configure(bg = orig_color))
-				b.grid(row=0, column=1)
-			
-				# ProgbarThread
-				progbarThread = threading.Thread(target=task, args=(filepath, pb, b))
-				progbarThread.setName('start')
-				progbarThread.start()
-			
-
-		# Open already formatted plots
-		def Open_File(self):
+		if not progbarThread:
 			try:
-				file = filedialog.askopenfile(title='Choose Arousal Plot file', filetypes=[('Arousal Plot','*.aplot')])
-				self.plot_Data = None # pickle.dump(file)
+				# TODO: Default dir
+				file = filedialog.askopenfile(title='Choose '+ res.ff_FILETITLE_a +' file', filetypes=[(res.ff_FILETITLE_a,'*'+res._FILETAG_a)])
+				self.plot_Data = None # TODO: pickle.dump(file)
 				file.close()
 			except Exception as e:
 				return
-			self.__Open_Plot()
+			self.main_frame.open_plot(self.plot_data)
+	
+	# Save plotfile
+	def Save_File(self):
+		if self.plot_Data:
+			# TODO: Default dir
+			file = filedialog.asksaveasfile(filetypes=[(res.ff_FILETITLE_a,'*'+res.ff_FILETAG_a)])
+			# TODO: pickle.dump(file, self.plot_Data)
+			file.close()
+
+	# Close/Cancel
+	def Close_File(self):
+		global progbarThread
+		if progbarThread and progbarThread.is_alive() and progbarThread.getName() != 'close':
+			progbarThread.setName('close') # Raise Flag
+		self.main_frame.close_plot()
+		self.plot_Data = None
+
+	def popup(self, text):
+		toplevel = Toplevel()
+		# Title
+		for s in text[:2]:
+			label = Label(toplevel, text=s, font=res.FONT)
+			label.grid(sticky=N)
+
+		# Labels
+		gridsize = [max([len(t) for t in tub]) for tub in zip(*[s for s in text if isinstance(s, list)])][:-1]
+		for i,s in enumerate(text[2:]):
+			if isinstance(s, list):
+				subframe = Frame(toplevel)
+				for j,ss in enumerate(s):
+					label = Label(subframe, text=ss, width=gridsize[j] if j < len(gridsize) else None, font=res.FONT, anchor=W)
+					label.grid(row=0, column=j)
+				subframe.grid(sticky=N+W)
+			else:
+				label = Label(toplevel, text=s, font=res.FONT, anchor=W)
+				label.grid(sticky=N+W)
+
+		# Focus grab
+		toplevel.bind('<Escape>', lambda e: toplevel.destroy())
+		toplevel.bind('<Return>', lambda e: toplevel.destroy())
+		toplevel.bind('<Shift-C>', lambda e: toplevel.destroy())
+		toplevel.lift()
+		toplevel.focus_force()
+		toplevel.grab_set()
+		toplevel.grab_release()
+
+	class Main_Frame(Frame):
+		def __init__(self, master, controller):
+			Frame.__init__(self, master) # Super.__init__()
+			self.controller = controller
+			self.plot_data = None
+
+			# Slaves
+			self.plot_frame = self.Plot_Frame(self, controller)
+			self.prop_frame = self.Prop_Frame(self, controller)
+
+			# Grid
+			self.plot_frame.grid(row=0, column=0)
+			self.prop_frame.grid(row=1, column=0)
+
+			# Default 
+			self.close_plot()
 
 		# Show plotfile
-		def __Open_Plot(self):
-			#if self.plot_Data:
-				self.plot_window.grid()
-				self.prop_window.grid()
+		def open_plot(self, plot_data=None):
+			#if plot_data:
+				self.plot_data = plot_data
+				self.plot_frame.grid()
+				self.prop_frame.grid()
 				# TODO: Plots n' stuff
 				# TODO: Properties n' stuff
-	
-		# Save plotfile
-		def Save_File(self):
-			if self.plot_Data:
-				file = filedialog.asksaveasfile(filetypes=[('Arousal Plot','*.aplot')])
-				#pickle.dump(file, self.plot_Data)
-				file.close()
 
-		# Close/Cancel
-		def Close_File(self):
-			global progbarThread
-			if progbarThread and progbarThread.is_alive() and progbarThread.getName() != 'close':
-				progbarThread.setName('close') # Raise Flag
-			self.plot_window.grid_remove()
-			self.prop_window.grid_remove()
-			self.plot_Data = None
+		# Close plotfile
+		def close_plot(self):
+			self.plot_frame.grid_forget()
+			self.prop_frame.grid_forget()
 
-		class Plot_Window(Frame):
-			def __init__(self, master=None):
+		class Plot_Frame(Frame):
+			def __init__(self, master, controller):
 				Frame.__init__(self, master) # Super.__init__()
+				self.controller = controller
 
 				# Widget Packing
 				self.__plot_menubar().grid(row=0, column=0)
@@ -258,9 +249,10 @@ class AppUI(Tk):
 				# arousals
 				return subframe
 
-		class Prop_Window(Frame):
-			def __init__(self, master = None):
+		class Prop_Frame(Frame):
+			def __init__(self, master, controller):
 				Frame.__init__(self, master) # Super.__init__()
+				self.controller = controller
 
 				# Widget slave packing
 				self.__plot_properties().grid()

@@ -88,7 +88,7 @@ class gru:
 		results = []
 		self.predict(epochs)
 		for epoch in epochs:
-			scores = metrics.compute_scores(epoch.y, epoch.yhat)
+			scores = metrics.compute_score(epoch.y, epoch.yhat)
 			results.append(scores)
 		return results
 

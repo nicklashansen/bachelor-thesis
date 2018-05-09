@@ -6,11 +6,20 @@ Nicklas Hansen,
 Michael Kirkegaard
 """
 
-def compute_scores(y, yhat, secOverlap=3.0, sampleRate=256):
+def compute_score(y, yhat, secOverlap=3.0, sampleRate=256):
 	scores = {}
 	for cm in [cm_standard, cm_overlap]:
 		d = scores[cm.__name__] = {}
 		TP,FP,TN,FN = cm(y, yhat, secOverlap, sampleRate)
+		d['TP_FP_TN_FN'] = TP,FP,TN,FN
+		for metric in [accuracy, sensitivity, specificity, precision, f1_score, mcc]:
+			d[metric.__name__] = metric(TP,FP,TN,FN)
+	return scores
+
+def compute_cm_score(TP, FP, TN, FN):
+	scores = {}
+	for cm in [cm_standard, cm_overlap]:
+		d = scores[cm.__name__] = {}
 		d['TP_FP_TN_FN'] = TP,FP,TN,FN
 		for metric in [accuracy, sensitivity, specificity, precision, f1_score, mcc]:
 			d[metric.__name__] = metric(TP,FP,TN,FN)
