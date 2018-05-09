@@ -70,14 +70,13 @@ def dataflow(filename = 'mesa-sleep-2084'):
 	epochs = model.predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
 	full.sort(key=lambda x: x.index_start, reverse=False)
-	ya, yhat, wake, rem, illegal = timeseries(epochs, None, epoch_length, overlap_factor, sample_rate)
-	results = metrics.compute_score(ya, yhat)['cm_overlap']
-	del results['mcc']
-	del results['precision']
-	del results['specificity']
-	del results['TP_FP_TN_FN']
-	del results['accuracy']
-	print(results)
+	ya, yhat, wake, rem, illegal = timeseries(epochs, full, epoch_length, overlap_factor, sample_rate)
+	#results = metrics.compute_score(ya, yhat)['cm_overlap']
+	#del results['mcc']
+	#del results['specificity']
+	#del results['TP_FP_TN_FN']
+	#del results['accuracy']
+	#print(results)
 
 	print('Evaluated from', int(epochs[0].index_start/sample_rate), ' s to', int(epochs[-1].index_stop/sample_rate), 's')
 	ill = region(illegal)
@@ -91,16 +90,11 @@ def epochs_from_prep(X, y, epoch_length=epoch.EPOCH_LENGTH, overlap_factor=epoch
 
 def timeseries(epochs, full, epoch_length, overlap_factor, sample_rate):
 	window = int(epoch_length - ( epoch_length / overlap_factor))
-	if not full:
-		length = int(epochs[-1].index_stop/sample_rate)
-	else:
-		length = int(full[-1].index_stop/sample_rate)
+	length = int(full[-1].index_stop/sample_rate)
 	y, yhat, wake, rem, illegal = zeros(length), zeros(length), zeros(length), zeros(length), zeros(length)
 	for i,obj in enumerate(epochs):
-		#y = modify_timeseries(y, obj.y, 1, obj.timecol, window, sample_rate)
+		y = modify_timeseries(y, obj.y, 1, obj.timecol, window, sample_rate)
 		yhat = modify_timeseries(yhat, obj.yhat, 1, obj.timecol, window, sample_rate)
-	if not full:
-		return y, yhat, None, None, None
 	for i,obj in enumerate(full):
 		sleep = transpose(obj.X)[-1]
 		wake = modify_timeseries(wake, sleep, -1, obj.timecol, window, sample_rate)
@@ -113,7 +107,9 @@ def timeseries(epochs, full, epoch_length, overlap_factor, sample_rate):
 
 def modify_timeseries(ts, values, criteria, timecol, window, sample_rate):
 	for i,y in enumerate(values[window:]):
-		enum = [int(timecol[window+i-1]/sample_rate),int(timecol[window+1]/sample_rate)]
+		enum = [int(timecol[window+i-3]/sample_rate),int(timecol[window+1]/sample_rate)]
+		if enum[0] > enum[1]:
+			enum[0] = 0
 		if y == criteria:
 			for j in range(enum[0],enum[1]):
 				ts[j] = 1
