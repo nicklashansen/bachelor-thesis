@@ -20,15 +20,18 @@ epoch_length, overlap_factor, overlap_score, sample_rate = 120, 2, 3, 256
 
 def test():
 	files = fs.load_splits()[1]
-	y, yhat, pad = [], [], [0] * (overlap_score * sample_rate)
+	TP=FP=TN=FN=0
 	for file in files:
 		try:
-			a, b = predict_file(file)
-			y.extend(a + pad)
-			yhat.extend(b + pad)
+			y, yhat = predict_file(file)
+			tp, fp, tn, fn = metrics.cm_overlap(y, yhat, overlap_score, sample_rate)
+			TP += tp
+			FP += fp
+			TN += tn
+			FN += fn
 		except Exception as e:
 			print(e)
-	results = metrics.compute_scores(y, yhat)
+	results = metrics.compute_cm_scores(TP, FP, TN, FN)
 
 def predict_file(filename):
 	X,y = fs.load_csv(filename)
@@ -201,8 +204,8 @@ def fit_eval(gpu = True):
 	#results = eval(model, test)
 
 def fit(batch_size = 100):
-	data = dataset(fs.load_epochs(), balance = True)
-	fs.write_epochs(data.epochs, 'epochs_new')
+	data = dataset(fs.load_epochs(), balance = False)
+	#fs.write_epochs(data.epochs, 'epochs_new')
 	train,test = data.epochs, []
 	#train,test = data.holdout(data.get_split())
 	model = gru(data, batch_size)
@@ -217,15 +220,17 @@ def fit(batch_size = 100):
 #	return results
 
 class dataset:
-	def __init__(self, epochs, shuffle=True, balance=True):
+	def __init__(self, epochs, shuffle=True, adjust_sleep=True, balance=False):
 		self.epochs = epochs
 		self.size = len(epochs)
 		self.timesteps = epochs[0].timesteps
 		self.features = epochs[0].features
-		if shuffle:
-			self.shuffle()
 		if balance:
 			self.balance()
+		if shuffle:
+			self.shuffle()
+		if adjust_sleep:
+			self.adjust_sleep()
 
 	def shuffle(self, seed = 22):
 		random.Random(seed).shuffle(self.epochs)
@@ -235,6 +240,12 @@ class dataset:
 			if sum(obj.y) == 0:
 				self.epochs.remove(obj)
 		self.size = len(self.epochs)
+
+	def adjust_sleep(self):
+		index = self.features - 1
+		for j,e in enumerate(self.epochs):
+			for i,val in enumerate(transpose(e.X)[index]):
+				self.epochs[j].X[i, index] = val + 1
 
 	def get_split(self):
 		split = 0.9
