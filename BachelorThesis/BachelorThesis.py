@@ -13,7 +13,7 @@ Michael Kirkegaard
 """
 
 if __name__ == '__main__':
-	fit_validate(gpu=True)
+	fit_validate(gpu=True, balance = True)
 	#dataflow()
 	#BachelorGUI()
 	#process_epochs()

@@ -5,7 +5,7 @@ from features import *
 from epoch import *
 from gru import *
 from timeseries import *
-from preprocessing import prepSingle
+from preprocessing import prep_X
 from dataset import *
 from log import *
 import filesystem as fs
@@ -23,18 +23,19 @@ def fit_validate(gpu = True, balance = False, only_arousal = False):
 	model = fit(batch_size, balance, only_arousal)
 	model.save()
 	files = fs.load_splits()[1]
-	results = validate(model, files[:2], balance, only_arousal)
+	results = validate(model, files, balance, only_arousal)
 	log_results(results)
 
-def log_results(results):
-	log = getLog('Validation', echo=True)
+def log_results(results, validation = True):
+	filename = 'Validation' if validation else 'Evaluation'
+	log = getLog(filename, echo=True)
 	for k,d in results.items():
 		log.print(str(k))
 		for key,val in d.items():
 			log.print(str(key)+':'+str(val))
 
 def fit(batch_size, balance, only_arousal):
-	data = dataset(fs.load_epochs()[:2], balance=balance, only_arousal=only_arousal)
+	data = dataset(fs.load_epochs(), balance=balance, only_arousal=only_arousal)
 	model = gru(data, batch_size)
 	model.fit(data.epochs)
 	return model
@@ -71,25 +72,18 @@ def reconstruct(X, y, epochs):
 			t[index + i] = index
 	return yhat, t
 
-# god fil: 'mesa-sleep-2084'
-def dataflow(filename = 'mesa-sleep-2084'):
-	#X,y = prepSingle(filename, save=False)
-	X,y = fs.load_csv(filename)
-	epochs = epochs_from_prep(X, y, epoch_length, overlap_factor, filter = False, removal=True)
-	full = epochs_from_prep(X, y, epoch_length, overlap_factor, filter = False, removal=False)
+def dataflow(edf = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\edfs\\mesa-sleep-2084.edf', anno = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\annotations-events-nsrr\\mesa-sleep-2084-nsrr.xml'):
+	X = prep_X(edf, anno)
+	#X,_ = fs.load_csv('mesa-sleep-2084')
+	epochs = epochs_from_prep(X, None, epoch_length, overlap_factor, filter = False, removal=True)
+	full = epochs_from_prep(X, None, epoch_length, overlap_factor, filter = False, removal=False)
 	model = gru(dataset(epochs))
 	model.graph = load_model('gru.h5')
 	epochs = model.predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
 	full.sort(key=lambda x: x.index_start, reverse=False)
-	ya, yhat, wake, rem, illegal = timeseries(epochs, full, epoch_length, overlap_factor, sample_rate)
-
-	print('Evaluated from', int(epochs[0].index_start/sample_rate), 's to', int(epochs[-1].index_stop/sample_rate), 's')
+	_, yhat, wake, rem, illegal = timeseries(epochs, full, epoch_length, overlap_factor, sample_rate)
 	ill = region(illegal)
 	ill.append([0, int(full[0].index_start/sample_rate)])
 	X = transpose(X)
-	plot_results(X[0]/sample_rate, [X[1], y], ['RR', 'arousal'], region(wake), region(rem), ill, region(yhat), int(full[-1].index_stop/sample_rate))
-
-def epochs_from_prep(X, y, epoch_length=epoch_length, overlap_factor=overlap_factor, sample_rate = sample_rate, filter = True, removal = True):
-	X,y,mask = make_features(X, y, sample_rate, removal)
-	return get_epochs(X, y, mask, epoch_length, overlap_factor, filter)
+	plot_results(X[0]/sample_rate, [X[1]], ['RR'], region(wake), region(rem), ill, region(yhat), int(full[-1].index_stop/sample_rate))
