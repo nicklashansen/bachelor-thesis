@@ -3,12 +3,11 @@ from tkinter import filedialog
 from tkinter.ttk import Progressbar
 import time
 import threading
-
+from dataflow import dataflow
 import matplotlib
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.figure import Figure
-
 import resources as res
 
 """
@@ -70,11 +69,17 @@ class AppUI(Tk):
 	# New File
 	def New_File(self):
 		if not self.progbarThread:
-			def task(toplevel, filepath_edf, filepath_anno, pb, b):
+			def task(toplevel, edf, anno, pb, b):
 				dest = False
 				try:
+					w=1280
+					h=720
+					dpi = 100
+					figure = Figure(figsize=(w/dpi, h/dpi), dpi=dpi)
+					figure.add_subplot(111)
+					figure = dataflow(edf, anno, figure)
 					# Mockup file
-					size = 1000
+					'''size = 1000
 					for _ in range(size):
 						# Soft Close
 						if self.progbarThread.getName() in ['cancel','close']: # Shutdown Flags
@@ -82,9 +87,9 @@ class AppUI(Tk):
 						# Do files and stuff
 						time.sleep(1.0/size) 
 						# step out of 100%
-						pb.step(100/size)
+						pb.step(100/size)'''
 
-					self.plot_Data = None
+					self.plot_Data = figure
 					self.main_frame.open_plot(self.plot_data)
 					dest = True
 				except Exception as e:
@@ -275,7 +280,7 @@ class AppUI(Tk):
 				subframe = Frame(self)
 				b_0 = Button(subframe, text='Raw ECG')
 				b_1 = Button(subframe, text='')
-				b_2 = Button(subframe, Text='')
+				b_2 = Button(subframe, text='')
 				
 				b_0.bind('<Button-1>', None) # Filter plot
 				return subframe

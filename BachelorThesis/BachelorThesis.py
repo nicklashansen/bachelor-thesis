@@ -3,7 +3,7 @@
 #sys.path.insert(0, './GUI')
 #from BachelorGUI import BachelorGUI
 #from preprocessing import prepAll
-from dataflow import dataflow, fit_validate
+from dataflow import dataflow, fit_validate, evaluate
 import h5py
 
 """
@@ -13,7 +13,8 @@ Michael Kirkegaard
 """
 
 if __name__ == '__main__':
-	fit_validate(gpu=True, balance = True)
+	#fit_validate(gpu=True, balance = True)
+	evaluate()
 	#dataflow()
 	#BachelorGUI()
 	#process_epochs()

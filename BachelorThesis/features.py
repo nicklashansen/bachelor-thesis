@@ -144,7 +144,7 @@ def sleep_removal(X, y, mask, sample_rate):
 	_X = transpose(X)
 	keep = [i for i,state in enumerate(_X[5]) if state >= 0]
 	X = array([X[i] for i in keep])
-	if y:
+	if y is not None:
 		y = array([y[i] for i in keep])
 	return X,y, mask
 
