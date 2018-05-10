@@ -7,6 +7,7 @@ from gru import *
 from timeseries import *
 from preprocessing import prepSingle
 from dataset import *
+from log import *
 import filesystem as fs
 import epoch
 
@@ -22,11 +23,16 @@ def fit_validate(gpu = True, balance = False, only_arousal = False):
 	model = fit(batch_size, balance, only_arousal)
 	model.save()
 	files = fs.load_splits()[1]
-	results = validate(model, files, balance, only_arousal)
-	print(results)
+	results = validate(model, files[:2], balance, only_arousal).items()
+	log_results(results)
+
+def log_results(results):
+	log = getLog('Validation', echo=True)
+	log.print(*results[0].items())
+	log.print(*results[1].items())
 
 def fit(batch_size, balance, only_arousal):
-	data = dataset(fs.load_epochs(), balance=balance, only_arousal=only_arousal)
+	data = dataset(fs.load_epochs()[:2], balance=balance, only_arousal=only_arousal)
 	model = gru(data, batch_size)
 	model.fit(data.epochs)
 	return model
