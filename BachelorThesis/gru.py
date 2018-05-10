@@ -35,8 +35,6 @@ class gru:
 	def get_callbacks(self):
 		early_stop = EarlyStopping(monitor='loss', patience=3, mode='auto', verbose=1)
 		history = History()
-		#checkpoint = ModelCheckpoint(fs.Filepaths.Model + '', monitor='val_loss', verbose=0, save_best_only=False, save_weights_only=False, mode='auto', period=1)
-		#tensorboard = TensorBoard(log_dir=fs.Filepaths.Logs + 'TensorBoard', histogram_freq=0, batch_size=self.batch_size, write_graph=True, write_grads=False, write_images=False, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
 		return [early_stop, history]
 
 	def shape_epochs(self, epochs):
@@ -56,20 +54,6 @@ class gru:
 	def return_loss(self, history):
 		items = history.history.items()
 		return [item[1] for item in items]
-
-	# TODO: fix data pass format
-	#def cross_val(self, tuple: tuple, trainX=None, trainY=None, testX=None, testY=None, metric=metrics.TPR_FNR):
-	#	if (tuple != None):
-	#		trainX, trainY, testX, testY = tuple[0], tuple[1], tuple[2], tuple[3]
-	#	timer, score = stopwatch(), []
-	#	for fold in range(len(trainX)):
-	#		self.build()
-	#		X,y,_X,_y = trainX[fold], trainY[fold], testX[fold], testY[fold]
-	#		self.fit(X, y, 1)
-	#		score.append(self.evaluate(_X, _y, metric=metric))
-	#		print(fold+1, '/', len(trainX), 'folds completed...')
-	#	print('Duration: ', timer.stop(), 's')
-	#	return score
 
 	def shape_X(self, epoch):
 		return reshape(epoch.X, (1, epoch.X.shape[0], epoch.X.shape[1]))
