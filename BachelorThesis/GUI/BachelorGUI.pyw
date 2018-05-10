@@ -374,10 +374,10 @@ class AppUI(Tk):
 				self.controller = controller
 
 				# Widget slave packing
-				w = 10
-				for k,v in self.controller.propertyDict.items():
-					self.__plot_property(str(k), str(v), w, res.FONT).grid(sticky=N)
-
+				w = 9
+				for i in range(10):
+					self.__plot_property('key'+str(i),'val'+str(i), w, res.FONT).grid(sticky=N)
+	
 			# Properties
 			def __plot_property(self, key, val, w, f):
 				subframe = Frame(self)
