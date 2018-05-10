@@ -366,7 +366,7 @@ class AppUI(Tk):
 				self.controller = controller
 
 				# Widget slave packing
-				w = 9.5
+				w = 9
 				for i in range(10):
 					self.__plot_property('key'+str(i),'val'+str(i), w, res.FONT).grid(sticky=N)
 	
