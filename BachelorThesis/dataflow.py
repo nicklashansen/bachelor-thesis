@@ -78,7 +78,7 @@ def reconstruct(X, y, epochs):
 			t[index + i] = index
 	return yhat, t
 
-def dataflow(edf = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\edfs\\mesa-sleep-2084.edf', anno = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\annotations-events-nsrr\\mesa-sleep-2084-nsrr.xml', figure = None):
+def dataflow(edf = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\edfs\\mesa-sleep-2084.edf', anno = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\annotations-events-nsrr\\mesa-sleep-2084-nsrr.xml'):
 	X = prep_X(edf, anno)
 	#X,_ = fs.load_csv('mesa-sleep-2084')
 	epochs = epochs_from_prep(X, None, epoch_length, overlap_factor, filter = False, removal=True)
@@ -92,4 +92,5 @@ def dataflow(edf = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622cc
 	ill = region(illegal)
 	ill.append([0, int(full[0].index_start/sample_rate)])
 	X = transpose(X)
-	return plot_results(X[0]/sample_rate, [X[1]], ['RR'], region(wake), region(rem), ill, region(yhat), int(full[-1].index_stop/sample_rate), figure)
+	return X[0]/sample_rate, [X[1]], ['RR'], region(wake), region(rem), ill, region(yhat), int(full[-1].index_stop/sample_rate)
+	#return plot_results(X[0]/sample_rate, [X[1]], ['RR'], region(wake), region(rem), ill, region(yhat), int(full[-1].index_stop/sample_rate))

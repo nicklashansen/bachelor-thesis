@@ -10,25 +10,17 @@ Michael Kirkegaard
 
 COLOR = ['black', 'orange', 'green']
 
-def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals, duration = None, figure = None):
+def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals, duration = None):
 	show_signals(timecol, signals, labels, COLOR, duration, figure)
 	show_spans(wake_states, '0.5', figure)
 	show_spans(rem, 'purple', figure)
 	show_spans(illegals, 'red', figure)
 	show_spans(arousals, 'green', 0.9, figure)
-
-	if figure:
-		figure.xlim(0, duration/60)
-		figure.ylim(-1,3)
-		figure.xlabel('Minutes')
-		figure.legend()
-		return figure
-	else:
-		plt.xlim(0, duration/60)
-		plt.ylim(-1,3)
-		plt.xlabel('Minutes')
-		plt.legend()
-		plt.show()
+	plt.xlim(0, duration/60)
+	plt.ylim(-1,3)
+	plt.xlabel('Minutes')
+	plt.legend()
+	plt.show()
 
 def show_signals(timecol, array, labels = None, colors = COLOR, duration = None, figure = None):
 	if array is None:
@@ -44,6 +36,7 @@ def show_signals(timecol, array, labels = None, colors = COLOR, duration = None,
 			figure.plot(x, signal, colors[i], label=labels[i])
 		else:
 			plt.plot(x, signal, colors[i], label=labels[i])
+	return figure
 
 def show_spans(array, color, alpha = 0.3, figure = None):
 	if array is None:
@@ -53,6 +46,7 @@ def show_spans(array, color, alpha = 0.3, figure = None):
 			figure.axvspan(obj[0]/60, obj[1]/60, color=color, alpha=alpha)
 		else:
 			plt.axvspan(obj[0]/60, obj[1]/60, color=color, alpha=alpha)
+	return figure
 
 def plot_data(signals, peaksIndexs=None, labels=None, normalization=False):
 	def normalize(X, scaler=MinMaxScaler()):
