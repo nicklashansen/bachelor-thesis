@@ -23,13 +23,15 @@ def fit_validate(gpu = True, balance = False, only_arousal = False):
 	model = fit(batch_size, balance, only_arousal)
 	model.save()
 	files = fs.load_splits()[1]
-	results = validate(model, files[:2], balance, only_arousal).items()
+	results = validate(model, files[:2], balance, only_arousal)
 	log_results(results)
 
 def log_results(results):
 	log = getLog('Validation', echo=True)
-	log.print(*results[0].items())
-	log.print(*results[1].items())
+	for k,d in results.items():
+		log.print(str(k))
+		for key,val in d.items():
+			log.print(str(key)+':'+str(val))
 
 def fit(batch_size, balance, only_arousal):
 	data = dataset(fs.load_epochs()[:2], balance=balance, only_arousal=only_arousal)
