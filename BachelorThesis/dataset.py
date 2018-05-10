@@ -3,23 +3,41 @@ from random import random, shuffle
 from sklearn.model_selection import KFold
 import random
 
+SEED = 22
+
 class dataset:
-	def __init__(self, epochs, shuffle=True, adjust_sleep=True, balance=False):
+	def __init__(self, epochs, shuffle=True, adjust_sleep=False, balance=False, only_arousal=False):
 		self.epochs = epochs
 		self.size = len(epochs)
 		self.timesteps = epochs[0].timesteps
 		self.features = epochs[0].features
-		if balance:
+		if only_arousal:
+			self.only_arousal
+		elif balance:
 			self.balance()
 		if shuffle:
 			self.shuffle()
 		if adjust_sleep:
 			self.adjust_sleep()
 
-	def shuffle(self, seed = 22):
+	def shuffle(self, seed = SEED):
 		random.Random(seed).shuffle(self.epochs)
 
+	def shuffle_list(self, list, seed = SEED):
+		random.Random(seed).shuffle(list)
+		return list
+
 	def balance(self):
+		list = []
+		for _,obj in enumerate(self.epochs):
+			if sum(obj.y) == 0:
+				self.epochs.remove(obj)
+				list.append(obj)
+		list = shuffle_list(list)[:len(self.epochs)]
+		self.epochs.append(list)
+		self.size = len(self.epochs)
+
+	def only_arousal(self):
 		for _,obj in enumerate(self.epochs):
 			if sum(obj.y) == 0:
 				self.epochs.remove(obj)
