@@ -10,6 +10,7 @@ Nicklas Hansen
 
 EPOCH_LENGTH = 120
 OVERLAP_FACTOR = 2
+SAMPLE_RATE = 256
 MASK_THRESHOLD = 0.125
 
 def get_epochs(X, y, mask, epoch_length = EPOCH_LENGTH, overlap_factor = OVERLAP_FACTOR, filter = True):

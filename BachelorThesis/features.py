@@ -4,12 +4,97 @@ from scipy.interpolate import CubicSpline
 from log import getLog
 from stopwatch import stopwatch
 from plots import plot_data
+import epoch
 
 """
 WRITTEN BY
 Micheal Kirkegaard,
 Nicklas Hansen
 """
+
+def process_epochs():
+	files = fs.getAllSubjectFilenames(preprocessed=True)
+	files = reliableFiles(files)
+	train, _, _ = train_test_eval_split(files) # = train,test,eval
+	epochs = compile_epochs(train)
+
+def reliableFiles(files):
+	log = getLog('Discard', echo=False)
+	datasetCsv = fs.getDataset_csv()
+
+	def isReliable(filename):
+		mesaid = int(filename[-4:])
+		filter = ['ai_all5','overall5','slewake5',]
+		# ai_all5  = arousal index
+		# overall5 = overall study quality 
+		# slewake5 = poor quailty EEG (sleep stage)
+		df = datasetCsv[datasetCsv['mesaid'] == mesaid][filter].iloc[0]
+		criteria = [
+			df[0] > 10.0,	# low ai index
+			df[1] > 3.0,	# low overall quality
+			df[2] == 0.0	# poor EEG (sleep stage scoring)
+			]	
+		return criteria
+
+	reliable = [isReliable(fn) for fn in files]
+	reliableFiles = [files[i] for i,r in enumerate(reliable) if all(r)]
+	
+	# Log Status
+	arr = array(reliable)
+	a = list(arr[:,0]).count(False)
+	b = list(arr[:,1]).count(False)
+	c = list(arr[:,2]).count(False)
+
+	log.print('Preprocessed files:        {0}'.format(len(files)))
+	log.print('Reliable files:            {0}'.format(len(reliableFiles)))
+	log.print('Removed by ai_all5 > 10.0: {0}'.format(a))
+	log.print('Removed by overall5 > 3.0: {0}'.format(b))
+	log.print('Removed by slewake5 = 1.0: {0}'.format(c))
+	log.printHL()
+	for fn in [f for f in files if f not in reliableFiles]:
+		log.print(fn)
+
+	return reliableFiles
+
+def train_test_eval_split(files, testsize=0.05, evalsize=0.05):
+	shuffle(files)
+	te = int(len(files)*(1.0-testsize))
+	tt = int(len(files)*(1.0-testsize-evalsize))
+	train,test,eval =  files[:tt], files[tt:te], files[te:]
+	fs.write_splits(train,test,eval)
+	return train,test,eval
+
+def compile_epochs(files, save = True):
+	log = getLog('Epochs', True)
+
+	log.print('Total files: {0}'.format(len(files)))
+	log.printHL()
+
+	p = int(len(files)/15)
+	epochs = []
+	for i, filename in enumerate(files):
+		try:
+			X,y = fs.load_csv(filename)
+			eps = epochs_from_prep(X, y)
+			epochs.extend(eps)
+			log.print('{0} created {1} epochs'.format(filename, len(eps)))
+			if save and i > 0 and i % p == 0: # Backup saves
+				save_epochs(epochs)
+				log.printHL()
+				log.print('Backup save of {0} epochs'.format(len(epochs)))
+				log.printHL()
+		except Exception as e:
+			log.print('{0} Exception: {1}'.format(filename, str(e)))
+	if save:
+		save_epochs(epochs)
+		log.printHL()
+		log.print('Final save of {0} epochs'.format(len(epochs)))
+		log.printHL()
+	return epochs
+
+def epochs_from_prep(X, y, epoch_length=epoch.EPOCH_LENGTH, overlap_factor=epoch.OVERLAP_FACTOR, sample_rate = epoch.SAMPLE_RATE, filter = True, removal = True):
+	X,y,mask = make_features(X, y, sample_rate, removal)
+	return get_epochs(X, y, mask, epoch_length, overlap_factor, filter)
 
 def make_features(X, y, sample_rate, removal = True):
 	masklist, mask = make_masks(X)
