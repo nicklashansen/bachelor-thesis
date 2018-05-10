@@ -25,6 +25,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="BachelorThesis.py" />
+    <Compile Include="dataset.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="epoch.py">
       <SubType>Code</SubType>
     </Compile>
@@ -72,6 +75,9 @@
     </Compile>
     <Compile Include="Mads\DataExtraction.py" />
     <Compile Include="Mads\subject.py" />
+    <Compile Include="timeseries.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Mads\" />

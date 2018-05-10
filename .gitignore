@@ -248,3 +248,6 @@ ModelManifest.xml
 .fake/
 /BachelorThesis/__pycache__
 /Matlab
+/BachelorThesis/GUI/__pycache__
+/Logs/TensorBoard
+/Files/Epochs

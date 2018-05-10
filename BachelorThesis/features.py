@@ -5,6 +5,7 @@ from log import getLog
 from stopwatch import stopwatch
 from plots import plot_data
 import epoch
+import filesystem as fs
 
 """
 WRITTEN BY
@@ -13,9 +14,10 @@ Nicklas Hansen
 """
 
 def process_epochs():
-	files = fs.getAllSubjectFilenames(preprocessed=True)
-	files = reliableFiles(files)
-	train, _, _ = train_test_eval_split(files) # = train,test,eval
+	#files = fs.getAllSubjectFilenames(preprocessed=True)
+	#files = reliableFiles(files)
+	train = fs.load_splits()[0]
+	#train, _, _ = train_test_eval_split(files) # = train,test,eval
 	epochs = compile_epochs(train)
 
 def reliableFiles(files):
@@ -79,14 +81,14 @@ def compile_epochs(files, save = True):
 			epochs.extend(eps)
 			log.print('{0} created {1} epochs'.format(filename, len(eps)))
 			if save and i > 0 and i % p == 0: # Backup saves
-				save_epochs(epochs)
+				epoch.save_epochs(epochs)
 				log.printHL()
 				log.print('Backup save of {0} epochs'.format(len(epochs)))
 				log.printHL()
 		except Exception as e:
 			log.print('{0} Exception: {1}'.format(filename, str(e)))
 	if save:
-		save_epochs(epochs)
+		epoch.save_epochs(epochs)
 		log.printHL()
 		log.print('Final save of {0} epochs'.format(len(epochs)))
 		log.printHL()
@@ -94,7 +96,7 @@ def compile_epochs(files, save = True):
 
 def epochs_from_prep(X, y, epoch_length=epoch.EPOCH_LENGTH, overlap_factor=epoch.OVERLAP_FACTOR, sample_rate = epoch.SAMPLE_RATE, filter = True, removal = True):
 	X,y,mask = make_features(X, y, sample_rate, removal)
-	return get_epochs(X, y, mask, epoch_length, overlap_factor, filter)
+	return epoch.get_epochs(X, y, mask, epoch_length, overlap_factor, filter)
 
 def make_features(X, y, sample_rate, removal = True):
 	masklist, mask = make_masks(X)
@@ -139,36 +141,43 @@ def cubic_spline(X, masks, plot=False):
 	return X
 
 def sleep_removal(X, y, mask, sample_rate):
-	Xt = transpose(X)
-	indexes = Xt[0]
-	sleep = Xt[5]
-	n = len(sleep)
-
-	keep = []
-	i = 0
-	while(i < n):
-		k = None
-		j = i+1
-		if sleep[i] >= 0:
-			while(j < n and sleep[j] >= 0):
-				j += 1
-		else:
-			while(j < n and sleep[j] == -1 and indexes[j]-indexes[i] < 30*sample_rate):
-				j += 1
-			if j < n and sleep[j] == -1:
-				cuti = j
-				cutj = i
-				while(j < n and sleep[j] == -1):
-					j += 1
-					cutj += 1 
-				if(cutj - cuti > 0):
-					k = list(range(i,cuti)) + list(range(cutj,j))
-		if not k:
-			k = list(range(i,j))
-		keep += k
-		i = j
-
+	_X = transpose(X)
+	keep = [i for i,state in enumerate(_X[5]) if state >= 0]
 	X = array([X[i] for i in keep])
 	y = array([y[i] for i in keep])
-	mask = [mask[i] for i in keep]
-	return X,y,mask
+	return X,y, mask
+
+#def sleep_removal(X, y, mask, sample_rate):
+#	Xt = transpose(X)
+#	indexes = Xt[0]
+#	sleep = Xt[5]
+#	n = len(sleep)
+
+#	keep = []
+#	i = 0
+#	while(i < n):
+#		k = None
+#		j = i+1
+#		if sleep[i] >= 0:
+#			while(j < n and sleep[j] >= 0):
+#				j += 1
+#		else:
+#			while(j < n and sleep[j] == -1 and indexes[j]-indexes[i] < 30*sample_rate):
+#				j += 1
+#			if j < n and sleep[j] == -1:
+#				cuti = j
+#				cutj = i
+#				while(j < n and sleep[j] == -1):
+#					j += 1
+#					cutj += 1 
+#				if(cutj - cuti > 0):
+#					k = list(range(i,cuti)) + list(range(cutj,j))
+#		if not k:
+#			k = list(range(i,j))
+#		keep += k
+#		i = j
+
+#	X = array([X[i] for i in keep])
+#	y = array([y[i] for i in keep])
+#	mask = [mask[i] for i in keep]
+#	return X,y,mask
