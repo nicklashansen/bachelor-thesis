@@ -9,7 +9,7 @@ import filesystem as fs
 
 """
 WRITTEN BY
-Micheal Kirkegaard,
+Michael Kirkegaard,
 Nicklas Hansen
 """
 
