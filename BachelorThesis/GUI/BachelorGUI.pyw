@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter import filedialog
-from tkinter.ttk import Progressbar
+from tkinter.ttk import Progressbar, Separator
 import time
 import threading
 
@@ -20,10 +20,14 @@ class AppUI(Tk):
 	def __init__(self, w=1280, h=720):
 		Tk.__init__(self)
 		self.geometry("{0}x{1}".format(w,h))
+		self.resizable(False, False)
 
 		# Var
 		self.plot_data = None
+		self.btn_plot_states = []
+
 		self.progbarThread = None
+
 
 		# Slave Widgets 
 		self.main_frame = self.Main_Frame(self, self, w, h)
@@ -78,18 +82,18 @@ class AppUI(Tk):
 					for _ in range(size):
 						# Soft Close
 						if self.progbarThread.getName() in ['cancel','close']: # Shutdown Flags
-							raise()
+							raise
 						# Do files and stuff
 						time.sleep(1.0/size) 
 						# step out of 100%
 						pb.step(100/size)
 
+					self.Close_File()
 					self.plot_Data = None
 					self.main_frame.open_plot(self.plot_data)
 					dest = True
 				except Exception as e:
-					if self.progbarThread.getName() != 'close':
-						self.Close_File()
+					pass
 				finally:
 					b.grid_forget()
 					pb.grid_forget()
@@ -98,101 +102,111 @@ class AppUI(Tk):
 					if dest:
 						toplevel.destroy()
 
-			def canceltask(b_go):
+			def canceltask(toplevel,b_go):
 				if self.progbarThread and self.progbarThread.is_alive() and self.progbarThread.getName() != 'cancel':
 					self.progbarThread.setName('cancel') # Raise Flag
 					b_go.grid()
+					toplevel.bind('<Escape>', lambda e: toplevel.destroy())
+			
+			def starttask(toplevel, b_go, filepath_edf, filepath_anno):
+				if not self.progbarThread:
+					#TODO: CHECK path and filetype
 
-			def getFilePath(svar, filetitle, filetag, callback, callbackarg):
+					b_go.grid_remove()
+					toplevel.unbind('<Escpae>')
+					toplevel.bind('<Escape>', lambda e: canceltask(toplevel, b_go))
+
+					# Progbar
+					pb = Progressbar(toplevel)
+					pb.grid(row=3, column=0)
+					pb.columnconfigure(0, weight=2)
+
+					# Cancel Button
+					b = Button(toplevel, text='Cancel')
+					orig_color = b.cget("background")
+					b.bind('<Button-1>', lambda event: canceltask(toplevel, b_go))
+					b.grid(row=3, column=2, sticky=NSEW)
+
+					# Task
+					self.progbarThread = threading.Thread(target=task, args=(toplevel, filepath_edf, filepath_anno, pb, b))
+					self.progbarThread.setName('start')
+					self.progbarThread.start()
+			
+			def getFilePath(svar, filetitle, filetag, callback):
 				try:
 					filepath = filedialog.askopenfilename(title='Choose '+filetitle+' File', filetypes=[(filetitle,'*'+filetag)])
 					if not filepath or filepath == '':
 						raise()
 					svar.set(filepath)
 				except Exception as e:
+					# TODO: ErrorMsg
 					svar.set("Error Loading File...")
 				finally:
-					callback(callbackarg)
-			
-			def starttask(toplevel, b_go, filepath_edf, filepath_anno):
-				if not self.progbarThread:
-					#TODO: CHECK isfile(path)
-
-					self.Close_File()
-					b_go.grid_forget()
-
-					# Progbar
-					pb = Progressbar(toplevel)
-					pb.grid(row=3, column=0)
-					self.bind('<Escape>', lambda e: canceltask(b_go))
-
-					# Cancel Button
-					b = Button(toplevel, text='Cancel')
-					orig_color = b.cget("background")
-					b.bind('<Button-1>', lambda event: canceltask(b_go))
-					b.grid(row=3, column=1)
-
-					# Task
-					self.progbarThread = threading.Thread(target=task, args=(toplevel, filepath_edf, filepath_anno, pb, b))
-					self.progbarThread.setName('start')
-					self.progbarThread.start()
+					callback()
 
 			def focus(toplevel):
 				toplevel.lift()
 				toplevel.focus_force()
 				toplevel.grab_set()
-				toplevel.grab_release()
+				#toplevel.grab_release()
 
 			file_toplevel = Toplevel()
 			focus(file_toplevel)
 			# EDF file
 			filepath_edf = StringVar(value='Choose File...')
+			label_edf = Label(file_toplevel, text=res.ff_FILETITLE_e+':', anchor=E)
 			entry_edf = Entry(file_toplevel, textvariable=filepath_edf, width=80)
-			b_edf = Button(file_toplevel, text='Choose File')
-			b_edf.bind('<Button-1>', lambda e: getFilePath(filepath_edf, res.ff_FILETITLE_e, res.ff_FILETAG_e, focus, file_toplevel))
+			b_edf = Button(file_toplevel, text='Choose File', command=lambda: getFilePath(filepath_edf, res.ff_FILETITLE_e, res.ff_FILETAG_e, lambda: focus(file_toplevel)))
 
 			# ANN file
 			filepath_anno = StringVar(value='Choose File...')
+			label_anno = Label(file_toplevel, text=res.ff_FILETITLE_s+':', anchor=E)
 			entry_anno = Entry(file_toplevel, textvariable=filepath_anno, width=80)
-			b_anno = Button(file_toplevel, text='Choose File')
-			b_anno.bind('<Button-1>', lambda e: getFilePath(filepath_anno, res.ff_FILETITLE_a, res.ff_FILETAG_a, focus, file_toplevel))
+			b_anno = Button(file_toplevel, text='Choose File', command=lambda: getFilePath(filepath_anno, res.ff_FILETITLE_s, res.ff_FILETAG_s, lambda: focus(file_toplevel)))
 
 			# Go button
 			b_go = Button(file_toplevel, text='Go')
+			b_go.bind('<Button-1>', lambda e: starttask(file_toplevel, b_go, filepath_edf.get(), filepath_anno.get()))	
 
 			# Grids
-			entry_edf.grid(row=0, column=0)
-			b_edf.grid(row=0, column=1)
+			label_edf.grid(row=0, column=0, sticky=E)
+			entry_edf.grid(row=0, column=1)
+			b_edf.grid(row=0, column=2)
+			
+			label_anno.grid(row=1, column=0, sticky=E)
+			entry_anno.grid(row=1, column=1)
+			b_anno.grid(row=1, column=2)
 
-			entry_anno.grid(row=1, column=0)
-			b_anno.grid(row=1, column=1)
-
-			b_go.grid(sticky=W+E)
-			b_go.bind('<Button-1>', lambda e: starttask(file_toplevel, b_go, filepath_edf.get(),filepath_anno.get()))
+			b_go.grid(row=2, column=2, sticky=NSEW)
 
 			# Binds
-			file_toplevel.bind('<Escape>', lambda e: file_toplevel.destroy())
-			file_toplevel.bind('<Return>', lambda e: starttask(file_toplevel, b_go, filepath_edf.get(),filepath_anno.get()))			
+			file_toplevel.bind('<Return>', lambda e: starttask(file_toplevel, b_go, filepath_edf.get(), filepath_anno.get()))
+			file_toplevel.bind('<Escape>', lambda e: file_toplevel.destroy())			
 
 	# Open already formatted plots
 	def Open_File(self):
 		if not self.progbarThread:
 			try:
 				# TODO: Default dir
-				file = filedialog.askopenfile(title='Choose '+ res.ff_FILETITLE_a +' file', filetypes=[(res.ff_FILETITLE_a,'*'+res._FILETAG_a)])
+				file = filedialog.askopenfile(title='Choose '+ res.ff_FILETITLE_a +' file', filetypes=[(res.ff_FILETITLE_a,'*'+res.ff_FILETAG_a)])
 				self.plot_Data = None # TODO: pickle.dump(file)
 				file.close()
+				self.main_frame.open_plot(self.plot_data)
 			except Exception as e:
+				# TODO: ErrorMsg
 				return
-			self.main_frame.open_plot(self.plot_data)
 	
 	# Save plotfile
 	def Save_File(self):
 		if self.plot_Data:
-			# TODO: Default dir
-			file = filedialog.asksaveasfile(filetypes=[(res.ff_FILETITLE_a,'*'+res.ff_FILETAG_a)])
-			# TODO: pickle.dump(file, self.plot_Data)
-			file.close()
+			try:
+				# TODO: Default dir
+				file = filedialog.asksaveasfile(filetypes=[(res.ff_FILETITLE_a,'*'+res.ff_FILETAG_a)])
+				# TODO: pickle.dump(file, self.plot_Data)
+				file.close()
+			except Exception as e:
+				# TODO: ErrorMsg
+				return 
 
 	# Close/Cancel
 	def Close_File(self):
@@ -228,13 +242,21 @@ class AppUI(Tk):
 		toplevel.lift()
 		toplevel.focus_force()
 		toplevel.grab_set()
-		toplevel.grab_release()
+
+	def plot_btn_state_swap(self, btn, id):
+		# button state swap
+		if (btn['text'][-2:] == 'ON'):
+			btn['text'] = btn['text'][:-2]+'OFF'
+		else:
+			btn['text'] = btn['text'][:-3]+'ON'
+
+		self.btn_plot_states[id] = not self.btn_plot_states[id] 
+		# TODO: # Re-render Plot
 
 	class Main_Frame(Frame):
 		def __init__(self, master, controller, w=None, h=None):
-			Frame.__init__(self, master, width=w, height=h) # Super.__init__()
+			Frame.__init__(self, master) # Super.__init__()
 			self.controller = controller
-			self.plot_data = None
 
 			# Slaves
 			self.plot_frame = self.Plot_Frame(self, controller)
@@ -242,7 +264,7 @@ class AppUI(Tk):
 
 			# Grid
 			self.plot_frame.grid(row=0, column=0)
-			self.prop_frame.grid(row=1, column=0)
+			self.prop_frame.grid(row=0, column=1, sticky=N)
 
 			# Default 
 			self.close_plot()
@@ -250,7 +272,6 @@ class AppUI(Tk):
 		# Show plotfile
 		def open_plot(self, plot_data=None):
 			#if plot_data:
-				self.plot_data = plot_data
 				self.plot_frame.grid()
 				self.prop_frame.grid()
 				# TODO: Plots n' stuff
@@ -258,26 +279,57 @@ class AppUI(Tk):
 
 		# Close plotfile
 		def close_plot(self):
-			self.plot_frame.grid_forget()
-			self.prop_frame.grid_forget()
+			self.plot_frame.grid_remove()
+			self.prop_frame.grid_remove()
 
 		class Plot_Frame(Frame):
 			def __init__(self, master, controller):
-				Frame.__init__(self, master) # Super.__init__()
+				Frame.__init__(self, master,bg='white') # Super.__init__()
 				self.controller = controller
 
 				# Widget Packing
-				self.__plot_menubar().grid(row=0, column=0)
+				self.__plot_menubar().grid(row=0, column=0, sticky=NW)
 				self.__plot_main().grid(row=1, column=0)
 
 			# plot menus
 			def __plot_menubar(self):
 				subframe = Frame(self)
-				b_0 = Button(subframe, text='Raw ECG')
-				b_1 = Button(subframe, text='')
-				b_2 = Button(subframe, Text='')
-				
-				b_0.bind('<Button-1>', None) # Filter plot
+
+				w = 25
+
+				# Buttons
+				b_0 = Button(subframe, width=w, text='Raw ECG : ON')
+				self.controller.btn_plot_states += [True]
+				b_0['command'] = lambda: self.controller.plot_btn_state_swap(b_0, 0)
+
+				b_1 = Button(subframe, width=w, text='Raw PPG : OFF')
+				self.controller.btn_plot_states += [False]
+				b_1['command'] = lambda:self.controller.plot_btn_state_swap(b_1, 1)
+
+				b_2 = Button(subframe, width=w, text='Arousals : ON')
+				self.controller.btn_plot_states += [True]
+				b_2['command'] = lambda: self.controller.plot_btn_state_swap(b_2, 2)
+
+				b_3 = Button(subframe, width=w, text='Wake State Regions: ON')
+				self.controller.btn_plot_states += [True]
+				b_3['command'] = lambda: self.controller.plot_btn_state_swap(b_3, 3)
+
+				b_4 = Button(subframe, width=w, text='REM state Regions: ON')
+				self.controller.btn_plot_states += [True]
+				b_4['command'] = lambda: self.controller.plot_btn_state_swap(b_4, 4)
+
+				b_5 = Button(subframe, width=w, text='nREM state Regions: ON')
+				self.controller.btn_plot_states += [True]
+				b_5['command'] = lambda: self.controller.plot_btn_state_swap(b_5, 5)
+
+				# Grid
+				b_0.grid(row=0, column=0, sticky=W)
+				b_1.grid(row=0, column=1, sticky=W)
+				b_2.grid(row=0, column=2, sticky=W)
+				b_3.grid(row=0, column=3, sticky=W)
+				b_4.grid(row=0, column=4, sticky=W)
+				b_5.grid(row=0, column=5, sticky=W)
+
 				return subframe
 
 			# main plt
@@ -286,7 +338,7 @@ class AppUI(Tk):
 
 				# https://pythonprogramming.net/how-to-embed-matplotlib-graph-tkinter-gui/
 
-				w=1280
+				w=1280-180
 				h=720
 				dpi = 100
 				f = Figure(figsize=(w/dpi, h/dpi), dpi=dpi)
@@ -309,16 +361,19 @@ class AppUI(Tk):
 				self.controller = controller
 
 				# Widget slave packing
-				self.__plot_properties().grid()
+				w = 9.5
+				for i in range(10):
+					self.__plot_property('key'+str(i),'val'+str(i), w, res.FONT).grid(sticky=N)
 	
 			# Properties
-			def __plot_properties(self):
+			def __plot_property(self, key, val, w, f):
 				subframe = Frame(self)
-				Label(subframe, text='plot_properties').pack()
-				# Raw
-				# Raw featues
-				# Final features
-				# arousals
+				Label(subframe, text=key, font=f, width=w).grid(row=0, column=0)
+				Separator(subframe, orient=VERTICAL).grid(row=0, column=1, rowspan=3, sticky=NS)
+				Label(subframe, text=val, font=f, width=w).grid(row=0, column=2)
+				Separator(subframe, orient=HORIZONTAL).grid(row=1, column=0, rowspan=3, sticky=EW)
+				Separator(subframe, orient=HORIZONTAL).grid(row=1, column=1, rowspan=3, sticky=EW)
+				Separator(subframe, orient=HORIZONTAL).grid(row=1, column=2, rowspan=3, sticky=EW)
 				return subframe
 
 if __name__ == '__main__':

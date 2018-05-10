@@ -130,11 +130,13 @@ def cubic_spline(X, masks, plot=False):
 	def spline(maskid, data):
 		mask = masks[maskid]
 		datamask = [data[i] for i,m in enumerate(mask) if m == 0]
-		cs = CubicSpline(range(len(datamask)),datamask)
-		datacs = cs(range(len(mask)))
-		if plot:
-			plot_data([data, datacs], labels=['Signal','Spline Correction'])
-		return array(datacs)
+		if(len(datamask) >= 0):
+			cs = CubicSpline(range(len(datamask)),datamask)
+			datacs = cs(range(len(mask)))
+			if plot:
+				plot_data([data, datacs], labels=['Signal','Spline Correction'])
+			return array(datacs)
+		return data
 
 	Xt = array([Xt[0]] + [spline(id,x) for id,x in enumerate(Xt[1:5])] + [Xt[5]]) # Spline DR,RPA,PTT,PWA
 	X = transpose(Xt)
