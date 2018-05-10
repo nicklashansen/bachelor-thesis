@@ -3,7 +3,7 @@ from tkinter import filedialog
 from tkinter.ttk import Progressbar, Separator
 import time
 import threading
-from dataflow import dataflow
+#from dataflow import dataflow
 import matplotlib
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
@@ -15,21 +15,29 @@ WRITTEN BY
 Micheal Kirkegaard
 """
 
+TEST_PROP = {0:0, 1:1, 2:2, 3:3, 4:4}
+
 class AppUI(Tk):
 	def __init__(self, w=1280, h=720):
 		Tk.__init__(self)
+		# Setup
 		self.geometry("{0}x{1}".format(w,h))
 		self.resizable(False, False)
+		self.width = w
+		self.height = h
 
-		# Var
-		self.plot_data = None
+		# Plot Vars
+		self.plot_data = 0
 		self.btn_plot_states = []
 
+		# Prop vars
+		self.propertyDict = dict()
+
+		# New File Thread
 		self.progbarThread = None
 
-
 		# Slave Widgets 
-		self.main_frame = self.Main_Frame(self, self, w, h)
+		self.main_frame = self.Main_Frame(self, self)
 
 		# Grid
 		self.main_frame.grid(sticky=N+E+S+W)
@@ -76,12 +84,12 @@ class AppUI(Tk):
 			def task(toplevel, edf, anno, pb, b):
 				dest = False
 				try:
-					w=1280
-					h=720
+					w = self.width
+					h = self.height
 					dpi = 100
-					figure = Figure(figsize=(w/dpi, h/dpi), dpi=dpi)
-					figure.add_subplot(111)
-					figure = dataflow(edf, anno, figure)
+					#figure = Figure(figsize=(w/dpi, h/dpi), dpi=dpi)
+					#figure.add_subplot(111)
+					#figure = dataflow(edf, anno, figure)
 					# Mockup file
 					'''size = 1000
 					for _ in range(size):
@@ -95,7 +103,7 @@ class AppUI(Tk):
 
 					self.Close_File()
 					self.plot_Data = None
-					self.main_frame.open_plot(self.plot_data)
+					self.main_frame.open_plot()
 					dest = True
 				except Exception as e:
 					pass
@@ -196,7 +204,7 @@ class AppUI(Tk):
 				file = filedialog.askopenfile(title='Choose '+ res.ff_FILETITLE_a +' file', filetypes=[(res.ff_FILETITLE_a,'*'+res.ff_FILETAG_a)])
 				self.plot_Data = None # TODO: pickle.dump(file)
 				file.close()
-				self.main_frame.open_plot(self.plot_data)
+				self.main_frame.open_plot()
 			except Exception as e:
 				# TODO: ErrorMsg
 				return
@@ -259,7 +267,7 @@ class AppUI(Tk):
 		# TODO: # Re-render Plot
 
 	class Main_Frame(Frame):
-		def __init__(self, master, controller, w=None, h=None):
+		def __init__(self, master, controller):
 			Frame.__init__(self, master) # Super.__init__()
 			self.controller = controller
 
@@ -275,8 +283,8 @@ class AppUI(Tk):
 			self.close_plot()
 
 		# Show plotfile
-		def open_plot(self, plot_data=None):
-			#if plot_data:
+		def open_plot(self):
+			#if self.controller.plot_data:
 				self.plot_frame.grid()
 				self.prop_frame.grid()
 				# TODO: Plots n' stuff
@@ -362,14 +370,14 @@ class AppUI(Tk):
 
 		class Prop_Frame(Frame):
 			def __init__(self, master, controller):
-				Frame.__init__(self, master) # Super.__init__()
+				Frame.__init__(self, master, bg='white') # Super.__init__()
 				self.controller = controller
 
 				# Widget slave packing
-				w = 9.5
-				for i in range(10):
-					self.__plot_property('key'+str(i),'val'+str(i), w, res.FONT).grid(sticky=N)
-	
+				w = 10
+				for k,v in self.controller.propertyDict.items():
+					self.__plot_property(str(k), str(v), w, res.FONT).grid(sticky=N)
+
 			# Properties
 			def __plot_property(self, key, val, w, f):
 				subframe = Frame(self)

@@ -28,6 +28,7 @@ hm_ABOUT_TEXT = [	"About",
 hm_FORMAT_TEXT = [	"File Formats",
 					"-"*50,
 					"- PSG files must be in European Data Format (*.edf file extension) and must contain PPG and ECG signals.",
+					"- Sleep stage annotation files must be formatted as per nsrr standards, and containted in an *.xml file.",
 					"- Arousal Plots are saved with *.aplot file extension and must be created through this software."
 					]
 		
