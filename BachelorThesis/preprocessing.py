@@ -12,6 +12,10 @@ Nicklas Hansen,
 Michael Kirkegaard
 """
 
+def prep_X(edf, anno):
+	sub = fs.Subject(None, edf, anno)
+	return preprocess(sub, arousals=False)
+
 def prepSingle(filename, save = True):
 	sub = fs.Subject(filename)
 	X, y = preprocess(sub)
@@ -51,11 +55,10 @@ def prepAll(force=False):
 			clock.round()
 	clock.stop()
 
-def preprocess(subject):
+def preprocess(subject, arousals = True):
 	sig_ECG = subject.ECG_signal
 	sig_PPG = subject.PPG_signal
 	anno_SleepStage = subject.SleepStage_anno
-	anno_Arousal = subject.Arousal_anno
 	
 	# Get Index
 	index, amp = QRS(subject)
@@ -64,7 +67,6 @@ def preprocess(subject):
 	x_DR, x_RPA = ECG(sig_ECG, index), array(amp).astype(float)
 	x_PTT, x_PWA = PPG(sig_PPG, index)
 	x_SS = SleepStageBin(anno_SleepStage, subject.frequency, index)
-	y_AA = ArousalBin(anno_Arousal, subject.frequency, index)
 
 	# Collect Matrix
 	features = [index, x_DR, x_RPA, x_PTT, x_PWA, x_SS]
@@ -72,14 +74,24 @@ def preprocess(subject):
 	for i,feat in enumerate(features):
 		X[i] = feat[1:len(feat)]
 	X = transpose(X)
-	y = array(y_AA[1:len(y_AA)])
-	return X, y
+
+	# Include Arousals
+	if arousals:
+		anno_Arousal = subject.Arousal_anno
+		y_AA = ArousalBin(anno_Arousal, subject.frequency, index)
+		y = array(y_AA[1:len(y_AA)])
+		return X, y
+	return X
 
 def QRS(subject):
 	eng = matlab.engine.start_matlab()
 	os.makedirs(fs.Filepaths.Matlab, exist_ok=True)
 	eng.cd(fs.Filepaths.Matlab)
-	index, amp = eng.peak_detect(fs.directory(), subject.filename + '.edf', float(subject.frequency), nargout=2)
+	if subject.filename:
+		edf = subject.filename + '.edf'
+	else:
+		edf = subject.edfPath
+	index, amp = eng.peak_detect(fs.directory(), edf, float(subject.frequency), nargout=2)
 	index = [int(i) for i in index[0]]
 	amp = [float(i) for i in amp[0]]
 	return index, amp

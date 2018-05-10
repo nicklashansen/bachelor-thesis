@@ -12,7 +12,7 @@ class dataset:
 		self.timesteps = epochs[0].timesteps
 		self.features = epochs[0].features
 		if only_arousal:
-			self.only_arousal
+			self.only_arousal()
 		elif balance:
 			self.balance()
 		if shuffle:
@@ -33,8 +33,8 @@ class dataset:
 			if sum(obj.y) == 0:
 				self.epochs.remove(obj)
 				list.append(obj)
-		list = shuffle_list(list)[:len(self.epochs)]
-		self.epochs.append(list)
+		list = self.shuffle_list(list)[:len(self.epochs)]
+		self.epochs.extend(list)
 		self.size = len(self.epochs)
 
 	def only_arousal(self):

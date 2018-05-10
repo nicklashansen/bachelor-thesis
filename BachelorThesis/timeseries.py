@@ -6,22 +6,23 @@ Nicklas Hansen
 """
 
 def timeseries(epochs, full, epoch_length, overlap_factor, sample_rate):
- 	window = int(epoch_length - ( epoch_length / overlap_factor))
- 	length = int(full[-1].index_stop/sample_rate)
- 	y, yhat, wake, rem, illegal = zeros(length), zeros(length), zeros(length), zeros(length), zeros(length)
- 	for i,obj in enumerate(epochs):
- 		y = modify_timeseries(y, obj.y, 1, obj.timecol, window, sample_rate)
- 		yhat = modify_timeseries(yhat, obj.yhat, 1, obj.timecol, window, sample_rate)
- 	for i,obj in enumerate(full):
- 		sleep = transpose(obj.X)[-1]
- 		wake = modify_timeseries(wake, sleep, -1, obj.timecol, window, sample_rate)
- 		rem = modify_timeseries(rem, sleep, 1, obj.timecol, window, sample_rate)
- 		illegal = modify_timeseries(illegal, obj.mask, 1, obj.timecol, window, sample_rate)
- 	for i in range(len(wake)):
- 		if illegal[i] == 1 and wake[i] == 1:
- 			illegal[i] = 0
- 	return y, yhat, wake, rem, illegal
- 
+	window = int(epoch_length - ( epoch_length / overlap_factor))
+	length = int(full[-1].index_stop/sample_rate)
+	y, yhat, wake, rem, illegal = zeros(length), zeros(length), zeros(length), zeros(length), zeros(length)
+	for i,obj in enumerate(epochs):
+		if (obj.y):
+			y = modify_timeseries(y, obj.y, 1, obj.timecol, window, sample_rate)
+		yhat = modify_timeseries(yhat, obj.yhat, 1, obj.timecol, window, sample_rate)
+	for i,obj in enumerate(full):
+		sleep = transpose(obj.X)[-1]
+		wake = modify_timeseries(wake, sleep, -1, obj.timecol, window, sample_rate)
+		rem = modify_timeseries(rem, sleep, 1, obj.timecol, window, sample_rate)
+		illegal = modify_timeseries(illegal, obj.mask, 1, obj.timecol, window, sample_rate)
+	for i in range(len(wake)):
+		if illegal[i] == 1 and wake[i] == 1:
+			illegal[i] = 0
+	return y, yhat, wake, rem, illegal
+
 def modify_timeseries(ts, values, criteria, timecol, window, sample_rate):
 	for i,y in enumerate(values[window:]):
 		enum = [int(timecol[window+i-3]/sample_rate),int(timecol[window+i]/sample_rate)]

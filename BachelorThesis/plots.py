@@ -15,7 +15,7 @@ def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals,
 	show_spans(wake_states, '0.5')
 	show_spans(rem, 'purple')
 	show_spans(illegals, 'red')
-	show_spans(arousals, 'green', 0.75)
+	show_spans(arousals, 'green', 0.9)
 
 	plt.xlim(0, duration/60)
 	plt.ylim(-1,3)
@@ -50,7 +50,6 @@ def plot_data(signals, peaksIndexs=None, labels=None, normalization=False):
 
 	color = ['b-', 'g-', 'r-']
 	peakcolor = ['rx','bx','gx']
-	#plt.figure(figsize=(6.5, 4))
 	x = range(0,len(signals[0]))
 	for i,signal in enumerate(signals):
 		plt.plot(x, signal, color[i], label=(labels[i] if labels else 'signal'+str(i+1)))

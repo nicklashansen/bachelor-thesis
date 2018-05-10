@@ -22,13 +22,16 @@ def extract_timecol(X):
 	return X, timecol
 
 def generate_epochs(X, y, mask, epoch_length, overlap_factor, filter):
-	epochs, index, length = [], int(0), len(y)-epoch_length
+	epochs, index, length = [], int(0), X.shape[0]-epoch_length
 	X, timecol = extract_timecol(X)
 	#a=b=c=overlap_factor*(length/epoch_length)
 	while (index < length):
 		index = int(index)
 		end = int(index+epoch_length)
-		e = epoch(X[index:end], y[index:end], timecol[index:end], mask[index:end])
+		if y:
+			e = epoch(X[index:end], y[index:end], timecol[index:end], mask[index:end])
+		else:
+			e = epoch(X[index:end], None, timecol[index:end], mask[index:end])
 		#if (e.continuous()):
 		#	a -= 1
 		#if (e.acceptable()):
@@ -53,7 +56,7 @@ class epoch(object):
 
 	def continuous(self):
 		for i in range(1, len(self.timecol)):
-			if (self.timecol[i] - self.timecol[i-1]) >= 1280:
+			if (self.timecol[i] - self.timecol[i-1]) >= SAMPLE_RATE * 10:
 				return False
 		return True
 
@@ -66,7 +69,8 @@ class epoch(object):
 		return True
 
 	def no_cut(self):
-		start,stop = self.y[0], self.y[-1]
-		if start or stop:
-			return False
+		if self.y:
+			start,stop = self.y[0], self.y[-1]
+			if start or stop:
+				return False
 		return True

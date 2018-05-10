@@ -55,8 +55,12 @@ class Signal(object):
 
 class Subject(object):
 	def __init__(self, filename, edfPath=None, annoPath=None, ArousalAnno=True):
-		self.id = int(filename[-4:])
-		self.filename = filename
+		if filename:
+			self.id = int(filename[-4:])
+			self.filename = filename
+		else:
+			self.id = None
+			self.filename = None
 		self.edfPath = edfPath
 		self.annoPath = annoPath
 
