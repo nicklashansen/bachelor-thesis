@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>53825e16-9ac2-46ea-a8c4-9c4832add750</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>GUI\BachelorGUI.pyw</StartupFile>
+    <StartupFile>BachelorGUI.pyw</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -43,10 +43,10 @@
     <Compile Include="gru.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="GUI\BachelorGUI.pyw">
+    <Compile Include="BachelorGUI.pyw">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="GUI\resources.py">
+    <Compile Include="resources.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="log.py">

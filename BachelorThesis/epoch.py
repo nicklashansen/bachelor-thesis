@@ -28,7 +28,7 @@ def generate_epochs(X, y, mask, epoch_length, overlap_factor, filter):
 	while (index < length):
 		index = int(index)
 		end = int(index+epoch_length)
-		if y:
+		if y is not None:
 			e = epoch(X[index:end], y[index:end], timecol[index:end], mask[index:end])
 		else:
 			e = epoch(X[index:end], None, timecol[index:end], mask[index:end])
@@ -69,7 +69,7 @@ class epoch(object):
 		return True
 
 	def no_cut(self):
-		if self.y:
+		if self.y is not None:
 			start,stop = self.y[0], self.y[-1]
 			if start or stop:
 				return False

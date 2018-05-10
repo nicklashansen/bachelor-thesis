@@ -1,5 +1,5 @@
 from numpy import *
-from keras.models import Sequential
+from keras.models import Sequential, model_from_json, load_model
 from keras.layers import Dense, Embedding, TimeDistributed, Bidirectional, GRU
 from keras.callbacks import EarlyStopping, TensorBoard, History
 import metrics
@@ -13,13 +13,18 @@ WRITTEN BY:
 Nicklas Hansen
 """
 
+MODEL = 'gru.h5'
+
 class gru:
-	def __init__(self, data, batch_size = 100):
-		self.data = data
-		self.neurons = data.timesteps
-		self.graph = None
+	def __init__(self, data = None, load_graph = False, batch_size = 2 ** 11):
 		self.batch_size = batch_size
-		self.build()
+		if load_graph:
+			self.graph = load_model(MODEL)
+		elif data:
+			self.data = data
+			self.neurons = data.timesteps
+			self.graph = None
+			self.build()
 
 	def build(self):
 		graph = Sequential()
@@ -30,7 +35,7 @@ class gru:
 		self.graph = graph
 
 	def save(self):
-		self.graph.save('gru.h5')
+		self.graph.save(MODEL)
 
 	def get_callbacks(self):
 		early_stop = EarlyStopping(monitor='loss', patience=3, mode='auto', verbose=1)
@@ -75,14 +80,3 @@ class gru:
 			scores = metrics.compute_score(epoch.y, epoch.yhat)
 			results.append(scores)
 		return results
-
-	#def evaluate(self, epochs, metric=metrics.TPR_TNR):
-	#	TPR=TNR=0
-	#	for epoch in epochs:
-	#		yhat = self.graph.predict_classes(self.shape_X(epoch))
-	#		p, n = metric(epoch.y, yhat)
-	#		TPR += p
-	#		TNR += n
-	#	TPR /= len(epochs)
-	#	TNR /= len(epochs)
-	#	return TPR, TNR

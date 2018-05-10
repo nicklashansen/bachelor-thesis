@@ -18,13 +18,19 @@ Nicklas Hansen
 
 epoch_length, overlap_factor, overlap_score, sample_rate = 120, 2, 3, 256
 
+def evaluate():
+	model = gru(load_graph=True)
+	files = fs.load_splits()[2]
+	results = validate(model, files)
+	log_results(results, validation=False)
+
 def fit_validate(gpu = True, balance = False, only_arousal = False):
 	batch_size = 2 ** 11 if gpu else 2 ** 7
 	model = fit(batch_size, balance, only_arousal)
 	model.save()
 	files = fs.load_splits()[1]
-	results = validate(model, files, balance, only_arousal)
-	log_results(results)
+	results = validate(model, files)
+	log_results(results, validation=True)
 
 def log_results(results, validation = True):
 	filename = 'Validation' if validation else 'Evaluation'
@@ -40,7 +46,7 @@ def fit(batch_size, balance, only_arousal):
 	model.fit(data.epochs)
 	return model
 
-def validate(model, files, balance, only_arousal):
+def validate(model, files):
 	TP=FP=TN=FN=0
 	count = len(files)
 	for file in files:
@@ -54,7 +60,7 @@ def validate_file(file, model, overlap_score, sample_rate):
 	TP, FP, TN, FN = metrics.cm_overlap(y, yhat, timecol, overlap_score, sample_rate)
 	return TP, FP, TN, FN
 
-def predict_file(filename, model, balance = False, only_arousal = False, filter = False, removal = True):
+def predict_file(filename, model, filter = False, removal = True):
 	X,y = fs.load_csv(filename)
 	epochs = epochs_from_prep(X, y, epoch_length, overlap_factor, sample_rate, filter, removal)
 	epochs = model.predict(epochs)
@@ -72,7 +78,7 @@ def reconstruct(X, y, epochs):
 			t[index + i] = index
 	return yhat, t
 
-def dataflow(edf = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\edfs\\mesa-sleep-2084.edf', anno = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\annotations-events-nsrr\\mesa-sleep-2084-nsrr.xml'):
+def dataflow(edf = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\edfs\\mesa-sleep-2084.edf', anno = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\annotations-events-nsrr\\mesa-sleep-2084-nsrr.xml', figure = None):
 	X = prep_X(edf, anno)
 	#X,_ = fs.load_csv('mesa-sleep-2084')
 	epochs = epochs_from_prep(X, None, epoch_length, overlap_factor, filter = False, removal=True)
@@ -86,4 +92,4 @@ def dataflow(edf = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622cc
 	ill = region(illegal)
 	ill.append([0, int(full[0].index_start/sample_rate)])
 	X = transpose(X)
-	plot_results(X[0]/sample_rate, [X[1]], ['RR'], region(wake), region(rem), ill, region(yhat), int(full[-1].index_stop/sample_rate))
+	return plot_results(X[0]/sample_rate, [X[1]], ['RR'], region(wake), region(rem), ill, region(yhat), int(full[-1].index_stop/sample_rate), figure)
