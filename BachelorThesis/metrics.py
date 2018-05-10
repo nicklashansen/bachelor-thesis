@@ -75,7 +75,7 @@ def cm_overlap(y, yhat, timecol, secOverlap, sampleRate):
 		def __getVal(self, init, inc):
 			dist = (secOverlap*sampleRate)
 			i = 0
-			while(0 <= i < n and abs(timecol[init]-timecol[init+i]) <= dist):
+			while(0 < i < n-1 and abs(timecol[init]-timecol[init+i]) <= dist):
 				i += inc
 			return i+(inc*-1)
 			

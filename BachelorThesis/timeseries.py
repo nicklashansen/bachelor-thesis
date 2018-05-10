@@ -1,5 +1,10 @@
 from numpy import *
 
+"""
+WRITTEN BY:
+Nicklas Hansen
+"""
+
 def timeseries(epochs, full, epoch_length, overlap_factor, sample_rate):
  	window = int(epoch_length - ( epoch_length / overlap_factor))
  	length = int(full[-1].index_stop/sample_rate)

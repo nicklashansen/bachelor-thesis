@@ -13,7 +13,6 @@ import epoch
 """
 WRITTEN BY:
 Nicklas Hansen
-Michael Kirkegaard
 """
 
 epoch_length, overlap_factor, overlap_score, sample_rate = 120, 2, 3, 256
@@ -23,11 +22,11 @@ def fit_validate(gpu = True, balance = False, only_arousal = False):
 	model = fit(batch_size, balance, only_arousal)
 	model.save()
 	files = fs.load_splits()[1]
-	results = validate(model, files[:2], balance, only_arousal)
+	results = validate(model, files, balance, only_arousal)
 	print(results)
 
 def fit(batch_size, balance, only_arousal):
-	data = dataset(fs.load_epochs()[:10], balance=balance, only_arousal=only_arousal)
+	data = dataset(fs.load_epochs(), balance=balance, only_arousal=only_arousal)
 	model = gru(data, batch_size)
 	model.fit(data.epochs)
 	return model
