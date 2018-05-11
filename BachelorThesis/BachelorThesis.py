@@ -14,8 +14,8 @@ Michael Kirkegaard
 
 if __name__ == '__main__':
 	#fit_validate(gpu=True, balance = True)
-	#evaluate()
+	evaluate()
 	#dataflow()
 	#BachelorGUI()
-	process_epochs()
+	#process_epochs()
 	#prepAll(force=False)
