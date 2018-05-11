@@ -18,11 +18,10 @@ def compute_score(y, yhat, secOverlap=3.0, sampleRate=256):
 
 def compute_cm_score(TP, FP, TN, FN):
 	scores = {}
-	for cm in [cm_standard, cm_overlap]:
-		d = scores[cm.__name__] = {}
-		d['TP_FP_TN_FN'] = TP,FP,TN,FN
-		for metric in [accuracy, sensitivity, specificity, precision, f1_score, mcc]:
-			d[metric.__name__] = metric(TP,FP,TN,FN)
+	d = scores['score'] = {}
+	d['TP_FP_TN_FN'] = TP,FP,TN,FN
+	for metric in [accuracy, sensitivity, specificity, precision, f1_score, mcc]:
+		d[metric.__name__] = metric(TP,FP,TN,FN)
 	return scores
 
 def accuracy(TP,FP,TN,FN):
@@ -64,73 +63,67 @@ def cm_overlap(y, yhat, timecol, secOverlap, sampleRate):
 	n = len(y)
 	
 	class Arousal:
-		def __init__(self, n, start, end):
-			self.n = n
-			self.start = start
-			self.end = end
-			self.combined = end-start
+		def __init__(self, start, end):
 			self.min = self.__getVal(start, -1) ; self.min = 0 if self.min < 0 else self.min
 			self.max = self.__getVal(end, 1) ; self.max = n if self.max > n else self.max
 
 		def __getVal(self, init, inc):
-			dist = (secOverlap*sampleRate)
+			dist = int((secOverlap*sampleRate)/2) # both arousals have overlap
 			i = 0
-			while(0 < i < n-1 and abs(timecol[init]-timecol[init+i]) <= dist):
+			while(0 <= init+i < n and abs(timecol[init]-timecol[init+i]) <= dist):
 				i += inc
-			return i+(inc*-1)
+			return init+i+(inc*-1)
 			
 		def compareTo(self,other):
-			if self.min <= other.start <= self.max or self.min <= other.end <= self.max:
+			if self.min <= other.min <= self.max or self.min <= other.max <= self.max:
 				return 0
-			return 1 if self.min > other.end else -1
+			return self.min - other.max
 
-	def transform(y, dontCombine):
+	def a_transform(y):
 		ax = []
 		a = None
 		for i,val in enumerate(y):
 			if val == 1 and not a:
 				a = i
 			elif val == 0 and a:
-				if dontCombine or not ax or Arousal(n,a,i).compareTo(ax[-1]) > 0 or i == len(y):
-					ax += [Arousal(n,a,i)]
-				else:
-					ax[-1].end = i
-					ax[-1].combined += i-a
+				ax += [Arousal(a,i)]
 				a = None
 		return ax
 
-	y = transform(y, True)
-	yhat = transform(yhat, False)
+	y = a_transform(y)
+	yhat = a_transform(yhat)
 
 	TP=FP=TN=FN = 0
 	i=j = 0
 	while (i<len(y) or j<len(yhat)):
-		# All scored arousals checked => rest of predicted = FP
-		if i == len(y):
-			FP += len(yhat)-j
-			j = len(yhat)
-		# last predicted arousal is combined but overlaps => split yy[i], TP++, increase j
-		elif j > 0 and yhat[j-1].combined > 0 and yhat[j-1].compareTo(y[i]) == 0:
-			yhat[j-1].combined -= y[i].combined
+		# Previous checked Scored Arousal overlaps
+		if(i > 0 and j < len(yhat) and y[i-1].compareTo(yhat[j])==0):
+			TP += 1
+			j += 1
+		# Previous checked predicted arousal
+		elif(j > 0 and i < len(y) and y[i].compareTo(yhat[j-1])==0):
 			TP += 1
 			i += 1
+		# All scored arousals checked => rest of predicted = FP
+		elif i == len(y):
+			FP += len(yhat)-j
+			j = len(yhat)
 		# All predicted arousals checked => rest of scored = FN
 		elif j == len(yhat):
 			FN += len(y)-i
 			i = len(y)
 		else:
-			co = yhat[j].compareTo(y[j])
-			# yy_i and yyhat_i overlaps => TP++, increase i,j
+			co = y[i].compareTo(yhat[j])
+			# y_i and yhat_i overlaps => TP++, increase i,j
 			if co == 0:
-				yhat[j].combined -= y[i].combined
 				TP += 1
 				i += 1
 				j += 1
-			# yy_i comes before yyhat_j => FN++, increase i
+			# y_i comes before yhat_j => FN++, increase i
 			elif co < 0:
 				FN += 1
 				i += 1
-			# yy_i comes after yyhat_j => FP++, increase j
+			# yhat_j comes before y_i => FP++, increase j
 			else: #co > 0
 				FP += 1
 				j += 1
