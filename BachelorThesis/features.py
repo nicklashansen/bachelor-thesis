@@ -72,7 +72,7 @@ def compile_epochs(files, save = True):
 	log.print('Total files: {0}'.format(len(files)))
 	log.printHL()
 
-	p = int(len(files)/15)
+	p = int(len(files)/14)
 	epochs = []
 	for i, filename in enumerate(files):
 		try:
@@ -130,7 +130,7 @@ def cubic_spline(X, masks, plot=False):
 	def spline(maskid, data):
 		mask = masks[maskid]
 		datamask = [data[i] for i,m in enumerate(mask) if m == 0]
-		if(len(datamask) >= 0):
+		if(len(datamask) >= 2):
 			cs = CubicSpline(range(len(datamask)),datamask)
 			datacs = cs(range(len(mask)))
 			if plot:
@@ -142,45 +142,49 @@ def cubic_spline(X, masks, plot=False):
 	X = transpose(Xt)
 	return X
 
+#def sleep_removal(X, y, mask, sample_rate):
+#	_X = transpose(X)
+#	keep = [i for i,state in enumerate(_X[5]) if state >= 0]
+#	X = array([X[i] for i in keep])
+#	if y is not None:
+#		y = array([y[i] for i in keep])
+#	if mask is not None:
+#		mask = [mask[i] for i in keep]
+#	return X,y, mask
+
 def sleep_removal(X, y, mask, sample_rate):
-	_X = transpose(X)
-	keep = [i for i,state in enumerate(_X[5]) if state >= 0]
+	Xt = transpose(X)
+	indexes = Xt[0]
+	sleep = Xt[5]
+	n = len(sleep)
+
+	keep = []
+	i = 0
+	while(i < n):
+		k = None
+		j = i+1
+		if sleep[i] >= 0:
+			while(j < n and sleep[j] >= 0):
+				j += 1
+		else:
+			while(j < n and sleep[j] == -1 and indexes[j]-indexes[i] < 30*sample_rate):
+				j += 1
+			if j < n and sleep[j] == -1:
+				cuti = j
+				cutj = i
+				while(j < n and sleep[j] == -1):
+					j += 1
+					cutj += 1 
+				if(cutj - cuti > 0):
+					k = list(range(i,cuti)) + list(range(cutj,j))
+		if not k:
+			k = list(range(i,j))
+		keep += k
+		i = j
+
 	X = array([X[i] for i in keep])
 	if y is not None:
 		y = array([y[i] for i in keep])
-	return X,y, mask
-
-#def sleep_removal(X, y, mask, sample_rate):
-#	Xt = transpose(X)
-#	indexes = Xt[0]
-#	sleep = Xt[5]
-#	n = len(sleep)
-
-#	keep = []
-#	i = 0
-#	while(i < n):
-#		k = None
-#		j = i+1
-#		if sleep[i] >= 0:
-#			while(j < n and sleep[j] >= 0):
-#				j += 1
-#		else:
-#			while(j < n and sleep[j] == -1 and indexes[j]-indexes[i] < 30*sample_rate):
-#				j += 1
-#			if j < n and sleep[j] == -1:
-#				cuti = j
-#				cutj = i
-#				while(j < n and sleep[j] == -1):
-#					j += 1
-#					cutj += 1 
-#				if(cutj - cuti > 0):
-#					k = list(range(i,cuti)) + list(range(cutj,j))
-#		if not k:
-#			k = list(range(i,j))
-#		keep += k
-#		i = j
-
-#	X = array([X[i] for i in keep])
-#	y = array([y[i] for i in keep])
-#	mask = [mask[i] for i in keep]
-#	return X,y,mask
+	if mask is not None:
+		mask = [mask[i] for i in keep]
+	return X,y,mask

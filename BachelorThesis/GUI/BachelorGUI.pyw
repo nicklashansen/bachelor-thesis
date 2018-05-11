@@ -15,7 +15,16 @@ WRITTEN BY
 Micheal Kirkegaard
 """
 
+w_=1280-180
+h_=720
+dpi_ = 100
+f_ = Figure(figsize=(w_/dpi_, h_/dpi_), dpi=dpi_)
+a_ = f_.add_subplot(111)
+a_.plot([1,2,3,4,5,6,7,8],[5,6,1,3,8,9,3,5])
+
+TEST_FIG = f_
 TEST_PROP = {0:0, 1:1, 2:2, 3:3, 4:4}
+TEST_PROP_2 = {5:5, 6:6, 7:7, 8:8, 9:9}
 
 class AppUI(Tk):
 	def __init__(self, w=1280, h=720):
@@ -27,11 +36,11 @@ class AppUI(Tk):
 		self.height = h
 
 		# Plot Vars
-		self.plot_data = 0
+		self.plot_data = []
 		self.btn_plot_states = []
 
 		# Prop vars
-		self.propertyDict = dict()
+		self.property_dict = {}
 
 		# New File Thread
 		self.progbarThread = None
@@ -82,16 +91,10 @@ class AppUI(Tk):
 	def New_File(self):
 		if not self.progbarThread:
 			def task(toplevel, edf, anno, pb, b):
-				dest = False
+				destroy = False
 				try:
-					w = self.width
-					h = self.height
-					dpi = 100
-					#figure = Figure(figsize=(w/dpi, h/dpi), dpi=dpi)
-					#figure.add_subplot(111)
-					#figure = dataflow(edf, anno, figure)
 					# Mockup file
-					'''size = 1000
+					size = 1000
 					for _ in range(size):
 						# Soft Close
 						if self.progbarThread.getName() in ['cancel','close']: # Shutdown Flags
@@ -99,21 +102,31 @@ class AppUI(Tk):
 						# Do files and stuff
 						time.sleep(1.0/size) 
 						# step out of 100%
-						pb.step(100/size)'''
+						pb.step(100/size)#'''
+					
+					# ---
+					# 1) Get Signals (plot is renderes elsewhere)
+					# 2) find propeties from signals
+					# 3) -->
+					# ---
 
-					self.Close_File()
-					self.plot_Data = None
-					self.main_frame.open_plot()
-					dest = True
+					plot_data = None
+					property_dict = TEST_PROP_2
+
+					# Finished
+					destroy = True
 				except Exception as e:
 					pass
 				finally:
-					b.grid_forget()
-					pb.grid_forget()
 					self.progbarThread = None
 					self.unbind('<Escape>')
-					if dest:
+					if destroy:
 						toplevel.destroy()
+						self.Close_File()
+						self.Show_Plot(plot_data, property_dict)
+					else:
+						b.grid_forget()
+						pb.grid_forget()
 
 			def canceltask(toplevel,b_go):
 				if self.progbarThread and self.progbarThread.is_alive() and self.progbarThread.getName() != 'cancel':
@@ -165,6 +178,7 @@ class AppUI(Tk):
 
 			file_toplevel = Toplevel()
 			focus(file_toplevel)
+
 			# EDF file
 			filepath_edf = StringVar(value='Choose File...')
 			label_edf = Label(file_toplevel, text=res.ff_FILETITLE_e+':', anchor=E)
@@ -202,32 +216,55 @@ class AppUI(Tk):
 			try:
 				# TODO: Default dir
 				file = filedialog.askopenfile(title='Choose '+ res.ff_FILETITLE_a +' file', filetypes=[(res.ff_FILETITLE_a,'*'+res.ff_FILETAG_a)])
-				self.plot_Data = None # TODO: pickle.dump(file)
+
+				# ---
+				# # x = [self.plot_data, self.property_dict]
+				# x = "pickle read(file)"
+				# plot_data = x[0]
+				# property_dict = x[1]
+				# ---
+
+				plot_data = None
+				property_dict = TEST_PROP	
+
 				file.close()
-				self.main_frame.open_plot()
 			except Exception as e:
 				# TODO: ErrorMsg
 				return
+
+			self.Close_File()
+			self.Show_Plot(plot_data, property_dict)
 	
+	def Show_Plot(self, plot_data, property_dict):
+		self.main_frame.close_plot()
+		self.plot_data = plot_data
+		self.property_dict = property_dict
+		self.main_frame.open_plot()
+
 	# Save plotfile
 	def Save_File(self):
-		if self.plot_Data:
+		if self.plot_data:
 			try:
 				# TODO: Default dir
 				file = filedialog.asksaveasfile(filetypes=[(res.ff_FILETITLE_a,'*'+res.ff_FILETAG_a)])
-				# TODO: pickle.dump(file, self.plot_Data)
+				
+				# ---
+				# x = [self.plot_data, self.property_dict]
+				# pickle.dump(file, x)
+				# ---
+
 				file.close()
 			except Exception as e:
 				# TODO: ErrorMsg
 				return 
 
-	# Close/Cancel
+	# Close
 	def Close_File(self):
-		if self.progbarThread and self.progbarThread.is_alive() and self.progbarThread.getName() != 'close':
-			self.progbarThread.setName('close') # Raise Flag
 		self.main_frame.close_plot()
-		self.plot_Data = None
-
+		self.plot_data = []
+		self.property_dict = {}
+	
+	# Text Popup
 	def popup(self, text):
 		toplevel = Toplevel()
 		# Title
@@ -255,7 +292,8 @@ class AppUI(Tk):
 		toplevel.lift()
 		toplevel.focus_force()
 		toplevel.grab_set()
-
+	
+	# press button
 	def plot_btn_state_swap(self, btn, id):
 		# button state swap
 		if (btn['text'][-2:] == 'ON'):
@@ -264,33 +302,38 @@ class AppUI(Tk):
 			btn['text'] = btn['text'][:-3]+'ON'
 
 		self.btn_plot_states[id] = not self.btn_plot_states[id] 
-		# TODO: # Re-render Plot
+		self.main_frame.update_plot()
 
 	class Main_Frame(Frame):
 		def __init__(self, master, controller):
 			Frame.__init__(self, master) # Super.__init__()
 			self.controller = controller
-
+			
 			# Slaves
 			self.plot_frame = self.Plot_Frame(self, controller)
 			self.prop_frame = self.Prop_Frame(self, controller)
 
 			# Grid
 			self.plot_frame.grid(row=0, column=0)
-			self.prop_frame.grid(row=0, column=1, sticky=N)
+			self.prop_frame.grid(row=0, column=1, sticky=NE)
 
-			# Default 
+			# Default
 			self.close_plot()
 
-		# Show plotfile
+		# Show plot
 		def open_plot(self):
-			#if self.controller.plot_data:
-				self.plot_frame.grid()
-				self.prop_frame.grid()
-				# TODO: Plots n' stuff
-				# TODO: Properties n' stuff
+			self.plot_frame.update_menu()
+			self.plot_frame.update_plot()
+			self.plot_frame.grid()
+			
+			self.prop_frame.update_properties()
+			self.prop_frame.grid()
 
-		# Close plotfile
+		# Update plot
+		def update_plot(self):
+			self.plot_frame.update_plot()
+
+		# Close plot
 		def close_plot(self):
 			self.plot_frame.grid_remove()
 			self.prop_frame.grid_remove()
@@ -301,11 +344,15 @@ class AppUI(Tk):
 				self.controller = controller
 
 				# Widget Packing
-				self.__plot_menubar().grid(row=0, column=0, sticky=NW)
-				self.__plot_main().grid(row=1, column=0)
+				self.menu = None
+				self.plot = None
+
+				# Grid
+				self.update_menu()
+				self.update_plot()
 
 			# plot menus
-			def __plot_menubar(self):
+			def update_menu(self):
 				subframe = Frame(self)
 
 				w = 25
@@ -343,20 +390,23 @@ class AppUI(Tk):
 				b_4.grid(row=0, column=4, sticky=W)
 				b_5.grid(row=0, column=5, sticky=W)
 
-				return subframe
+				if(self.menu):
+					self.menu.grid_forget()
+				self.menu = subframe
+				subframe.grid(row=0, column=0, sticky=N)
 
-			# main plt
-			def __plot_main(self):
+			# update plot
+			def update_plot(self):
 				subframe = Frame(self)
 
-				# https://pythonprogramming.net/how-to-embed-matplotlib-graph-tkinter-gui/
-
-				w=1280-180
-				h=720
-				dpi = 100
-				f = Figure(figsize=(w/dpi, h/dpi), dpi=dpi)
-				a = f.add_subplot(111)
-				a.plot([1,2,3,4,5,6,7,8],[5,6,1,3,8,9,3,5])
+				f = TEST_FIG if not self.controller.plot_data else None #TODO: plot_compute(self.controller.plot_data)
+				
+				#w_=self.controller.width - 180
+				#h_=self.controller.height - 60
+				#dpi_ = 100
+				#f = Figure(figsize=(w_/dpi_, h_/dpi_), dpi=dpi_)
+				#a = f.add_subplot(111)
+				#a.plot([1,2,3,4,5,6,7,8],[5,6,1,3,8,9,3,5])
 
 				canvas = FigureCanvasTkAgg(f, subframe)
 				canvas.show()
@@ -364,26 +414,38 @@ class AppUI(Tk):
 
 				toolbar = NavigationToolbar2TkAgg(canvas, subframe)
 				toolbar.update()
+				toolbar.config(background='white')
 				canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=True)
 
-				return subframe
+				if(self.plot):
+					self.plot.grid_forget()
+				self.plot = subframe
+				self.plot.grid(row=1, column=0)
 
 		class Prop_Frame(Frame):
 			def __init__(self, master, controller):
 				Frame.__init__(self, master, bg='white') # Super.__init__()
 				self.controller = controller
+				self.properties = []
+				self.update_properties()
+			
+			# Update
+			def update_properties(self):
+				if self.properties != None:
+					for frame in self.properties:
+						frame.grid_forget()
 
-				# Widget slave packing
-				w = 9
-				for i in range(10):
-					self.__plot_property('key'+str(i),'val'+str(i), w, res.FONT).grid(sticky=N)
-	
+				for k,v in self.controller.property_dict.items():
+					subframe = self.__property(str(k), str(v), 9, res.FONT)
+					subframe.grid(sticky=NE)
+					self.properties += [subframe]
+
 			# Properties
-			def __plot_property(self, key, val, w, f):
+			def __property(self, key, val, width, font):
 				subframe = Frame(self)
-				Label(subframe, text=key, font=f, width=w).grid(row=0, column=0)
+				Label(subframe, text=key, font=font, width=width).grid(row=0, column=0)
 				Separator(subframe, orient=VERTICAL).grid(row=0, column=1, rowspan=3, sticky=NS)
-				Label(subframe, text=val, font=f, width=w).grid(row=0, column=2)
+				Label(subframe, text=val, font=font, width=width).grid(row=0, column=2)
 				Separator(subframe, orient=HORIZONTAL).grid(row=1, column=0, rowspan=3, sticky=EW)
 				Separator(subframe, orient=HORIZONTAL).grid(row=1, column=1, rowspan=3, sticky=EW)
 				Separator(subframe, orient=HORIZONTAL).grid(row=1, column=2, rowspan=3, sticky=EW)
