@@ -33,7 +33,7 @@ def fit(batch_size, balance, only_arousal):
 def evaluate(model = None, validation = True):
 	set = 1 if validation else 2
 	if model is None:
-		model = gru(load_graph=True)
+		model = gru(load_graph=True, path = 'gru-newsleep-arousals.h5')
 	files = fs.load_splits()[set]
 	results = validate(model, files)
 	log_results(results, validation=validation)
@@ -81,6 +81,13 @@ def log_results(results, validation = True):
 		for key,val in d.items():
 			log.print(str(key)+':'+str(val))
 
+def get_timeseries_prediction(X, model):
+	epochs = epochs_from_prep(X, None, epoch_length, overlap_factor, filter = False, removal=False)
+	epochs = model.predict(epochs)
+	epochs.sort(key=lambda x: x.index_start, reverse=False)
+	_, yhat, wake, rem, illegal = timeseries(epochs, epochs, epoch_length, overlap_factor, sample_rate)
+	return epochs, yhat, wake, rem, illegal
+
 def add_predictions(yhat1, yhat2):
 	assert len(yhat1) == len(yhat2)
 	for i in range(len(yhat1)):
@@ -88,50 +95,19 @@ def add_predictions(yhat1, yhat2):
 			yhat1[i] = 1
 	return yhat1
 
-def dataflow(edf = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\edfs\\mesa-sleep-2084.edf', anno = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\annotations-events-nsrr\\mesa-sleep-2084-nsrr.xml'):
-	path1 = 'gru.h5'
-	path2 = 'gru-new.h5'
+def add_ECG_overhead(epoch, illegal):
+	illegal.append([0, int(epoch.index_start/sample_rate)])
+	return illegal
 
-	#X = prep_X(edf, anno)
-	X,y= fs.load_csv('mesa-sleep-2084')
-	epochs = epochs_from_prep(X, y, epoch_length, overlap_factor, filter = False, removal=False)
-	full = epochs_from_prep(X, y, epoch_length, overlap_factor, filter = False, removal=False)
-	model = gru(load_graph=True, path=path1)
-	epochs = model.predict(epochs)
-	epochs.sort(key=lambda x: x.index_start, reverse=False)
-	full.sort(key=lambda x: x.index_start, reverse=False)
-	_, yhat, wake, rem, illegal = timeseries(epochs, full, epoch_length, overlap_factor, sample_rate)
-	ill = region(illegal)
-	ill.append([0, int(full[0].index_start/sample_rate)])
+def dataflow(edf = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\edfs\\mesa-sleep-2084.edf', anno = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\annotations-events-nsrr\\mesa-sleep-2084-nsrr.xml', cmd_plot = True):
+	X = prep_X(edf, anno)
+	epochs, yhat, wake, rem, illegal = get_timeseries_prediction(X, gru(load_graph=True))
 
-	epochs2 = epochs_from_prep(X, y, epoch_length, overlap_factor, filter = False, removal=False)
-	model2 = gru(load_graph=True, path=path2)
-	epochs2 = model2.predict(epochs2)
-	epochs2.sort(key=lambda x: x.index_start, reverse=False)
-	_, yhat2, wake, rem, illegal = timeseries(epochs2, full, epoch_length, overlap_factor, sample_rate)
+	## if multiple models
+	#yhat2, wake2, rem2, illegal2 = get_timeseries_prediction(X, gru(load_graph=True, path='gru2.h5'))
+	#yhat = add_predictions(yhat, yhat2)
 
-	# Modellerne lægges sammen til plottet
-	yhat = add_predictions(yhat, yhat2)
-
-	# Reconstruction af yhat for hver model
-	_yhat, timecol = reconstruct(X, y, epochs)
-	_yhat2, timecol2 = reconstruct(X, y, epochs2)
-
-	# Modellerne lægges sammen til metrics
-	_yhat = add_predictions(_yhat, _yhat2)
-
-	# For at få time axis
 	X = transpose(X)
-
-	# Tjek forskelle i sum, bare for sjov
-	print('y = ', sum(y))
-	print('_yhat = ', sum(_yhat))
-
-	# Her bruges _yhat i stedet, da yhat til plottet er resampled
-	TP, FP, TN, FN = metrics.cm_overlap(y, _yhat, timecol, overlap_score, sample_rate)
-	results = metrics.compute_cm_score(TP, FP, TN, FN)
-	print(results)
-
-	# Plot
-	plot_results(X[0]/sample_rate, [X[1], y], ['RR', 'arousals'], region(wake), None, None, region(yhat), int(full[-1].index_stop/sample_rate))
-	return X[0]/sample_rate, [X[1]], ['RR'], region(wake), region(rem), ill, region(yhat), int(full[-1].index_stop/sample_rate)
+	if cmd_plot:
+		plot_results(X[0]/sample_rate, [X[1]], ['RR'], region(wake), region(rem), add_ECG_overhead(epochs[0], region(illegal)), region(yhat), int(epochs[-1].index_stop/sample_rate))
+	return X[0]/sample_rate, [X[1]], ['RR'], region(wake), region(rem), add_ECG_overhead(epochs[0], region(illegal)), region(yhat), int(epochs[-1].index_stop/sample_rate)
