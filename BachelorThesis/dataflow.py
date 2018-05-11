@@ -99,7 +99,7 @@ def add_ECG_overhead(epoch, illegal):
 	illegal.append([0, int(epoch.index_start/sample_rate)])
 	return illegal
 
-def dataflow(edf = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\edfs\\mesa-sleep-2084.edf', anno = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\annotations-events-nsrr\\mesa-sleep-2084-nsrr.xml', cmd_plot = True):
+def dataflow(edf = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\edfs\\mesa-sleep-2084.edf', anno = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\annotations-events-nsrr\\mesa-sleep-2084-nsrr.xml', cmd_plot = False):
 	X = prep_X(edf, anno)
 	epochs, yhat, wake, rem, illegal = get_timeseries_prediction(X, gru(load_graph=True))
 
