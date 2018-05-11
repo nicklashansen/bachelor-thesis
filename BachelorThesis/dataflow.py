@@ -42,7 +42,7 @@ def fit_validate(gpu = True, balance = False, only_arousal = False, load_path = 
 	evaluate(model, validation)
 
 def fit(batch_size = None, balance = False, only_arousal = False, model = None, load_path = None):
-	data = dataset(fs.load_epochs()[6000:6020], balance=balance, only_arousal=only_arousal)
+	data = dataset(fs.load_epochs(), balance=balance, only_arousal=only_arousal)
 	if model is None:
 		model = gru(data, batch_size)
 	model.fit(data.epochs)
