@@ -33,15 +33,18 @@ def modify_timeseries(ts, values, criteria, timecol, window, sample_rate):
 				ts[j] = 1
 	return ts
 
-def region(array):
-	regions, start, bin = [], 0, False
+def region(array, count = False):
+	regions, start, bin, n = [], 0, False, 0
 	for i,val in enumerate(array):
 		if val == 1:
 			if not bin:
 				start, bin = i, True
+			n += 1
 		elif bin:
 			bin = False
 			regions.append([start, i-1])
 	if bin:
 		regions.append([start, i-1])
+	if count:
+		return regions, n
 	return regions
