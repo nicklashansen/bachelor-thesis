@@ -9,21 +9,16 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.figure import Figure
 import resources as res
 
+if __name__ == '__main__':
+	import sys, os
+	sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from plots import plot_results
+
 """
 WRITTEN BY
 Micheal Kirkegaard
 """
-
-w_=1280-180
-h_=720
-dpi_ = 100
-f_ = Figure(figsize=(w_/dpi_, h_/dpi_), dpi=dpi_)
-a_ = f_.add_subplot(111)
-a_.plot([1,2,3,4,5,6,7,8],[5,6,1,3,8,9,3,5])
-
-TEST_FIG = f_
-TEST_PROP = {0:0, 1:1, 2:2, 3:3, 4:4}
-TEST_PROP_2 = {5:5, 6:6, 7:7, 8:8, 9:9}
 
 class AppUI(Tk):
 	def __init__(self, w=1280, h=720):
@@ -99,16 +94,12 @@ class AppUI(Tk):
 					# TODO: validate file format
 
 					# Step 1 Tensorflow
-					time.sleep(5) # TODO: REMOVE
+					time.sleep(1) # TODO: REMOVE
 					progresbar.step(int(100/steps))
 					statuslabel['text'] = 'Loading tensorflow...'
 					if this.getName() in ['cancel','close']: # Shutdown Flags
 						raise
 					# Step 1 - load tensorflow / dataflow
-					if __name__ == '__main__':
-						import sys, os
-						sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 					from dataflow import dataflow
 
 					# Step 2 - Analyse
@@ -117,12 +108,7 @@ class AppUI(Tk):
 					if this.getName() in ['cancel','close']: # Shutdown Flags
 						raise
 
-					# ---
-					# 1) Get Signals (plot is renderes elsewhere)
-					plot_data = dataflow(edf, anno)
-					# 2) find propeties from signals
-					property_dict = TEST_PROP_2
-					# ---
+					plot_data, property_dict = dataflow(edf, anno)
 
 					# Step 3 - Plot data
 					progresbar.step(int(100/steps))
@@ -131,7 +117,7 @@ class AppUI(Tk):
 						raise
 
 					# step 4 - Finished
-					time.sleep(5) # TODO: REMOVE
+					time.sleep(1) # TODO: REMOVE
 					progresbar.step(int(100/steps))
 					destroy = True
 
@@ -267,7 +253,7 @@ class AppUI(Tk):
 				# ---
 
 				plot_data = None
-				property_dict = TEST_PROP	
+				property_dict = None	
 
 				file.close()
 			except Exception as e:
@@ -281,9 +267,6 @@ class AppUI(Tk):
 		self.main_frame.close_plot()
 		self.plot_data = plot_data
 		self.property_dict = property_dict
-		# TODO:
-		#plotdata = [s for i,s in enumerate(self.plot_data) if self.btn_plot_states[i]]
-		#from plots import make_figure(plotdata) ; self.plot_figure = make_figure(plotdata)
 		self.main_frame.open_plot()
 
 	# Save plotfile
@@ -368,7 +351,7 @@ class AppUI(Tk):
 		# Show plot
 		def open_plot(self):
 			self.plot_frame.update_menu()
-			self.plot_frame.update_plot()
+			self.update_plot()
 			self.plot_frame.grid()
 			
 			self.prop_frame.update_properties()
@@ -376,10 +359,8 @@ class AppUI(Tk):
 
 		# Update plot
 		def update_plot(self):
-			# TODO:
-			# plotdata = [s for i,s in enumerate(self.controller.plot_data) if self.controller.btn_plot_states[i]]
-			# from plots import make_figure(plotdata) ; self.controller.plot_figure = make_figure(plotdata)
-			
+			plot = [self.controller.plot_data[0]] + [data if self.controller.btn_plot_states[i] else None for i,data in enumerate(self.controller.plot_data[1:7])] + [self.controller.plot_data[7]]
+			self.controller.plot_figure = plot_results(*(plot + [Figure(figsize=(res.ss_PLOT_WIDTH/res.ss_PLOT_DPI, res.ss_PLOT_HEIGHT/res.ss_PLOT_DPI), dpi=res.ss_PLOT_DPI)]))
 			self.plot_frame.update_plot()
 
 		# Close plot
@@ -404,7 +385,7 @@ class AppUI(Tk):
 			def update_menu(self):
 				subframe = Frame(self)
 
-				w = 25
+				w = res.ss_BUTTON_WIDTH
 
 				# Buttons
 				b_0 = Button(subframe, width=w, text='Raw ECG : ON')
@@ -412,7 +393,7 @@ class AppUI(Tk):
 				b_0['command'] = lambda: self.controller.plot_btn_state_swap(b_0, 0)
 
 				b_1 = Button(subframe, width=w, text='Raw PPG : OFF')
-				self.controller.btn_plot_states += [False]
+				self.controller.btn_plot_states += [True]
 				b_1['command'] = lambda:self.controller.plot_btn_state_swap(b_1, 1)
 
 				b_2 = Button(subframe, width=w, text='Arousals : ON')
@@ -446,23 +427,22 @@ class AppUI(Tk):
 
 			# update plot
 			def update_plot(self):
-				subframe = Frame(self)
+				if self.controller.plot_figure: 
+					subframe = Frame(self)
 
-				f = TEST_FIG if not self.controller.plot_figure else self.controller.plot_figure
+					canvas = FigureCanvasTkAgg(self.controller.plot_figure, subframe)
+					canvas.show()
+					canvas.get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)
 
-				canvas = FigureCanvasTkAgg(f, subframe)
-				canvas.show()
-				canvas.get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)
+					toolbar = NavigationToolbar2TkAgg(canvas, subframe)
+					toolbar.update()
+					toolbar.config(background='white')
+					canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=True)
 
-				toolbar = NavigationToolbar2TkAgg(canvas, subframe)
-				toolbar.update()
-				toolbar.config(background='white')
-				canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=True)
-
-				if(self.plot):
-					self.plot.grid_forget()
-				self.plot = subframe
-				self.plot.grid(row=1, column=0)
+					if(self.plot):
+						self.plot.grid_forget()
+					self.plot = subframe
+					self.plot.grid(row=1, column=0)
 
 		class Prop_Frame(Frame):
 			def __init__(self, master, controller):
@@ -477,8 +457,9 @@ class AppUI(Tk):
 					for frame in self.properties:
 						frame.grid_forget()
 
-				for k,v in self.controller.property_dict.items():
-					subframe = self.__property(str(k), str(v), 9, res.FONT)
+				w = res.ss_LABEL_WIDTH
+				for k,v in self.controller.property_dict:
+					subframe = self.__property(str(k), str(v), w, res.FONT)
 					subframe.grid(sticky=NE)
 					self.properties += [subframe]
 
