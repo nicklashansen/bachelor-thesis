@@ -16,7 +16,7 @@ Nicklas Hansen
 MODEL = 'gru.h5'
 
 class gru:
-	def __init__(self, data = None, load_graph = False, path = MODEL, batch_size = 2 ** 11):
+	def __init__(self, data = None, load_graph = False, path = MODEL, batch_size = 2 ** 8):
 		self.batch_size = batch_size
 		if load_graph:
 			self.graph = load_model(path)

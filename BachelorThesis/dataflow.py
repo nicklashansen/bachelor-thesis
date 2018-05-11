@@ -35,7 +35,7 @@ def evaluate(model = None, validation = True):
 	if model is None:
 		model = gru(load_graph=True)
 	files = fs.load_splits()[set]
-	results = validate(model, files[:8])
+	results = validate(model, files)
 	log_results(results, validation=validation)
 
 def validate(model, files):
