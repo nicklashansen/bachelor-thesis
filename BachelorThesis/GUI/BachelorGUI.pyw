@@ -3,7 +3,6 @@ from tkinter import filedialog
 from tkinter.ttk import Progressbar, Separator
 import time
 import threading
-#from dataflow import dataflow
 import matplotlib
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
@@ -37,6 +36,7 @@ class AppUI(Tk):
 
 		# Plot Vars
 		self.plot_data = []
+		self.plot_figure = None
 		self.btn_plot_states = []
 
 		# Prop vars
@@ -90,72 +90,114 @@ class AppUI(Tk):
 	# New File
 	def New_File(self):
 		if not self.progbarThread:
-			def task(toplevel, edf, anno, pb, b):
+			def task(toplevel, edf_e, edf_b, anno_e, anno_b, b_go, edf, anno, cancelbutton, statuslabel, progresbar):
+				this = self.progbarThread
 				destroy = False
 				try:
-					# Mockup file
-					size = 1000
-					for _ in range(size):
-						# Soft Close
-						if self.progbarThread.getName() in ['cancel','close']: # Shutdown Flags
-							raise
-						# Do files and stuff
-						time.sleep(1.0/size) 
-						# step out of 100%
-						pb.step(100/size)#'''
-					
+					steps = 4
+					# Step 0 Load files
+					# TODO: validate file format
+
+					# Step 1 Tensorflow
+					time.sleep(5) # TODO: REMOVE
+					progresbar.step(int(100/steps))
+					statuslabel['text'] = 'Loading tensorflow...'
+					if this.getName() in ['cancel','close']: # Shutdown Flags
+						raise
+					# Step 1 - load tensorflow / dataflow
+					if __name__ == '__main__':
+						import sys, os
+						sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+					from dataflow import dataflow
+
+					# Step 2 - Analyse
+					progresbar.step(int(100/steps))
+					statuslabel['text'] = 'Analysing Data...'
+					if this.getName() in ['cancel','close']: # Shutdown Flags
+						raise
+
 					# ---
 					# 1) Get Signals (plot is renderes elsewhere)
+					plot_data = dataflow(edf, anno)
 					# 2) find propeties from signals
-					# 3) -->
+					property_dict = TEST_PROP_2
 					# ---
 
-					plot_data = None
-					property_dict = TEST_PROP_2
+					# Step 3 - Plot data
+					progresbar.step(int(100/steps))
+					statuslabel['text'] = 'Plotting Results...'
+					if this.getName() in ['cancel','close']: # Shutdown Flags
+						raise
 
-					# Finished
+					# step 4 - Finished
+					time.sleep(5) # TODO: REMOVE
+					progresbar.step(int(100/steps))
 					destroy = True
+
 				except Exception as e:
 					pass
 				finally:
-					self.progbarThread = None
-					self.unbind('<Escape>')
-					if destroy:
-						toplevel.destroy()
-						self.Close_File()
-						self.Show_Plot(plot_data, property_dict)
-					else:
-						b.grid_forget()
-						pb.grid_forget()
+					if(this.getName() != 'cancel'):
+						if destroy:
+							self.progbarThread = None
+							self.unbind('<Escape>')
+							toplevel.destroy()
+							self.Close_File()
+							self.Show_Plot(plot_data, property_dict)
+						else:
+							canceltask(toplevel, edf_e, edf_b, anno_e, anno_b, b_go,cancelbutton,statuslabel,progresbar)
+							#TODO: ErrMsg
 
-			def canceltask(toplevel,b_go):
-				if self.progbarThread and self.progbarThread.is_alive() and self.progbarThread.getName() != 'cancel':
-					self.progbarThread.setName('cancel') # Raise Flag
+			def canceltask(toplevel, edf_e, edf_b, anno_e, anno_b, b_go,cancelbutton,statuslabel,progresbar):
+				if self.progbarThread:
+					# Forget task
+					self.progbarThread.setName('cancel')
+					self.progbarThread = None
+
+					# Reset view
+					edf_e['state'] = 'normal'
+					edf_b['state'] = 'normal'
+					anno_e['state'] = 'normal'
+					anno_b['state'] = 'normal'
 					b_go.grid()
+
+					self.unbind('<Escape>')
 					toplevel.bind('<Escape>', lambda e: toplevel.destroy())
+
+					cancelbutton.grid_forget()
+					statuslabel.grid_forget()
+					progresbar.grid_forget()
 			
-			def starttask(toplevel, b_go, filepath_edf, filepath_anno):
+			def starttask(toplevel, edf_e, edf_b, anno_e, anno_b, b_go, filepath_edf, filepath_anno):
 				if not self.progbarThread:
-					#TODO: CHECK path and filetype
+
+					edf_e['state'] = 'disabled'
+					edf_b['state'] = 'disabled'
+					anno_e['state'] = 'disabled'
+					anno_b['state'] = 'disabled'
 
 					b_go.grid_remove()
-					toplevel.unbind('<Escpae>')
-					toplevel.bind('<Escape>', lambda e: canceltask(toplevel, b_go))
 
 					# Progbar
 					pb = Progressbar(toplevel)
 					pb.grid(row=3, column=0)
-					pb.columnconfigure(0, weight=2)
+
+					# StatusLabel
+					sl = Label(toplevel, text='Loading Files...')
+					sl.grid(row=3, column=1)
 
 					# Cancel Button
 					b = Button(toplevel, text='Cancel')
 					orig_color = b.cget("background")
-					b.bind('<Button-1>', lambda event: canceltask(toplevel, b_go))
+					b.bind('<Button-1>', lambda event: canceltask(toplevel, edf_e, edf_b, anno_e, anno_b, b_go, b, sl, pb))
 					b.grid(row=3, column=2, sticky=NSEW)
 
+					# Bind
+					toplevel.bind('<Escape>', lambda e: canceltask(toplevel, edf_e, edf_b, anno_e, anno_b, b_go, b, sl, pb))
+
 					# Task
-					self.progbarThread = threading.Thread(target=task, args=(toplevel, filepath_edf, filepath_anno, pb, b))
-					self.progbarThread.setName('start')
+					self.progbarThread = threading.Thread(target=task, args=(toplevel, edf_e, edf_b, anno_e, anno_b, b_go, filepath_edf, filepath_anno, b, sl, pb))
 					self.progbarThread.start()
 			
 			def getFilePath(svar, filetitle, filetag, callback):
@@ -174,7 +216,6 @@ class AppUI(Tk):
 				toplevel.lift()
 				toplevel.focus_force()
 				toplevel.grab_set()
-				#toplevel.grab_release()
 
 			file_toplevel = Toplevel()
 			focus(file_toplevel)
@@ -193,7 +234,7 @@ class AppUI(Tk):
 
 			# Go button
 			b_go = Button(file_toplevel, text='Go')
-			b_go.bind('<Button-1>', lambda e: starttask(file_toplevel, b_go, filepath_edf.get(), filepath_anno.get()))	
+			b_go.bind('<Button-1>', lambda e: starttask(file_toplevel, entry_edf, b_edf, entry_anno, b_anno, b_go, filepath_edf.get(), filepath_anno.get()))	
 
 			# Grids
 			label_edf.grid(row=0, column=0, sticky=E)
@@ -207,16 +248,17 @@ class AppUI(Tk):
 			b_go.grid(row=2, column=2, sticky=NSEW)
 
 			# Binds
-			file_toplevel.bind('<Return>', lambda e: starttask(file_toplevel, b_go, filepath_edf.get(), filepath_anno.get()))
+			file_toplevel.bind('<Return>', lambda e: starttask(file_toplevel, entry_edf, b_edf, entry_anno, b_anno, b_go, filepath_edf.get(), filepath_anno.get()))
 			file_toplevel.bind('<Escape>', lambda e: file_toplevel.destroy())			
 
 	# Open already formatted plots
 	def Open_File(self):
 		if not self.progbarThread:
 			try:
-				# TODO: Default dir
+				# TODO: Default dir ?
 				file = filedialog.askopenfile(title='Choose '+ res.ff_FILETITLE_a +' file', filetypes=[(res.ff_FILETITLE_a,'*'+res.ff_FILETAG_a)])
 
+				# TODO:
 				# ---
 				# # x = [self.plot_data, self.property_dict]
 				# x = "pickle read(file)"
@@ -239,11 +281,14 @@ class AppUI(Tk):
 		self.main_frame.close_plot()
 		self.plot_data = plot_data
 		self.property_dict = property_dict
+		# TODO:
+		#plotdata = [s for i,s in enumerate(self.plot_data) if self.btn_plot_states[i]]
+		#from plots import make_figure(plotdata) ; self.plot_figure = make_figure(plotdata)
 		self.main_frame.open_plot()
 
 	# Save plotfile
 	def Save_File(self):
-		if self.plot_data:
+		if self.plot_data and self.property_dict:
 			try:
 				# TODO: Default dir
 				file = filedialog.asksaveasfile(filetypes=[(res.ff_FILETITLE_a,'*'+res.ff_FILETAG_a)])
@@ -331,6 +376,10 @@ class AppUI(Tk):
 
 		# Update plot
 		def update_plot(self):
+			# TODO:
+			# plotdata = [s for i,s in enumerate(self.controller.plot_data) if self.controller.btn_plot_states[i]]
+			# from plots import make_figure(plotdata) ; self.controller.plot_figure = make_figure(plotdata)
+			
 			self.plot_frame.update_plot()
 
 		# Close plot
@@ -399,14 +448,7 @@ class AppUI(Tk):
 			def update_plot(self):
 				subframe = Frame(self)
 
-				f = TEST_FIG if not self.controller.plot_data else None #TODO: plot_compute(self.controller.plot_data)
-				
-				#w_=self.controller.width - 180
-				#h_=self.controller.height - 60
-				#dpi_ = 100
-				#f = Figure(figsize=(w_/dpi_, h_/dpi_), dpi=dpi_)
-				#a = f.add_subplot(111)
-				#a.plot([1,2,3,4,5,6,7,8],[5,6,1,3,8,9,3,5])
+				f = TEST_FIG if not self.controller.plot_figure else self.controller.plot_figure
 
 				canvas = FigureCanvasTkAgg(f, subframe)
 				canvas.show()
