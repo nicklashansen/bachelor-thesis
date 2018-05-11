@@ -10,7 +10,7 @@ def timeseries(epochs, full, epoch_length, overlap_factor, sample_rate):
 	length = int(full[-1].index_stop/sample_rate)
 	y, yhat, wake, rem, illegal = zeros(length), zeros(length), zeros(length), zeros(length), zeros(length)
 	for i,obj in enumerate(epochs):
-		if (obj.y):
+		if obj.y is not None:
 			y = modify_timeseries(y, obj.y, 1, obj.timecol, window, sample_rate)
 		yhat = modify_timeseries(yhat, obj.yhat, 1, obj.timecol, window, sample_rate)
 	for i,obj in enumerate(full):
