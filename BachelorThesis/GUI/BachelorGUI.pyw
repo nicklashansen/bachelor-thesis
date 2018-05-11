@@ -14,6 +14,7 @@ if __name__ == '__main__':
 	sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from plots import plot_results
+from preprocessing import prep_X
 
 """
 WRITTEN BY
@@ -21,7 +22,7 @@ Micheal Kirkegaard
 """
 
 class AppUI(Tk):
-	def __init__(self, w=1280, h=720):
+	def __init__(self, w=res.ss_WIDTH, h=res.ss_HEIGHT):
 		Tk.__init__(self)
 		# Setup
 		self.geometry("{0}x{1}".format(w,h))
@@ -89,34 +90,44 @@ class AppUI(Tk):
 				this = self.progbarThread
 				destroy = False
 				try:
-					steps = 4
+					steps = 5
 					# Step 0 Load files
-					# TODO: validate file format
+					statuslabel['text'] = 'Loading files...'
+					if this.getName() in ['cancel','close']: # Shutdown Flags
+						raise
+					# TODO: validate file format and signals
 
-					# Step 1 Tensorflow
+					# Step 1 prep files
+					time.sleep(1) # TODO: REMOVE
+					progresbar.step(int(100/steps))
+					statuslabel['text'] = 'Preprocessing files...'
+					if this.getName() in ['cancel','close']: # Shutdown Flags
+						raise
+					X = prep_X(edf, anno)
+
+					# Step 2 Tensorflow
 					time.sleep(1) # TODO: REMOVE
 					progresbar.step(int(100/steps))
 					statuslabel['text'] = 'Loading tensorflow...'
 					if this.getName() in ['cancel','close']: # Shutdown Flags
 						raise
-					# Step 1 - load tensorflow / dataflow
 					from dataflow import dataflow
 
-					# Step 2 - Analyse
+					# Step 3 - Analyse
 					progresbar.step(int(100/steps))
 					statuslabel['text'] = 'Analysing Data...'
 					if this.getName() in ['cancel','close']: # Shutdown Flags
 						raise
+					plot_data, property_dict = dataflow(X)
+					property_dict = [('edf_path',edf),('anno_path',anno)] + property_dict
 
-					plot_data, property_dict = dataflow(edf, anno)
-
-					# Step 3 - Plot data
+					# Step 4 - Plot data
 					progresbar.step(int(100/steps))
 					statuslabel['text'] = 'Plotting Results...'
 					if this.getName() in ['cancel','close']: # Shutdown Flags
 						raise
 
-					# step 4 - Finished
+					# step 5 - Finished
 					time.sleep(1) # TODO: REMOVE
 					progresbar.step(int(100/steps))
 					destroy = True
@@ -170,7 +181,7 @@ class AppUI(Tk):
 					pb.grid(row=3, column=0)
 
 					# StatusLabel
-					sl = Label(toplevel, text='Loading Files...')
+					sl = Label(toplevel)
 					sl.grid(row=3, column=1)
 
 					# Cancel Button
@@ -209,13 +220,13 @@ class AppUI(Tk):
 			# EDF file
 			filepath_edf = StringVar(value='Choose File...')
 			label_edf = Label(file_toplevel, text=res.ff_FILETITLE_e+':', anchor=E)
-			entry_edf = Entry(file_toplevel, textvariable=filepath_edf, width=80)
+			entry_edf = Entry(file_toplevel, textvariable=filepath_edf, width=res.ss_ENTRY_WIDTH)
 			b_edf = Button(file_toplevel, text='Choose File', command=lambda: getFilePath(filepath_edf, res.ff_FILETITLE_e, res.ff_FILETAG_e, lambda: focus(file_toplevel)))
 
 			# ANN file
 			filepath_anno = StringVar(value='Choose File...')
 			label_anno = Label(file_toplevel, text=res.ff_FILETITLE_s+':', anchor=E)
-			entry_anno = Entry(file_toplevel, textvariable=filepath_anno, width=80)
+			entry_anno = Entry(file_toplevel, textvariable=filepath_anno, width=res.ss_ENTRY_WIDTH)
 			b_anno = Button(file_toplevel, text='Choose File', command=lambda: getFilePath(filepath_anno, res.ff_FILETITLE_s, res.ff_FILETAG_s, lambda: focus(file_toplevel)))
 
 			# Go button

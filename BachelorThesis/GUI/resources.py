@@ -9,6 +9,8 @@ FONT = 'monospace 10'
 ss_WIDTH	= 1280
 ss_HEIGHT	= 720
 
+ss_ENTRY_WIDTH = 100
+
 ss_PLOT_DPI		= 100
 ss_PLOT_WIDTH	= ss_WIDTH - 210
 ss_PLOT_HEIGHT	= ss_HEIGHT - 60
