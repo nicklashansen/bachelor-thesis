@@ -99,15 +99,57 @@ def add_ECG_overhead(epoch, illegal):
 	illegal.append([0, int(epoch.index_start/sample_rate)])
 	return illegal
 
+def summary_statistics(files, X, epochs, yhat, wake, rem, illegal):
+	print('-- Summary Statistics --')
+	
+	timecol = transpose(X)[0]
+	rec_dur_float = ((timecol[-1]-timecol[0])/sample_rate)/60
+	rec_dur = str(int(rec_dur_float)) + ' min'
+	
+	_, n_wake = region(wake, count = True)
+	p_wake = n_wake/len(wake)
+	pct_wake = str(int(p_wake*100)) + '%'
+	
+	_, n_rem = region(rem, count = True)
+	pct_rem = str(int((n_rem/len(rem))*100)) + '%'
+
+	_, n_ill = region(illegal, count = True)
+	pct_ill = str(int((n_ill/len(illegal))*100)) + '%'
+
+	arousals, n = region(yhat, count = True)
+	n_arousals = len(arousals)
+
+	arousals_hr = '{0:.1f}'.format(n_arousals/((rec_dur_float/60)*(1-p_wake)))
+
+	arousal_dur = []
+	for arousal in arousals:
+		arousal_dur.append(arousal[1] - arousal[0])
+
+	return	[('edf', 'fileA')
+			,('anno', 'fileB')
+			,('aplot', 'fileC')
+			,('rec_dur', rec_dur)
+			,('pct_wake', pct_wake)
+			,('pct_rem', pct_rem)
+			,('n_arousals', n_arousals)
+			,('arousals_hr', arousals_hr)
+			,('avg_arousal', mean(arousal_dur))
+			,('med_arousal', median(arousal_dur))
+			,('std_arousal', std(arousal_dur))
+			,('pct_ill', pct_ill)
+			]
+
 def dataflow(edf = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\edfs\\mesa-sleep-2084.edf', anno = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\annotations-events-nsrr\\mesa-sleep-2084-nsrr.xml', cmd_plot = False):
-	X = prep_X(edf, anno)
+	#X = prep_X(edf, anno)
+	X,_ = fs.load_csv('mesa-sleep-2084')
 	epochs, yhat, wake, rem, illegal = get_timeseries_prediction(X, gru(load_graph=True))
 
 	## if multiple models
 	#yhat2, wake2, rem2, illegal2 = get_timeseries_prediction(X, gru(load_graph=True, path='gru2.h5'))
 	#yhat = add_predictions(yhat, yhat2)
 
+	summary = summary_statistics([edf, anno, None], X, epochs, yhat, wake, rem, illegal)
 	X = transpose(X)
 	if cmd_plot:
 		plot_results(X[0]/sample_rate, [X[1]], ['RR'], region(wake), region(rem), add_ECG_overhead(epochs[0], region(illegal)), region(yhat), int(epochs[-1].index_stop/sample_rate))
-	return X[0]/sample_rate, [X[1]], ['RR'], region(wake), region(rem), add_ECG_overhead(epochs[0], region(illegal)), region(yhat), int(epochs[-1].index_stop/sample_rate)
+	return (X[0]/sample_rate, [X[1]], ['RR'], region(wake), region(rem), add_ECG_overhead(epochs[0], region(illegal)), region(yhat), int(epochs[-1].index_stop/sample_rate)), summary
