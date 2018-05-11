@@ -101,7 +101,7 @@ def cm_overlap(y, yhat, timecol, secOverlap, sampleRate):
 			TP += 1
 			j += 1
 		# Previous checked predicted arousal
-		elif(j > 0 and i < len(i) and y[i].compareTo(yhat[j-1])==0):
+		elif(j > 0 and i < len(y) and y[i].compareTo(yhat[j-1])==0):
 			TP += 1
 			i += 1
 		# All scored arousals checked => rest of predicted = FP
