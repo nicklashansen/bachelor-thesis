@@ -9,24 +9,20 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.figure import Figure
 import resources as res
 
+if __name__ == '__main__':
+	import sys, os
+	sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from plots import plot_results
+from preprocessing import prep_X
+
 """
 WRITTEN BY
 Micheal Kirkegaard
 """
 
-w_=1280-180
-h_=720
-dpi_ = 100
-f_ = Figure(figsize=(w_/dpi_, h_/dpi_), dpi=dpi_)
-a_ = f_.add_subplot(111)
-a_.plot([1,2,3,4,5,6,7,8],[5,6,1,3,8,9,3,5])
-
-TEST_FIG = f_
-TEST_PROP = {0:0, 1:1, 2:2, 3:3, 4:4}
-TEST_PROP_2 = {5:5, 6:6, 7:7, 8:8, 9:9}
-
 class AppUI(Tk):
-	def __init__(self, w=1280, h=720):
+	def __init__(self, w=res.ss_WIDTH, h=res.ss_HEIGHT):
 		Tk.__init__(self)
 		# Setup
 		self.geometry("{0}x{1}".format(w,h))
@@ -94,44 +90,45 @@ class AppUI(Tk):
 				this = self.progbarThread
 				destroy = False
 				try:
-					steps = 4
+					steps = 5
 					# Step 0 Load files
-					# TODO: validate file format
+					statuslabel['text'] = 'Loading files...'
+					if this.getName() in ['cancel','close']: # Shutdown Flags
+						raise
+					# TODO: validate file format and signals
 
-					# Step 1 Tensorflow
-					time.sleep(5) # TODO: REMOVE
+					# Step 1 prep files
+					time.sleep(1) # TODO: REMOVE
+					progresbar.step(int(100/steps))
+					statuslabel['text'] = 'Preprocessing files...'
+					if this.getName() in ['cancel','close']: # Shutdown Flags
+						raise
+					X = prep_X(edf, anno)
+
+					# Step 2 Tensorflow
+					time.sleep(1) # TODO: REMOVE
 					progresbar.step(int(100/steps))
 					statuslabel['text'] = 'Loading tensorflow...'
 					if this.getName() in ['cancel','close']: # Shutdown Flags
 						raise
-					# Step 1 - load tensorflow / dataflow
-					if __name__ == '__main__':
-						import sys, os
-						sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 					from dataflow import dataflow
 
-					# Step 2 - Analyse
+					# Step 3 - Analyse
 					progresbar.step(int(100/steps))
 					statuslabel['text'] = 'Analysing Data...'
 					if this.getName() in ['cancel','close']: # Shutdown Flags
 						raise
+					plot_data, property_dict = dataflow(X)
+					property_dict = [('edf_path',edf),('anno_path',anno)] + property_dict
 
-					# ---
-					# 1) Get Signals (plot is renderes elsewhere)
-					plot_data = dataflow(edf, anno)
-					# 2) find propeties from signals
-					property_dict = TEST_PROP_2
-					# ---
-
-					# Step 3 - Plot data
+					# Step 4 - Plot data
 					progresbar.step(int(100/steps))
 					statuslabel['text'] = 'Plotting Results...'
 					if this.getName() in ['cancel','close']: # Shutdown Flags
 						raise
 
-					# step 4 - Finished
-					time.sleep(5) # TODO: REMOVE
+					# step 5 - Finished
+					time.sleep(1) # TODO: REMOVE
 					progresbar.step(int(100/steps))
 					destroy = True
 
@@ -184,7 +181,7 @@ class AppUI(Tk):
 					pb.grid(row=3, column=0)
 
 					# StatusLabel
-					sl = Label(toplevel, text='Loading Files...')
+					sl = Label(toplevel)
 					sl.grid(row=3, column=1)
 
 					# Cancel Button
@@ -223,13 +220,13 @@ class AppUI(Tk):
 			# EDF file
 			filepath_edf = StringVar(value='Choose File...')
 			label_edf = Label(file_toplevel, text=res.ff_FILETITLE_e+':', anchor=E)
-			entry_edf = Entry(file_toplevel, textvariable=filepath_edf, width=80)
+			entry_edf = Entry(file_toplevel, textvariable=filepath_edf, width=res.ss_ENTRY_WIDTH)
 			b_edf = Button(file_toplevel, text='Choose File', command=lambda: getFilePath(filepath_edf, res.ff_FILETITLE_e, res.ff_FILETAG_e, lambda: focus(file_toplevel)))
 
 			# ANN file
 			filepath_anno = StringVar(value='Choose File...')
 			label_anno = Label(file_toplevel, text=res.ff_FILETITLE_s+':', anchor=E)
-			entry_anno = Entry(file_toplevel, textvariable=filepath_anno, width=80)
+			entry_anno = Entry(file_toplevel, textvariable=filepath_anno, width=res.ss_ENTRY_WIDTH)
 			b_anno = Button(file_toplevel, text='Choose File', command=lambda: getFilePath(filepath_anno, res.ff_FILETITLE_s, res.ff_FILETAG_s, lambda: focus(file_toplevel)))
 
 			# Go button
@@ -267,7 +264,7 @@ class AppUI(Tk):
 				# ---
 
 				plot_data = None
-				property_dict = TEST_PROP	
+				property_dict = None	
 
 				file.close()
 			except Exception as e:
@@ -281,9 +278,6 @@ class AppUI(Tk):
 		self.main_frame.close_plot()
 		self.plot_data = plot_data
 		self.property_dict = property_dict
-		# TODO:
-		#plotdata = [s for i,s in enumerate(self.plot_data) if self.btn_plot_states[i]]
-		#from plots import make_figure(plotdata) ; self.plot_figure = make_figure(plotdata)
 		self.main_frame.open_plot()
 
 	# Save plotfile
@@ -368,7 +362,7 @@ class AppUI(Tk):
 		# Show plot
 		def open_plot(self):
 			self.plot_frame.update_menu()
-			self.plot_frame.update_plot()
+			self.update_plot()
 			self.plot_frame.grid()
 			
 			self.prop_frame.update_properties()
@@ -376,10 +370,8 @@ class AppUI(Tk):
 
 		# Update plot
 		def update_plot(self):
-			# TODO:
-			# plotdata = [s for i,s in enumerate(self.controller.plot_data) if self.controller.btn_plot_states[i]]
-			# from plots import make_figure(plotdata) ; self.controller.plot_figure = make_figure(plotdata)
-			
+			plot = [self.controller.plot_data[0]] + [data if self.controller.btn_plot_states[i] else None for i,data in enumerate(self.controller.plot_data[1:7])] + [self.controller.plot_data[7]]
+			self.controller.plot_figure = plot_results(*(plot + [Figure(figsize=(res.ss_PLOT_WIDTH/res.ss_PLOT_DPI, res.ss_PLOT_HEIGHT/res.ss_PLOT_DPI), dpi=res.ss_PLOT_DPI)]))
 			self.plot_frame.update_plot()
 
 		# Close plot
@@ -404,7 +396,7 @@ class AppUI(Tk):
 			def update_menu(self):
 				subframe = Frame(self)
 
-				w = 25
+				w = res.ss_BUTTON_WIDTH
 
 				# Buttons
 				b_0 = Button(subframe, width=w, text='Raw ECG : ON')
@@ -412,7 +404,7 @@ class AppUI(Tk):
 				b_0['command'] = lambda: self.controller.plot_btn_state_swap(b_0, 0)
 
 				b_1 = Button(subframe, width=w, text='Raw PPG : OFF')
-				self.controller.btn_plot_states += [False]
+				self.controller.btn_plot_states += [True]
 				b_1['command'] = lambda:self.controller.plot_btn_state_swap(b_1, 1)
 
 				b_2 = Button(subframe, width=w, text='Arousals : ON')
@@ -446,23 +438,22 @@ class AppUI(Tk):
 
 			# update plot
 			def update_plot(self):
-				subframe = Frame(self)
+				if self.controller.plot_figure: 
+					subframe = Frame(self)
 
-				f = TEST_FIG if not self.controller.plot_figure else self.controller.plot_figure
+					canvas = FigureCanvasTkAgg(self.controller.plot_figure, subframe)
+					canvas.show()
+					canvas.get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)
 
-				canvas = FigureCanvasTkAgg(f, subframe)
-				canvas.show()
-				canvas.get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)
+					toolbar = NavigationToolbar2TkAgg(canvas, subframe)
+					toolbar.update()
+					toolbar.config(background='white')
+					canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=True)
 
-				toolbar = NavigationToolbar2TkAgg(canvas, subframe)
-				toolbar.update()
-				toolbar.config(background='white')
-				canvas._tkcanvas.pack(side=TOP, fill=BOTH, expand=True)
-
-				if(self.plot):
-					self.plot.grid_forget()
-				self.plot = subframe
-				self.plot.grid(row=1, column=0)
+					if(self.plot):
+						self.plot.grid_forget()
+					self.plot = subframe
+					self.plot.grid(row=1, column=0)
 
 		class Prop_Frame(Frame):
 			def __init__(self, master, controller):
@@ -477,8 +468,9 @@ class AppUI(Tk):
 					for frame in self.properties:
 						frame.grid_forget()
 
-				for k,v in self.controller.property_dict.items():
-					subframe = self.__property(str(k), str(v), 9, res.FONT)
+				w = res.ss_LABEL_WIDTH
+				for k,v in self.controller.property_dict:
+					subframe = self.__property(str(k), str(v), w, res.FONT)
 					subframe.grid(sticky=NE)
 					self.properties += [subframe]
 

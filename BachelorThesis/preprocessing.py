@@ -13,7 +13,7 @@ Michael Kirkegaard
 """
 
 def prep_X(edf, anno):
-	sub = fs.Subject(None, edf, anno)
+	sub = fs.Subject(None, edf, anno, ArousalAnno=False)
 	return preprocess(sub, arousals=False)
 
 def prepSingle(filename, save = True):

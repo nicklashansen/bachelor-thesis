@@ -4,6 +4,21 @@
 FONT = 'monospace 10'
 
 #
+# Sizes
+#
+ss_WIDTH	= 1280
+ss_HEIGHT	= 720
+
+ss_ENTRY_WIDTH = 100
+
+ss_PLOT_DPI		= 100
+ss_PLOT_WIDTH	= ss_WIDTH - 210
+ss_PLOT_HEIGHT	= ss_HEIGHT - 60
+ss_BUTTON_WIDTH = 24
+ss_LABEL_WIDTH = 12
+
+
+#
 # FILEFORMATTINGS
 #
 
