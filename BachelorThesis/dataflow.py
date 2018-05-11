@@ -19,7 +19,7 @@ Nicklas Hansen
 epoch_length, overlap_factor, overlap_score, sample_rate = 120, 2, 10, 256
 
 def fit_validate(gpu = True, balance = False, only_arousal = False):
-	batch_size = 2 ** 11 if gpu else 2 ** 7
+	batch_size = 2 ** 8 if gpu else 2 ** 6
 	model = fit(batch_size, balance, only_arousal)
 	model.save()
 	evaluate(model, validation)
@@ -35,7 +35,7 @@ def evaluate(model = None, validation = True):
 	if model is None:
 		model = gru(load_graph=True)
 	files = fs.load_splits()[set]
-	results = validate(model, files)
+	results = validate(model, files[:8])
 	log_results(results, validation=validation)
 
 def validate(model, files):
