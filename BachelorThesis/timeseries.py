@@ -25,7 +25,7 @@ def timeseries(epochs, full, epoch_length, overlap_factor, sample_rate):
 
 def modify_timeseries(ts, values, criteria, timecol, window, sample_rate):
 	for i,y in enumerate(values[window:]):
-		enum = [int(timecol[window+i-3]/sample_rate),int(timecol[window+i]/sample_rate)]
+		enum = [int(timecol[window+i-1]/sample_rate),int(timecol[window+i]/sample_rate)]
 		if enum[0] > enum[1]:
 			enum[0] = 0
 		if y == criteria:

@@ -16,7 +16,7 @@ WRITTEN BY:
 Nicklas Hansen
 """
 
-epoch_length, overlap_factor, overlap_score, sample_rate = 120, 2, 3, 256
+epoch_length, overlap_factor, overlap_score, sample_rate = 120, 2, 10, 256
 
 def fit_validate(gpu = True, balance = False, only_arousal = False):
 	batch_size = 2 ** 11 if gpu else 2 ** 7
@@ -65,13 +65,13 @@ def predict_file(filename, model, filter = False, removal = True):
 
 def reconstruct(X, y, epochs):
 	timecol = transpose(X)[0]
-	yhat, t = zeros(y.size), zeros(y.size)
+	yhat = zeros(y.size)
 	for _,e in enumerate(epochs):
 		index = where(timecol == e.index_start)[0][0]
 		for i,val in enumerate(e.yhat):
-			yhat[index + i] = val
-			t[index + i] = index
-	return yhat, t
+			if val == 1:
+				yhat[index + i] = val
+	return yhat, timecol
 
 def log_results(results, validation = True):
 	filename = 'Validation' if validation else 'Evaluation'
@@ -80,6 +80,13 @@ def log_results(results, validation = True):
 		log.print(str(k))
 		for key,val in d.items():
 			log.print(str(key)+':'+str(val))
+
+def add_predictions(yhat1, yhat2):
+	assert len(yhat1) == len(yhat2)
+	for i in range(len(yhat1)):
+		if yhat2[i] == 1:
+			yhat1[i] = 1
+	return yhat1
 
 def dataflow(edf = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\edfs\\mesa-sleep-2084.edf', anno = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\annotations-events-nsrr\\mesa-sleep-2084-nsrr.xml'):
 	path1 = 'gru.h5'
@@ -103,31 +110,28 @@ def dataflow(edf = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622cc
 	epochs2.sort(key=lambda x: x.index_start, reverse=False)
 	_, yhat2, wake, rem, illegal = timeseries(epochs2, full, epoch_length, overlap_factor, sample_rate)
 
+	# Modellerne lægges sammen til plottet
+	yhat = add_predictions(yhat, yhat2)
+
+	# Reconstruction af yhat for hver model
 	_yhat, timecol = reconstruct(X, y, epochs)
 	_yhat2, timecol2 = reconstruct(X, y, epochs2)
 
-	#TP, FP, TN, FN = metrics.cm_overlap(y, _yhat, timecol, overlap_score, sample_rate)
-	#results = metrics.compute_cm_score(TP, FP, TN, FN)
-	#print(results)
+	# Modellerne lægges sammen til metrics
+	_yhat = add_predictions(_yhat, _yhat2)
 
-	#TP, FP, TN, FN = metrics.cm_overlap(y, _yhat2, timecol2, overlap_score, sample_rate)
-	#results2 = metrics.compute_cm_score(TP, FP, TN, FN)
-	#print(results2)
-
+	# For at få time axis
 	X = transpose(X)
 
-	plot_results(X[0]/sample_rate, [X[1], y], ['RR', 'arousals'], region(wake), None, None, region(yhat), int(full[-1].index_stop/sample_rate))
+	# Tjek forskelle i sum, bare for sjov
+	print('y = ', sum(y))
+	print('_yhat = ', sum(_yhat))
 
-	print(sum(yhat), sum(yhat2))
-	assert len(yhat) == len(yhat2)
-	for i in range(len(yhat)):
-		if yhat[i] == 1 or yhat2[i] == 1:
-			yhat[i] = 1
-	print(sum(yhat))
-
+	# Her bruges _yhat i stedet, da yhat til plottet er resampled
 	TP, FP, TN, FN = metrics.cm_overlap(y, _yhat, timecol, overlap_score, sample_rate)
 	results = metrics.compute_cm_score(TP, FP, TN, FN)
 	print(results)
 
+	# Plot
 	plot_results(X[0]/sample_rate, [X[1], y], ['RR', 'arousals'], region(wake), None, None, region(yhat), int(full[-1].index_stop/sample_rate))
 	return X[0]/sample_rate, [X[1]], ['RR'], region(wake), region(rem), ill, region(yhat), int(full[-1].index_stop/sample_rate)
