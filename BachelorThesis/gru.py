@@ -6,7 +6,6 @@ from keras.utils import plot_model
 import metrics
 from stopwatch import *
 import sys
-import pydot
 from plots import *
 import filesystem as fs
 
