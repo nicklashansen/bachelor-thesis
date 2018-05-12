@@ -18,9 +18,13 @@ Nicklas Hansen
 
 epoch_length, overlap_factor, overlap_score, sample_rate = 120, 2, 10, 256
 
+def get_batch_size(gpu = True):
+	return 2 ** 8 if gpu else 2 ** 6
+
 def parameter_tuning(gpu = True, evaluate_model = True, balance = False, only_arousal = False):
 	params = [[1,2], [0,1], [1,2], [0, 0.2]]
-	batch_size = 2 ** 8 if gpu else 2 ** 6
+	batch_size = get_batch_size(gpu)
+	data = dataset(fs.load_epochs(), balance=balance, only_arousal=only_arousal)
 	step = 0
 	for i,ix in enumerate(params[0]):
 		for j,jx in enumerate(params[1]):
@@ -29,20 +33,21 @@ def parameter_tuning(gpu = True, evaluate_model = True, balance = False, only_ar
 					print('Running configuration', step, '...')
 					config = gru_config('param' + str(step), ix, jx, kx, hx)
 					model = gru(batch_size=batch_size, config=config)
-					model = fit(model=model, balance=True)
+					model = fit(model=model, data=data)
 					model.save()
 					if evaluate_model:
 						evaluate(model, validation=True, log_filename = config.name)
 					step += 1
 
 def fit_validate(gpu = True, balance = False, only_arousal = False, load_path = None, save_path = None):
-	batch_size = 2 ** 8 if gpu else 2 ** 6
+	batch_size = get_batch_size(gpu)
 	model = fit(batch_size, balance, only_arousal)
 	model.save()
 	evaluate(model, validation)
 
-def fit(batch_size = None, balance = False, only_arousal = False, model = None, load_path = None):
-	data = dataset(fs.load_epochs(), balance=balance, only_arousal=only_arousal)
+def fit(batch_size = None, balance = False, only_arousal = False, model = None, load_path = None, data = None):
+	if data is None:
+		data = dataset(fs.load_epochs(), balance=balance, only_arousal=only_arousal)
 	if model is None:
 		model = gru(data, batch_size)
 	model.fit(data.epochs)
@@ -54,7 +59,7 @@ def evaluate(model = None, validation = True, log_filename = None):
 		model = gru(load_graph=True)
 	files = fs.load_splits()[set]
 	results = validate(model, files)
-	log_results(results, validation=validation, log_filename=filename)
+	log_results(results, validation=validation, filename=log_filename)
 	return results
 
 def validate(model, files):
