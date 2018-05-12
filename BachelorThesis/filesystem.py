@@ -33,12 +33,14 @@ class Filepaths(object):
 	SaveSubject = Files + 'Subjects\\'
 	SaveSplits  = Files + 'Splits\\'
 	SaveEpochs = Files + 'Epochs\\'
-	
 
 	# Load paths
 	LoadDatabaseCsv = Files + 'Data\\mesa\\datasets\\mesa-sleep-dataset-0.3.0.csv'
 	LoadPsg = Files + 'Data\\mesa\\polysomnography\\edfs\\'
 	LoadAnno = Files + 'Data\\mesa\\polysomnography\\annotations-events-nsrr\\'
+
+	# GUI
+	TempAplotFile = Files + 'temp.aplot' 
 
 class Annotation(object):
 	def __init__(self, label, annolist, dur):
@@ -178,7 +180,6 @@ def write_splits(train, test, eval, name='splits'):
 		f.write(','.join(test)+'\n')
 		f.write(','.join(eval))
 
-
 def load_epochs(name='epochs'):
 	file = Filepaths.SaveEpochs + name +'.pickle'
 	with open(file, 'rb') as f:
@@ -190,6 +191,17 @@ def write_epochs(epochs, name='epochs'):
 	file = Filepaths.SaveEpochs + name + '.pickle'
 	with open(file, 'wb') as handle:
 		pck.dump(epochs, handle, protocol=pck.HIGHEST_PROTOCOL)
+
+def load_aplot(filepath):
+	filepath = filepath if filepath else Filepaths.TempAplotFile
+	with open(filepath, 'rb') as f:
+		plotdata, properties = pck.load(f)
+	return plotdata, properties
+
+def write_alpot(filepath, plotdata, properties):
+	filepath = filepath if filepath else Filepaths.TempAplotFile
+	with open(filepath, 'wb') as f:
+		pck.dump([plotdata,properties], f, protocol=pck.HIGHEST_PROTOCOL)
 
 def write(directory, filename, line=None, wra='a'):
 	os.makedirs(directory, exist_ok=True)

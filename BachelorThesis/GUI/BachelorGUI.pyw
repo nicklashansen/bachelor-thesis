@@ -8,13 +8,12 @@ matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.figure import Figure
 import resources as res
-
+import sys, os
 if __name__ == '__main__':
-	import sys, os
 	sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from plots import plot_results
 from preprocessing import prep_X
+import filesystem as fs
 
 """
 WRITTEN BY
@@ -58,6 +57,11 @@ class AppUI(Tk):
 		self.bind('<Shift-C>', lambda e: self.Close_File())
 		self.bind('<Shift-Escape>', lambda e: self.quit())
 
+		# Load last plot
+		if os.path.isfile(fs.Filepaths.TempAplotFile):
+			plot_data, property_dict = fs.load_aplot(None)
+			self.Show_Plot(plot_data, property_dict)
+
 		# Init
 		self.mainloop()
 	
@@ -69,7 +73,7 @@ class AppUI(Tk):
 		filemenu.add_command(label="New", command=self.New_File, accelerator='Shift-N')
 		filemenu.add_command(label="Open", command=self.Open_File, accelerator='Shift-O')
 		filemenu.add_command(label="Save", command=self.Save_File, accelerator='Shift-S')
-		filemenu.add_command(label="Close", command=self.Close_File, accelerator='Shift-Enter')
+		filemenu.add_command(label="Close", command=self.Close_File, accelerator='Shift-C')
 		filemenu.add_separator()
 		filemenu.add_command(label="Exit", command=self.quit, accelerator='Shift-Escape')
 		menubar.add_cascade(label="File", menu=filemenu)
@@ -115,7 +119,7 @@ class AppUI(Tk):
 
 					# Step 3 - Analyse
 					progresbar.step(int(100/steps))
-					statuslabel['text'] = 'Analysing Data...'
+					statuslabel['text'] = 'Analysing data...'
 					if this.getName() in ['cancel','close']: # Shutdown Flags
 						raise
 					plot_data, property_dict = dataflow(X)
@@ -123,7 +127,7 @@ class AppUI(Tk):
 
 					# Step 4 - Plot data
 					progresbar.step(int(100/steps))
-					statuslabel['text'] = 'Plotting Results...'
+					statuslabel['text'] = 'Plotting results...'
 					if this.getName() in ['cancel','close']: # Shutdown Flags
 						raise
 
@@ -143,8 +147,9 @@ class AppUI(Tk):
 							self.Close_File()
 							self.Show_Plot(plot_data, property_dict)
 						else:
+							#TODO: ErrorMsg
 							canceltask(toplevel, edf_e, edf_b, anno_e, anno_b, b_go,cancelbutton,statuslabel,progresbar)
-							#TODO: ErrMsg
+							
 
 			def canceltask(toplevel, edf_e, edf_b, anno_e, anno_b, b_go,cancelbutton,statuslabel,progresbar):
 				if self.progbarThread:
@@ -253,20 +258,8 @@ class AppUI(Tk):
 		if not self.progbarThread:
 			try:
 				# TODO: Default dir ?
-				file = filedialog.askopenfile(title='Choose '+ res.ff_FILETITLE_a +' file', filetypes=[(res.ff_FILETITLE_a,'*'+res.ff_FILETAG_a)])
-
-				# TODO:
-				# ---
-				# # x = [self.plot_data, self.property_dict]
-				# x = "pickle read(file)"
-				# plot_data = x[0]
-				# property_dict = x[1]
-				# ---
-
-				plot_data = None
-				property_dict = None	
-
-				file.close()
+				filepath = filedialog.askopenfilename(title='Choose '+ res.ff_FILETITLE_a +' file', filetypes=[(res.ff_FILETITLE_a,'*'+res.ff_FILETAG_a)])
+				plot_data, property_dict = fs.load_aplot(filepath)
 			except Exception as e:
 				# TODO: ErrorMsg
 				return
@@ -278,21 +271,17 @@ class AppUI(Tk):
 		self.main_frame.close_plot()
 		self.plot_data = plot_data
 		self.property_dict = property_dict
+		fs.write_alpot(None, self.plot_data, self.property_dict)
 		self.main_frame.open_plot()
 
 	# Save plotfile
 	def Save_File(self):
 		if self.plot_data and self.property_dict:
 			try:
-				# TODO: Default dir
-				file = filedialog.asksaveasfile(filetypes=[(res.ff_FILETITLE_a,'*'+res.ff_FILETAG_a)])
-				
-				# ---
-				# x = [self.plot_data, self.property_dict]
-				# pickle.dump(file, x)
-				# ---
-
-				file.close()
+				# TODO: Default dir ?
+				filepath = filedialog.asksaveasfilename(filetypes=[(res.ff_FILETITLE_a,'*'+res.ff_FILETAG_a)])
+				fs.write_alpot(filepath, self.plot_data, self.property_dict)
+				# TODO: SuccessMsg
 			except Exception as e:
 				# TODO: ErrorMsg
 				return 
@@ -403,7 +392,7 @@ class AppUI(Tk):
 				self.controller.btn_plot_states += [True]
 				b_0['command'] = lambda: self.controller.plot_btn_state_swap(b_0, 0)
 
-				b_1 = Button(subframe, width=w, text='Raw PPG : OFF')
+				b_1 = Button(subframe, width=w, text='Raw PPG : ON')
 				self.controller.btn_plot_states += [True]
 				b_1['command'] = lambda:self.controller.plot_btn_state_swap(b_1, 1)
 
