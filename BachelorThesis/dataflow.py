@@ -106,12 +106,14 @@ def log_results(results, validation = True, filename = None):
 		for key,val in d.items():
 			log.print(str(key)+':'+str(val))
 
-def get_timeseries_prediction(X, model):
-	epochs = epochs_from_prep(X, None, epoch_length, overlap_factor, filter = False, removal=False)
+def get_timeseries_prediction(X, model, y=None):
+	epochs = epochs_from_prep(X, y, epoch_length, overlap_factor, filter = False, removal=True)
 	epochs = model.predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
-	_, yhat, wake, rem, illegal = timeseries(epochs, epochs, epoch_length, overlap_factor, sample_rate)
-	return epochs, yhat, wake, rem, illegal
+	y, yhat, wake, rem, illegal, timecol = timeseries(epochs, epochs, epoch_length, overlap_factor, sample_rate)
+	if y is not None:
+		return epochs, y, yhat, wake, rem, illegal, timecol
+	return epochs, yhat, wake, rem, illegal, timecol
 
 def add_predictions(yhat1, yhat2):
 	assert len(yhat1) == len(yhat2)
@@ -152,13 +154,24 @@ def summary_statistics(X, epochs, yhat, wake, rem, illegal):
 			,('ill_score', ill_score)
 			]
 
-def test_dataflow(edf = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\edfs\\mesa-sleep-2084.edf', anno = 'C:\\Users\\nickl\\Source\\Repos\\a000de373e6449ea8c29d5622ccbfcc6\\BachelorThesis\\Files\\Data\\mesa\\polysomnography\\annotations-events-nsrr\\mesa-sleep-2084-nsrr.xml'):
-	X,_ = fs.load_csv('mesa-sleep-2084')
-	data, summary = dataflow(X, cmd_plot=True)
-	print(summary)
+def test_dataflow():
+	X,y = fs.load_csv('mesa-sleep-2084')
+	epochs = epochs_from_prep(X, y, epoch_length, overlap_factor, sample_rate, filter=False, removal=True)
+	epochs = gru(load_graph=True).predict(epochs)
+	epochs.sort(key=lambda x: x.index_start, reverse=False)
+	yhat, timecol = reconstruct(X, y, epochs)
+	X,_,mask = make_features(X, None, sample_rate, removal=False)
+	X = transpose(X)
+	wake = [1 if x == -1 else 0 for i,x in enumerate(X[5])]
+	rem = [1 if x == 1 else 0 for i,x in enumerate(X[5])]
+	ill = [1 if x >= 1 and wake[i] == 0 else 0 for i,x in enumerate(mask)]
+	
+	plot_results(X[0]/sample_rate, [X[1]], ['RR'], region(wake), region(rem), region(ill), region(yhat), int(X[0,-1]/sample_rate))
+	#data, summary = dataflow(X, cmd_plot=True)
+	#print(summary)
 
 def dataflow(X, cmd_plot = False):
-	epochs, yhat, wake, rem, illegal = get_timeseries_prediction(X, gru(load_graph=True))
+	epochs,yhat,wake,rem,illegal = get_timeseries_prediction(X, gru(load_graph=True))
 
 	## if multiple models
 	#epochs2, yhat2, wake2, rem2, illegal2 = get_timeseries_prediction(X, gru(load_graph=True, path='gru2.h5'))
@@ -168,4 +181,4 @@ def dataflow(X, cmd_plot = False):
 	X = transpose(X)
 	if cmd_plot:
 		plot_results(X[0]/sample_rate, [X[1]], ['RR'], region(wake), region(rem), add_ECG_overhead(epochs[0], region(illegal)), region(yhat), int(epochs[-1].index_stop/sample_rate))
-	return (X[0]/sample_rate, [X[1]], ['RR'], region(wake), region(rem), add_ECG_overhead(epochs[0], region(illegal)), region(yhat), int(epochs[-1].index_stop/sample_rate)), summary
+	return (X[0]/sample_rate, [X[1], X[3]], ['RR', 'PTT'], region(wake), region(rem), add_ECG_overhead(epochs[0], region(illegal)), region(yhat), int(epochs[-1].index_stop/sample_rate)), summary

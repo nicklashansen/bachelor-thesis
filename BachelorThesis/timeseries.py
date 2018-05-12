@@ -42,7 +42,10 @@ def region(array, count = False):
 			n += 1
 		elif bin:
 			bin = False
-			regions.append([start, i-1])
+			if i-1-start <= 3 and start > 2:
+				regions.append([start-2,i-1])
+			else:
+				regions.append([start, i-1])
 	if bin:
 		regions.append([start, i-1])
 	if count:

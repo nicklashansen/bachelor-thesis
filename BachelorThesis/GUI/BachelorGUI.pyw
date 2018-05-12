@@ -18,7 +18,7 @@ from preprocessing import prep_X
 
 """
 WRITTEN BY
-Micheal Kirkegaard
+Michael Kirkegaard
 """
 
 class AppUI(Tk):

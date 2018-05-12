@@ -13,10 +13,10 @@ Michael Kirkegaard
 """
 
 if __name__ == '__main__':
-	parameter_tuning(evaluate_model=False)
+	#parameter_tuning(evaluate_model=False)
 	#fit_validate(gpu=True, balance = True)
 	#evaluate()
-	#test_dataflow()
+	test_dataflow()
 	#BachelorGUI()
 	#process_epochs()
 	#prepAll(force=False)

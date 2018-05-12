@@ -14,10 +14,7 @@ Nicklas Hansen
 """
 
 def process_epochs():
-	#files = fs.getAllSubjectFilenames(preprocessed=True)
-	#files = reliableFiles(files)
 	train = fs.load_splits()[0]
-	#train, _, _ = train_test_eval_split(files) # = train,test,eval
 	epochs = compile_epochs(train)
 
 def reliableFiles(files):
@@ -104,7 +101,7 @@ def make_features(X, y, sample_rate, removal = True):
 	if removal:
 		X,y,mask = sleep_removal(X, y, mask, sample_rate)
 	X = median_filt(X)
-	X = quantile_norm(X, 10)
+	X = quantile_norm(X, 10000)
 	return X, y, mask
 
 def make_masks(X):
