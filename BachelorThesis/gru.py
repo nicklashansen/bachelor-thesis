@@ -2,9 +2,11 @@ from numpy import *
 from keras.models import Sequential, model_from_json, load_model
 from keras.layers import Dense, Embedding, TimeDistributed, Bidirectional, GRU, Dropout
 from keras.callbacks import EarlyStopping, TensorBoard, History
+from keras.utils import plot_model
 import metrics
 from stopwatch import *
 import sys
+import pydot
 from plots import *
 import filesystem as fs
 
@@ -15,6 +17,7 @@ Nicklas Hansen
 
 MODEL = 'gru.h5'
 HIST = 'hist.csv'
+PLOT = 'gru.png'
 
 class gru_config:
 	def __init__(self, name = 'gru', rnn_layers = 1, dense_layers_before = 0, dense_layers_after = 1, dropout = 0, timesteps = 120, features = 5, verbose = 1):
@@ -67,11 +70,19 @@ class gru:
 		graph.compile(loss='binary_crossentropy', optimizer='adam')
 		self.graph = graph
 
-	def save(self, path = MODEL):
+	def save(self, path = MODEL, plot = False, plot_path = PLOT):
 		if self.config is not None:
 			self.graph.save(self.config.name + '.h5')
 		else:
 			self.graph.save(path)
+		if plot:
+			self.plot(plot_path)
+
+	def plot(self, path = PLOT):
+		if self.config is not None:
+			plot_model(self.graph, self.config.name + '.png')
+		else:
+			plot_model(self.graph, to_file=path)
 
 	def get_callbacks(self):
 		early_stop = EarlyStopping(monitor='loss', patience=3, mode='auto', verbose=1)

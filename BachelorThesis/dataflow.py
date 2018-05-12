@@ -29,7 +29,7 @@ def parameter_tuning(gpu = True, evaluate_model = True, balance = False, only_ar
 					print('Running configuration', step, '...')
 					config = gru_config('param' + str(step), ix, jx, kx, hx)
 					model = gru(batch_size=batch_size, config=config)
-					model = fit(model=model)
+					model = fit(model=model, balance=True)
 					model.save()
 					if evaluate_model:
 						evaluate(model, validation=True, log_filename = config.name)
@@ -42,7 +42,7 @@ def fit_validate(gpu = True, balance = False, only_arousal = False, load_path = 
 	evaluate(model, validation)
 
 def fit(batch_size = None, balance = False, only_arousal = False, model = None, load_path = None):
-	data = dataset(fs.load_epochs(), balance=balance, only_arousal=only_arousal)
+	data = dataset(fs.load_epochs()[:10], balance=balance, only_arousal=only_arousal)
 	if model is None:
 		model = gru(data, batch_size)
 	model.fit(data.epochs)
@@ -53,7 +53,7 @@ def evaluate(model = None, validation = True, log_filename = None):
 	if model is None:
 		model = gru(load_graph=True)
 	files = fs.load_splits()[set]
-	results = validate(model, files)
+	results = validate(model, files[:1])
 	log_results(results, validation=validation, log_filename=filename)
 	return results
 
