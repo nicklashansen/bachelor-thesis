@@ -18,25 +18,49 @@ Nicklas Hansen
 
 epoch_length, overlap_factor, overlap_score, sample_rate = 120, 2, 10, 256
 
-def fit_validate(gpu = True, balance = False, only_arousal = False):
-	batch_size = 2 ** 8 if gpu else 2 ** 6
+def get_batch_size(gpu = True):
+	return 2 ** 8 if gpu else 2 ** 6
+
+def parameter_tuning(gpu = True, evaluate_model = True, balance = False, only_arousal = False):
+	params = [[1,2], [0,1], [1,2], [0, 0.2]]
+	batch_size = get_batch_size(gpu)
+	data = dataset(fs.load_epochs(), balance=balance, only_arousal=only_arousal)
+	step = 0
+	for i,ix in enumerate(params[0]):
+		for j,jx in enumerate(params[1]):
+			for k,kx in enumerate(params[2]):
+				for h,hx in enumerate(params[3]):
+					print('Running configuration', step, '...')
+					config = gru_config('param' + str(step), ix, jx, kx, hx)
+					model = gru(batch_size=batch_size, config=config)
+					model = fit(model=model, data=data)
+					model.save()
+					if evaluate_model:
+						evaluate(model, validation=True, log_filename = config.name)
+					step += 1
+
+def fit_validate(gpu = True, balance = False, only_arousal = False, load_path = None, save_path = None):
+	batch_size = get_batch_size(gpu)
 	model = fit(batch_size, balance, only_arousal)
 	model.save()
 	evaluate(model, validation)
 
-def fit(batch_size, balance, only_arousal):
-	data = dataset(fs.load_epochs(), balance=balance, only_arousal=only_arousal)
-	model = gru(data, batch_size)
+def fit(batch_size = None, balance = False, only_arousal = False, model = None, load_path = None, data = None):
+	if data is None:
+		data = dataset(fs.load_epochs(), balance=balance, only_arousal=only_arousal)
+	if model is None:
+		model = gru(data, batch_size)
 	model.fit(data.epochs)
 	return model
 
-def evaluate(model = None, validation = True):
+def evaluate(model = None, validation = True, log_filename = None):
 	set = 1 if validation else 2
 	if model is None:
-		model = gru(load_graph=True, path = 'gru-newsleep-arousals.h5')
+		model = gru(load_graph=True)
 	files = fs.load_splits()[set]
 	results = validate(model, files)
-	log_results(results, validation=validation)
+	log_results(results, validation=validation, filename=log_filename)
+	return results
 
 def validate(model, files):
 	TP=FP=TN=FN=0
@@ -73,8 +97,9 @@ def reconstruct(X, y, epochs):
 				yhat[index + i] = val
 	return yhat, timecol
 
-def log_results(results, validation = True):
-	filename = 'Validation' if validation else 'Evaluation'
+def log_results(results, validation = True, filename = None):
+	if filename is None:
+		filename = 'Validation' if validation else 'Evaluation'
 	log = getLog(filename, echo=True)
 	for k,d in results.items():
 		log.print(str(k))

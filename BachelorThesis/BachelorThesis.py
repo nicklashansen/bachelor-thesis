@@ -3,7 +3,7 @@
 #sys.path.insert(0, './GUI')
 #from BachelorGUI import BachelorGUI
 from features import process_epochs
-from dataflow import test_dataflow, fit_validate, evaluate
+from dataflow import test_dataflow, parameter_tuning, fit_validate, evaluate
 import h5py
 
 """
@@ -13,9 +13,10 @@ Michael Kirkegaard
 """
 
 if __name__ == '__main__':
+	parameter_tuning(evaluate_model=False)
 	#fit_validate(gpu=True, balance = True)
 	#evaluate()
-	test_dataflow()
+	#test_dataflow()
 	#BachelorGUI()
 	#process_epochs()
 	#prepAll(force=False)
