@@ -101,7 +101,7 @@ def make_features(X, y, sample_rate, removal = True):
 	if removal:
 		X,y,mask = sleep_removal(X, y, mask, sample_rate)
 	X = median_filt(X)
-	X = quantile_norm(X, 10000)
+	X = quantile_norm(X, 1000)
 	return X, y, mask
 
 def make_masks(X):

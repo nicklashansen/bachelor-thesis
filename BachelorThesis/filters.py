@@ -13,6 +13,7 @@ def median_filt(X, kernel = 3):
 
 def quantile_norm(X, quantiles = 10):
 	return operation_2D(X, quantile_transform, (0,quantiles))
+	#return operation_2D(X, quantile_transform, (0,quantiles, 'normal'))
 
 def operation_1D(X, op=median_filt, args=None):
 	_X = transpose(X)
@@ -30,6 +31,7 @@ def operation_2D(X, op=quantile_transform, args=None):
 			_X[i] = squeeze(op(reshape(_X[i], (-1,1))))
 		elif (args[0] == 0):
 			_X[i] = squeeze(op(reshape(_X[i], (-1,1)), args[0], args[1]))
+			#_X[i] = squeeze(op(reshape(_X[i], (-1,1)), args[0], args[1], args[2]))
 		else:
 			_X[i] = squeeze(op(reshape(_X[i], (-1,1)), args[0]))
 	return transpose(_X)

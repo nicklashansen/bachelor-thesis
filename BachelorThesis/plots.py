@@ -20,7 +20,7 @@ def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals,
 		a = show_spans(illegals, 'red', a=a)
 		a = show_spans(arousals, 'green', 0.9, a=a)
 		a.set_xlim(0, duration/60)
-		a.set_ylim(0,1.5)
+		a.set_ylim(-1,2)
 		a.set_xlabel('Minutes')
 		a.legend()
 		return figure
@@ -31,7 +31,7 @@ def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals,
 		show_spans(illegals, 'red')
 		show_spans(arousals, 'green', 0.9)
 		plt.xlim(0, duration/60)
-		plt.ylim(-0.5,1.5)
+		plt.ylim(-1,2)
 		plt.xlabel('Minutes')
 		plt.legend()
 		plt.show()
