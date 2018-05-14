@@ -56,7 +56,7 @@ class epoch(object):
 
 	def continuous(self):
 		for i in range(1, len(self.timecol)):
-			if (self.timecol[i] - self.timecol[i-1]) >= SAMPLE_RATE * 10:
+			if (self.timecol[i] - self.timecol[i-1]) >= SAMPLE_RATE * 5:
 				return False
 		return True
 

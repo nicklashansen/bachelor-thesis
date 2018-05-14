@@ -95,7 +95,7 @@ def epochs_from_prep(X, y, epoch_length=epoch.EPOCH_LENGTH, overlap_factor=epoch
 	X,y,mask = make_features(X, y, sample_rate, removal)
 	return epoch.get_epochs(X, y, mask, epoch_length, overlap_factor, filter)
 
-def make_features(X, y, sample_rate, removal = True, old_removal = False, onehot=False):
+def make_features(X, y, sample_rate, removal = True, old_removal = False, onehot=True):
 	masklist, mask = make_masks(X)
 	X = cubic_spline(X, masklist)
 	if removal:
@@ -200,7 +200,7 @@ def sleep_onehot(X):
 		arr = [wake,nrem,rem]
 
 		for i,val in enumerate(data):
-			arr[val+1][i] = 1
+			arr[int(val+1)][i] = 1
 
 		return [wake,nrem,rem]
 

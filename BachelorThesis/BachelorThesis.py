@@ -14,5 +14,5 @@ if __name__ == '__main__':
 	#test_bidirectional(balance=True)
 	#fit_validate(gpu=True, balance = True)
 	#evaluate()
-	test_dataflow()
-	#process_epochs()
+	#test_dataflow()
+	process_epochs()
