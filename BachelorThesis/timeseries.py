@@ -1,4 +1,5 @@
 from numpy import *
+from epoch import epoch
 
 """
 WRITTEN BY:
@@ -42,9 +43,16 @@ def region(array, count = False):
 			n += 1
 		elif bin:
 			bin = False
-			regions.append([start, i-1])
+			if i-1-start <= 3 and start > 2:
+				regions.append([start-2,i-1])
+			else:
+				regions.append([start, i-1])
 	if bin:
 		regions.append([start, i-1])
 	if count:
 		return regions, n
 	return regions
+
+def add_ECG_overhead(epoch, illegal):
+	illegal.append([0, int(epoch.index_start/sample_rate)])
+	return illegal

@@ -3,7 +3,7 @@ from PPGpeak_detector import PPG_Peaks
 import filesystem as fs
 import matlab.engine
 import os
-from log import getLog
+from log import get_log
 from stopwatch import stopwatch
 
 """
@@ -24,7 +24,7 @@ def prepSingle(filename, save = True):
 	return X, y
 
 def prepAll(force=False):
-	log, clock = getLog('Preprocessing', echo=True), stopwatch()
+	log, clock = get_log('Preprocessing', echo=True), stopwatch()
 	filenames = fs.getAllSubjectFilenames(preprocessed=False)
 
 	# already completed files

@@ -1,7 +1,7 @@
 from numpy import *
 from filters import quantile_norm, median_filt
 from scipy.interpolate import CubicSpline
-from log import getLog
+from log import get_log
 from stopwatch import stopwatch
 from plots import plot_data
 import epoch
@@ -14,14 +14,11 @@ Nicklas Hansen
 """
 
 def process_epochs():
-	#files = fs.getAllSubjectFilenames(preprocessed=True)
-	#files = reliableFiles(files)
 	train = fs.load_splits()[0]
-	#train, _, _ = train_test_eval_split(files) # = train,test,eval
 	epochs = compile_epochs(train)
 
 def reliableFiles(files):
-	log = getLog('Discard', echo=False)
+	log = get_log('Discard', echo=False)
 	datasetCsv = fs.getDataset_csv()
 
 	def isReliable(filename):
@@ -67,7 +64,7 @@ def train_test_eval_split(files, testsize=0.05, evalsize=0.05):
 	return train,test,eval
 
 def compile_epochs(files, save = True):
-	log = getLog('Epochs', True)
+	log = get_log('Epochs', True)
 
 	log.print('Total files: {0}'.format(len(files)))
 	log.printHL()

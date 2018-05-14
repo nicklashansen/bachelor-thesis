@@ -9,7 +9,7 @@ Nicklas Hansen
 
 TABLE = dict()
 
-def getLog(directory = 'Evaluation', echo = False):
+def get_log(directory = 'Evaluation', echo = False):
 	if directory not in TABLE:
 		TABLE[directory] = Log(directory, echo)
 	else:
@@ -31,7 +31,7 @@ class Log:
 			try:
 				print(line)
 			except Exception as e:
-				None #Do nothing quick-n-dirty fix for print errors
+				None
 
 	def printHL(self):
 		self.print('-'*35)

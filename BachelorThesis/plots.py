@@ -8,7 +8,7 @@ Nicklas Hansen,
 Michael Kirkegaard
 """
 
-COLOR = ['black', 'orange', 'green']
+COLOR = ['black', 'orange', 'green', 'red']
 
 def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals, duration = None, figure = None):
 	if figure:
@@ -20,8 +20,9 @@ def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals,
 		a = show_spans(illegals, 'red', a=a)
 		a = show_spans(arousals, 'green', 0.9, a=a)
 		a.set_xlim(0, duration/60)
-		a.set_ylim(-1,3)
+		a.set_ylim(-1,2)
 		a.set_xlabel('Minutes')
+		a.set_ylabel('Normalised values')
 		a.legend()
 		return figure
 	else:
@@ -31,8 +32,9 @@ def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals,
 		show_spans(illegals, 'red')
 		show_spans(arousals, 'green', 0.9)
 		plt.xlim(0, duration/60)
-		plt.ylim(-1,3)
+		plt.ylim(-1,2)
 		plt.xlabel('Minutes')
+		plt.ylabel('Normalised values')
 		plt.legend()
 		plt.show()
 
@@ -49,7 +51,7 @@ def show_signals(timecol, array, labels = None, colors = COLOR, duration = None,
 		if a:
 			a.plot(x, signal, colors[i], label=labels[i], linewidth=0.6)
 		else:
-			plt.plot(x, signal, colors[i], label=labels[i])
+			plt.plot(x, signal, colors[i], label=labels[i], linewidth=0.6)
 	return a
 
 def show_spans(array, color, alpha = 0.3, a = None):
