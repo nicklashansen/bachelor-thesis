@@ -100,7 +100,7 @@ def make_features(X, y, sample_rate, removal = True, old_removal = False, onehot
 	X = cubic_spline(X, masklist)
 	if removal:
 		if not old_removal:
-			X,y,mask = sleep_removal(X, y, mask, sample_rate)
+			X,y,mask = sleep_removal_new(X, y, mask, sample_rate)
 		else: 
 			X,y,mask = sleep_removal_old(X, y, mask, sample_rate)
 	X = median_filt(X)

@@ -32,7 +32,7 @@ def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals,
 		show_spans(timecol, illegals, 'red')
 		show_spans(timecol, arousals, 'green', 0.9)
 		plt.xlim(0, duration/60)
-		plt.ylim(-4,4)
+		plt.ylim(-1,1)
 		plt.xlabel('Minutes')
 		plt.ylabel('Normalised values')
 		plt.legend()
@@ -48,11 +48,11 @@ def show_signals(timecol, array, labels = None, colors = COLOR, duration = None,
 				duration = len(signal)
 	x = timecol/60
 	for i,signal in enumerate(array):
-		linewidth = 1.2 if labels[i] == 'y' else 0.6
+		linewidth = 1.8 if labels[i] == 'y' else 0.6
 		if a:
-			a.plot(x, signal/8, colors[i], label=labels[i], linewidth=linewidth)
+			a.plot(x, signal/10, colors[i], label=labels[i], linewidth=linewidth)
 		else:
-			plt.plot(x, signal/8, colors[i], label=labels[i], linewidth=linewidth)
+			plt.plot(x, signal/10, colors[i], label=labels[i], linewidth=linewidth)
 	return a
 
 def show_spans(timecol, array, color, alpha = 0.3, a = None):
