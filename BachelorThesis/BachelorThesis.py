@@ -12,7 +12,7 @@ Michael Kirkegaard
 if __name__ == '__main__':
 	#parameter_tuning(evaluate_model=False)
 	#test_bidirectional(balance=True)
-	#fit_validate(gpu=True, balance = True)
+	fit_validate(gpu=True, balance = True)
 	#evaluate()
 	#test_dataflow()
-	process_epochs()
+	#process_epochs()
