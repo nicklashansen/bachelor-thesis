@@ -95,13 +95,18 @@ def epochs_from_prep(X, y, epoch_length=epoch.EPOCH_LENGTH, overlap_factor=epoch
 	X,y,mask = make_features(X, y, sample_rate, removal)
 	return epoch.get_epochs(X, y, mask, epoch_length, overlap_factor, filter)
 
-def make_features(X, y, sample_rate, removal = True):
+def make_features(X, y, sample_rate, removal = True, old_removal = False, onehot=False):
 	masklist, mask = make_masks(X)
 	X = cubic_spline(X, masklist)
 	if removal:
-		X,y,mask = sleep_removal(X, y, mask, sample_rate)
+		if not old_removal:
+			X,y,mask = sleep_removal(X, y, mask, sample_rate)
+		else: 
+			X,y,mask = sleep_removal_old(X, y, mask, sample_rate)
 	X = median_filt(X)
-	X = quantile_norm(X, 10000)
+	X = quantile_norm(X, 1000)
+	if onehot:
+		X = sleep_onehot(X)
 	return X, y, mask
 
 def make_masks(X):
@@ -139,17 +144,17 @@ def cubic_spline(X, masks, plot=False):
 	X = transpose(Xt)
 	return X
 
-#def sleep_removal(X, y, mask, sample_rate):
-#	_X = transpose(X)
-#	keep = [i for i,state in enumerate(_X[5]) if state >= 0]
-#	X = array([X[i] for i in keep])
-#	if y is not None:
-#		y = array([y[i] for i in keep])
-#	if mask is not None:
-#		mask = [mask[i] for i in keep]
-#	return X,y, mask
+def sleep_removal_old(X, y, mask, sample_rate):
+	_X = transpose(X)
+	keep = [i for i,state in enumerate(_X[5]) if state >= 0]
+	X = array([X[i] for i in keep])
+	if y is not None:
+		y = array([y[i] for i in keep])
+	if mask is not None:
+		mask = [mask[i] for i in keep]
+	return X,y, mask
 
-def sleep_removal(X, y, mask, sample_rate):
+def sleep_removal_new(X, y, mask, sample_rate):
 	Xt = transpose(X)
 	indexes = Xt[0]
 	sleep = Xt[5]
@@ -185,3 +190,20 @@ def sleep_removal(X, y, mask, sample_rate):
 	if mask is not None:
 		mask = [mask[i] for i in keep]
 	return X,y,mask
+
+def sleep_onehot(X):
+	Xt = transpose(X)
+
+	def onehot_arr(data):
+		n = len(data)
+		wake,nrem,rem = zeros(n), zeros(n), zeros(n) 
+		arr = [wake,nrem,rem]
+
+		for i,val in enumerate(data):
+			arr[val+1][i] = 1
+
+		return [wake,nrem,rem]
+
+
+	Xt = array([f for f in Xt[0:5]] + onehot_arr(Xt[5])) # Spline DR,RPA,PTT,PWA
+	return transpose(Xt)
