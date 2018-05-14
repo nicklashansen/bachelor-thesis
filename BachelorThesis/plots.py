@@ -8,7 +8,7 @@ Nicklas Hansen,
 Michael Kirkegaard
 """
 
-COLOR = ['black', 'orange', 'green', 'red']
+COLOR = ['black', 'orange', 'cyan', 'green']
 
 def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals, duration = None, figure = None):
 	if figure:
@@ -27,12 +27,12 @@ def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals,
 		return figure
 	else:
 		show_signals(timecol, signals, labels, COLOR, duration)
-		show_spans(wake_states, '0.5')
-		show_spans(rem, 'purple')
-		show_spans(illegals, 'red')
-		show_spans(arousals, 'green', 0.9)
+		show_spans(timecol, wake_states, '0.5')
+		show_spans(timecol, rem, 'purple')
+		show_spans(timecol, illegals, 'red')
+		show_spans(timecol, arousals, 'green', 0.9)
 		plt.xlim(0, duration/60)
-		plt.ylim(-1,2)
+		plt.ylim(-4,4)
 		plt.xlabel('Minutes')
 		plt.ylabel('Normalised values')
 		plt.legend()
@@ -48,20 +48,22 @@ def show_signals(timecol, array, labels = None, colors = COLOR, duration = None,
 				duration = len(signal)
 	x = timecol/60
 	for i,signal in enumerate(array):
+		linewidth = 1.2 if labels[i] == 'y' else 0.6
 		if a:
-			a.plot(x, signal, colors[i], label=labels[i], linewidth=0.6)
+			a.plot(x, signal/8, colors[i], label=labels[i], linewidth=linewidth)
 		else:
-			plt.plot(x, signal, colors[i], label=labels[i], linewidth=0.6)
+			plt.plot(x, signal/8, colors[i], label=labels[i], linewidth=linewidth)
 	return a
 
-def show_spans(array, color, alpha = 0.3, a = None):
+def show_spans(timecol, array, color, alpha = 0.3, a = None):
 	if array is None:
 		return a
+	x = timecol/60
 	for _,obj in enumerate(array):
 		if a:
-			a.axvspan(obj[0]/60, obj[1]/60, color=color, alpha=alpha)
+			a.axvspan(x[obj[0]], x[obj[1]], color=color, alpha=alpha)
 		else:
-			plt.axvspan(obj[0]/60, obj[1]/60, color=color, alpha=alpha)
+			plt.axvspan(x[obj[0]], x[obj[1]], color=color, alpha=alpha)
 	return a
 
 def plot_data(signals, peaksIndexs=None, labels=None, normalization=False):

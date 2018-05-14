@@ -17,17 +17,17 @@ Nicklas Hansen
 epoch_length, overlap_factor, overlap_score, sample_rate = 120, 2, 10, 256
 
 def test_dataflow():
-	X,y = fs.load_csv('mesa-sleep-2084')
+	X,y = fs.load_csv('mesa-sleep-0002')
 	epochs = epochs_from_prep(X, y, epoch_length, overlap_factor, sample_rate, filter=False, removal=True)
 	epochs = gru(load_graph=True).predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
-	yhat, timecol = reconstruct(X, y, epochs)
+	yhat, _ = reconstruct(X, y, epochs)
 	X,_,mask = make_features(X, None, sample_rate, removal=False)
 	X = transpose(X)
 	wake = [1 if x == -1 else 0 for i,x in enumerate(X[5])]
 	rem = [1 if x == 1 else 0 for i,x in enumerate(X[5])]
 	ill = [1 if x >= 1 and wake[i] == 0 else 0 for i,x in enumerate(mask)]
-	plot_results(X[0]/sample_rate, [X[1]], ['RR interval'], region(wake), region(rem), region(ill), region(yhat), int(X[0,-1]/sample_rate))
+	plot_results(X[0]/sample_rate, [X[1], y], ['RR interval', 'y'], region(wake), region(rem), region(ill), region(yhat), int(X[0,-1]/sample_rate))
 
 def dataflow(X, cmd_plot = False):
 	epochs,yhat,wake,rem,illegal = get_timeseries_prediction(X, gru(load_graph=True))

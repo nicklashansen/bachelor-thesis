@@ -1,7 +1,3 @@
-# Import GUI
-#import sys
-#sys.path.insert(0, './GUI')
-#from BachelorGUI import BachelorGUI
 from features import process_epochs
 from dataflow import test_dataflow
 from model_selection import parameter_tuning, test_bidirectional, fit_validate, evaluate
@@ -15,8 +11,8 @@ Michael Kirkegaard
 
 if __name__ == '__main__':
 	#parameter_tuning(evaluate_model=False)
-	test_bidirectional(balance=True)
+	#test_bidirectional(balance=True)
 	#fit_validate(gpu=True, balance = True)
 	#evaluate()
-	#test_dataflow()
+	test_dataflow()
 	#process_epochs()
