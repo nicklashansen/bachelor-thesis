@@ -83,7 +83,6 @@ class Subject(object):
 	def get_signal(self, label):
 		filepath = Filepaths.LoadPsg + self.filename + ".edf" if not self.edfPath else self.edfPath
 		with pyedflib.EdfReader(filepath) as file:
-
 			id = file.getSignalLabels().index(label)
 			sig = file.readSignal(id)
 			freq = file.getSampleFrequency(id)
@@ -95,7 +94,7 @@ class Subject(object):
 		filepath = Filepaths.LoadAnno + self.filename + "-nsrr.xml" if not self.annoPath else self.annoPath
 		xml = xmlTree.parse(filepath).getroot()
 
-		dict = self.make_dict_from_tree(xml)
+		dict = make_dict_from_tree(xml)
 
 		eventlist = dict['PSGAnnotation']['ScoredEvents']['ScoredEvent']
 		dur = sorted([float(d['Start']) + float(d['Duration']) for d in eventlist])[-1]
@@ -105,25 +104,45 @@ class Subject(object):
 		
 		return Annotation(label, ax, dur)
 
-	''' https://ericscrivner.me/2015/07/python-tip-convert-xml-tree-to-a-dictionary/ '''
-	def make_dict_from_tree(self, element_tree):
-		def internal_iter(tree, accum):
-			if tree is None:
-				return accum	
-			if tree.getchildren():
-				accum[tree.tag] = {}
-				for each in tree.getchildren():
-					result = internal_iter(each, {})
-					if each.tag in accum[tree.tag]:
-						if not isinstance(accum[tree.tag][each.tag], list):
-							accum[tree.tag][each.tag] = [accum[tree.tag][each.tag]]
-						accum[tree.tag][each.tag].append(result[each.tag])
-					else:
-						accum[tree.tag].update(result)
-			else:
-				accum[tree.tag] = tree.text
-			return accum
-		return internal_iter(element_tree, {})
+''' https://ericscrivner.me/2015/07/python-tip-convert-xml-tree-to-a-dictionary/ '''
+def make_dict_from_tree(element_tree):
+	def internal_iter(tree, accum):
+		if tree is None:
+			return accum	
+		if tree.getchildren():
+			accum[tree.tag] = {}
+			for each in tree.getchildren():
+				result = internal_iter(each, {})
+				if each.tag in accum[tree.tag]:
+					if not isinstance(accum[tree.tag][each.tag], list):
+						accum[tree.tag][each.tag] = [accum[tree.tag][each.tag]]
+					accum[tree.tag][each.tag].append(result[each.tag])
+				else:
+					accum[tree.tag].update(result)
+		else:
+			accum[tree.tag] = tree.text
+		return accum
+	return internal_iter(element_tree, {})
+
+def validate_fileformat(edfpath, annopath):
+	return validate_edf(edfpath) and validate_anno(annopath)
+
+def validate_edf(edfpath):
+	try:
+		with pyedflib.EdfReader(edfpath) as file:
+			signals = file.getSignalLabels()
+		return all(label in signals for label in ['EKG', 'Pleth'])
+	except Exception as e:
+		return False
+
+def validate_anno(annopath):
+	try:
+		xml = xmlTree.parse(annopath).getroot()
+		dict = make_dict_from_tree(xml)
+		eventlist = dict['PSGAnnotation']['ScoredEvents']['ScoredEvent']
+		return any([d['EventType'] and 'stages' in d['EventType'].lower() for d in eventlist])
+	except Exception as e:
+		return False
 
 def getAllSubjectFilenames(preprocessed=False):
 	if(preprocessed):
@@ -193,13 +212,11 @@ def write_epochs(epochs, name='epochs'):
 		pck.dump(epochs, handle, protocol=pck.HIGHEST_PROTOCOL)
 
 def load_aplot(filepath):
-	filepath = filepath if filepath else Filepaths.TempAplotFile
 	with open(filepath, 'rb') as f:
 		plotdata, properties = pck.load(f)
 	return plotdata, properties
 
-def write_alpot(filepath, plotdata, properties):
-	filepath = filepath if filepath else Filepaths.TempAplotFile
+def write_aplot(filepath, plotdata, properties):
 	with open(filepath, 'wb') as f:
 		pck.dump([plotdata,properties], f, protocol=pck.HIGHEST_PROTOCOL)
 

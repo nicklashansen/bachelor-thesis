@@ -47,7 +47,7 @@ def show_signals(timecol, array, labels = None, colors = COLOR, duration = None,
 	x = timecol/60
 	for i,signal in enumerate(array):
 		if a:
-			a.plot(x, signal, colors[i], label=labels[i])
+			a.plot(x, signal, colors[i], label=labels[i], linewidth=0.6)
 		else:
 			plt.plot(x, signal, colors[i], label=labels[i])
 	return a
