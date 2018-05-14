@@ -1,4 +1,5 @@
 from numpy import *
+from epoch import epoch
 
 """
 WRITTEN BY:
@@ -51,3 +52,7 @@ def region(array, count = False):
 	if count:
 		return regions, n
 	return regions
+
+def add_ECG_overhead(epoch, illegal):
+	illegal.append([0, int(epoch.index_start/sample_rate)])
+	return illegal

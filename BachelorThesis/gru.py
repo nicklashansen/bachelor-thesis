@@ -3,10 +3,10 @@ from keras.models import Sequential, model_from_json, load_model
 from keras.layers import Dense, Embedding, TimeDistributed, Bidirectional, GRU, Dropout
 from keras.callbacks import EarlyStopping, TensorBoard, History
 from keras.utils import plot_model
-import metrics
 from stopwatch import *
-import sys
 from plots import *
+import sys
+import metrics
 import filesystem as fs
 
 """
@@ -19,11 +19,13 @@ HIST = 'hist.csv'
 PLOT = 'gru.png'
 
 class gru_config:
-	def __init__(self, name = 'gru', rnn_layers = 1, dense_layers_before = 0, dense_layers_after = 1, dropout = 0, timesteps = 120, features = 5, verbose = 1):
+	def __init__(self, name = 'gru', rnn_layers = 1, dense_layers_before = 0, dense_layers_after = 1, bidirectional = False, bidirectional_mode = 'sum', dropout = 0, timesteps = 120, features = 5, verbose = 1):
 		self.name = name
 		self.rnn_layers = rnn_layers
 		self.dense_layers_before = dense_layers_before
 		self.dense_layers_after = dense_layers_after
+		self.bidirectional = bidirectional
+		self.bidirectional_mode = bidirectional_mode
 		self.dropout = dropout
 		self.timesteps = timesteps
 		self.features = features
@@ -49,19 +51,26 @@ class gru:
 			graph.add(GRU(self.timesteps, return_sequences=True, input_shape=(self.data.timesteps, self.data.features)))
 		else:
 			for i in range(config.dense_layers_before):
-				graph.add(TimeDistributed(Dense(config.timesteps, activation='relu'), input_shape=(config.timesteps, config.features)))
+				graph.add(TimeDistributed(Dense(config.timesteps, activation='tanh'), input_shape=(config.timesteps, config.features)))
 				if config.dropout > 0:
 					graph.add(Dropout(config.dropout))
 			for j in range(config.rnn_layers):
 				if config.dense_layers_before == 0 and j == 0:
-					graph.add(GRU(config.timesteps, return_sequences=True, input_shape=(config.timesteps, config.features)))
+					if config.bidirectional:
+						graph.add(Bidirectional(GRU(config.timesteps, return_sequences=True), input_shape=(config.timesteps, config.features), merge_mode=config.bidirectional_mode))
+					else:
+						graph.add(GRU(config.timesteps, return_sequences=True, input_shape=(config.timesteps, config.features)))
 				else:
+					if config.bidirectional:
+						graph.add(Bidirectional(GRU(config.timesteps, return_sequences=True), merge_mode=config.bidirectional_mode))
+					else:
+						graph.add(GRU(config.timesteps, return_sequences=True))
 					graph.add(GRU(config.timesteps, return_sequences=True))
 				if config.dropout > 0:
 					graph.add(Dropout(config.dropout))
 			if config.dense_layers_after > 1:
 				for k in range(config.dense_layers_after - 1):
-					graph.add(TimeDistributed(Dense(config.timesteps, activation='relu')))
+					graph.add(TimeDistributed(Dense(config.timesteps, activation='tanh')))
 					if config.dropout > 0:
 						graph.add(Dropout(config.dropout))
 		graph.add(TimeDistributed(Dense(1, activation='sigmoid')))

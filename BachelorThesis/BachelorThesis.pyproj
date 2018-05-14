@@ -58,6 +58,9 @@
     <Compile Include="filters.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="model_selection.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="plots.py">
       <SubType>Code</SubType>
     </Compile>
