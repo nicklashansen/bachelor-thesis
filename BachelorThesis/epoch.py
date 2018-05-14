@@ -1,7 +1,7 @@
 from numpy import *
 from filters import quantile_norm
 import filesystem as fs
-from log import *
+from log import Log, get_log
 
 """
 WRITTEN BY

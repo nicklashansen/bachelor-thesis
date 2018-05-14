@@ -42,8 +42,8 @@ def region(array, count = False):
 				start, bin = i, True
 		elif bin:
 			bin = False
-			regions.append([start, i-1])
 			n += 1
+			regions.append([start, i-1])
 			#if i-1-start <= 3 and start > 2:
 			#	regions.append([start-2,i-1])
 			#else:
@@ -54,12 +54,6 @@ def region(array, count = False):
 	if count:
 		return regions, n
 	return regions
-
-#yhat = [1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,1]
-#dimsum = region(yhat,True)
-#print(dimsum)
-#breakpoint = 0
-
 
 def add_ECG_overhead(epoch, illegal):
 	illegal.append([0, int(epoch.index_start/sample_rate)])

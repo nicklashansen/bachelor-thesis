@@ -1,4 +1,4 @@
-from numpy import *
+from numpy import array
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 
@@ -12,7 +12,6 @@ COLOR = ['black', 'orange', 'cyan', 'green']
 
 def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals, duration = None, figure = None):
 	if figure:
-		#figure = plt.Figure()
 		a = figure.add_subplot(111)
 		a = show_signals(timecol, signals, labels, COLOR, duration, a=a)
 		a = show_spans(wake_states, '0.5', a=a)
@@ -20,7 +19,7 @@ def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals,
 		a = show_spans(illegals, 'red', a=a)
 		a = show_spans(arousals, 'green', 0.9, a=a)
 		a.set_xlim(0, duration/60)
-		a.set_ylim(-1,2)
+		a.set_ylim(-1,1)
 		a.set_xlabel('Minutes')
 		a.set_ylabel('Normalised values')
 		a.legend()

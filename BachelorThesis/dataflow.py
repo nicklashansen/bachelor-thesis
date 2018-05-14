@@ -6,7 +6,7 @@ from timeseries import timeseries, region, add_ECG_overhead
 from dataset import dataset
 from model_selection import add_predictions, reconstruct
 from plots import plot_results
-from log import *
+from log import Log, get_log
 import filesystem as fs
 
 """
