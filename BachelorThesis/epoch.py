@@ -2,18 +2,14 @@ from numpy import *
 from filters import quantile_norm
 import filesystem as fs
 from log import Log, get_log
+import settings
 
 """
 WRITTEN BY
 Nicklas Hansen
 """
 
-EPOCH_LENGTH = 120
-OVERLAP_FACTOR = 2
-SAMPLE_RATE = 256
-MASK_THRESHOLD = 0.125
-
-def get_epochs(X, y, mask, epoch_length = EPOCH_LENGTH, overlap_factor = OVERLAP_FACTOR, filter = True):
+def get_epochs(X, y, mask, epoch_length = settings.EPOCH_LENGTH, overlap_factor = settings.OVERLAP_FACTOR, filter = True):
 	return generate_epochs(X, y, mask, epoch_length, overlap_factor, filter)
 
 def extract_timecol(X):
@@ -56,7 +52,7 @@ class epoch(object):
 
 	def continuous(self):
 		for i in range(1, len(self.timecol)):
-			if (self.timecol[i] - self.timecol[i-1]) >= SAMPLE_RATE * 5:
+			if (self.timecol[i] - self.timecol[i-1]) >= settings.SAMPLE_RATE * 5:
 				return False
 		return True
 
@@ -64,7 +60,7 @@ class epoch(object):
 		if (self.mask == None):
 			return False
 		num = sum(self.mask)
-		if (num > MASK_THRESHOLD * EPOCH_LENGTH):
+		if (num > settings.MASK_THRESHOLD * settings.EPOCH_LENGTH):
 			return False
 		return True
 

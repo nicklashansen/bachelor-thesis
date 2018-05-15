@@ -27,9 +27,9 @@ def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals,
 	else:
 		show_signals(timecol, signals, labels, COLOR, duration)
 		show_spans(timecol, wake_states, '0.5')
-		show_spans(timecol, rem, 'purple')
+		#show_spans(timecol, rem, 'purple', 0.15)
 		show_spans(timecol, illegals, 'red')
-		show_spans(timecol, arousals, 'green', 0.9)
+		#show_spans(timecol, arousals, 'green', 0.9)
 		plt.xlim(0, duration/60)
 		plt.ylim(-1,1)
 		plt.xlabel('Minutes')
