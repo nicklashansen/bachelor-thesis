@@ -17,18 +17,16 @@ Nicklas Hansen
 GOOD = ['mesa-sleep-0064','mesa-sleep-2685','mesa-sleep-2260','mesa-sleep-6176','mesa-sleep-6419','mesa-sleep-5221','mesa-sleep-3267','mesa-sleep-2821','mesa-sleep-4588']
 BAD = ['mesa-sleep-1035','mesa-sleep-6614','mesa-sleep-5339','mesa-sleep-4379','mesa-sleep-4178','mesa-sleep-5734','mesa-sleep-0718','mesa-sleep-3692','mesa-sleep-2472']
 
-def test_reliableFiles():
+def make_splits():
 	before = fs.getAllSubjectFilenames(preprocessed=True)
-	#before = GOOD + BAD
 	after = reliableFiles(before)
-	#tr,ev,te = train_vali_test_split(after, save=False)
-	None
+	tr,ev,te = train_vali_test_split(after)
 
 def process_epochs():
 	train = fs.load_splits()[0]
 	epochs = compile_epochs(train)
 
-def reliableFiles(files, ai_all5=15.0, overall5=4.0, slewake5=0.0, maskThreshold_all=1/16, maskTreshhold_single=1/32):
+def reliableFiles(files, ai_all5=10.0, overall5=4.0, slewake5=0.0, maskThreshold_all=0.05, maskTreshhold_single=0.05):
 	log = get_log('Discard', echo=False)
 	datasetCsv = fs.getDataset_csv()
 
@@ -62,8 +60,6 @@ def reliableFiles(files, ai_all5=15.0, overall5=4.0, slewake5=0.0, maskThreshold
 		sums = [sum(m)/len(m) for m in masklist]
 		msum = sum(mask)/len(mask)
 
-		if filename in ['mesa-sleep-1035','mesa-sleep-3267','mesa-sleep-2821','mesa-sleep-5734']:
-			None
 		return criteria
 
 	reliable = [isReliable(fn) for fn in files]
@@ -74,25 +70,37 @@ def reliableFiles(files, ai_all5=15.0, overall5=4.0, slewake5=0.0, maskThreshold
 	a = list(arr[:,0]).count(False)
 	b = list(arr[:,1]).count(False)
 	c = list(arr[:,2]).count(False)
+	d = list(arr[:,3]).count(False)
+	e = list(arr[:,4]).count(False)
+	f = list(arr[:,5]).count(False)
+	g = list(arr[:,6]).count(False)
+	h = list(arr[:,7]).count(False)
+	i = list(arr[:,8]).count(False)
 
-	log.print('Preprocessed files:        {0}'.format(len(files)))
-	log.print('Reliable files:            {0}'.format(len(reliableFiles)))
-	log.print('Removed by ai_all5 > 10.0: {0}'.format(a))
-	log.print('Removed by overall5 > 3.0: {0}'.format(b))
-	log.print('Removed by slewake5 = 1.0: {0}'.format(c))
+	log.print('Preprocessed files:  {0}'.format(len(files)))
+	log.print('Reliable files:      {0}'.format(len(reliableFiles)))
+	log.print('Removed by ai_all5:  {0}'.format(a))
+	log.print('Removed by overall5: {0}'.format(b))
+	log.print('Removed by slewake5: {0}'.format(c))
+	log.print('Removed by sum(y)=0: {0}'.format(d))
+	log.print('Removed by mask RR:  {0}'.format(e))
+	log.print('Removed by mask RPA: {0}'.format(f))
+	log.print('Removed by mask PTT: {0}'.format(g))
+	log.print('Removed by mask PWA: {0}'.format(h))
+	log.print('Removed by mask all: {0}'.format(i))
 	log.printHL()
 	for fn in [f for f in files if f not in reliableFiles]:
 		log.print(fn)
 
 	return reliableFiles
 
-def train_vali_test_split(files, valisize=0.05, testsize=0.05, save=True):
+def train_vali_test_split(files, valisize=0.05, testsize=0.05, save=True, name=None):
 	random.shuffle(files)
 	va = int(len(files)*(1.0-valisize))
 	tr = int(len(files)*(1.0-valisize-testsize))
 	train,vali,test =  files[:tr], files[tr:va], files[va:]
 	if save:
-		fs.write_splits(train,vali,test)
+		fs.write_splits(train,vali,test,name='splits' + '' if not name else name)
 	return train,vali,test
 
 def compile_epochs(files, save = True):
@@ -239,6 +247,3 @@ def sleep_onehot(X):
 
 	Xt = array([f for f in Xt[0:5]] + onehot_arr(Xt[5])) # Spline DR,RPA,PTT,PWA
 	return transpose(Xt)
-
-if __name__ == '__main__':
-	test_reliableFiles()
