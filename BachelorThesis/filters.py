@@ -11,7 +11,7 @@ Nicklas Hansen
 def median_filt(X, kernel = 3):
 	return operation_1D(X, medfilt, (kernel,0))
 
-def quantile_norm(X, quantiles = 10):
+def quantile_norm(X, quantiles = 1000):
 	return operation_2D(X, quantile_transform, (0,quantiles))
 	#return operation_2D(X, quantile_transform, (0,quantiles, 'normal'))
 
