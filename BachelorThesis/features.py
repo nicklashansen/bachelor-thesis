@@ -240,4 +240,5 @@ def sleep_onehot(X):
 	Xt = array([f for f in Xt[0:5]] + onehot_arr(Xt[5])) # Spline DR,RPA,PTT,PWA
 	return transpose(Xt)
 
-test_reliableFiles()
+if __name__ == '__main__':
+	test_reliableFiles()
