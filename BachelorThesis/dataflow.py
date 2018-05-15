@@ -16,7 +16,7 @@ Nicklas Hansen
 """
 
 def test_dataflow():
-	X,y = fs.load_csv('mesa-sleep-2472')
+	X,y = fs.load_csv('mesa-sleep-2821')
 	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter=False, removal=True)
 	epochs = gru(load_graph=True).predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
