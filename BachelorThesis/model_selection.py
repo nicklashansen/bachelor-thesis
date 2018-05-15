@@ -6,13 +6,12 @@ from dataset import dataset
 from log import Log, get_log
 import filesystem as fs
 import metrics
+import settings
 
 """
 WRITTEN BY:
 Nicklas Hansen
 """
-
-epoch_length, overlap_factor, overlap_score, sample_rate = 120, 2, 10, 256
 
 def get_batch_size(gpu = True):
 	return 2 ** 8 if gpu else 2 ** 6
@@ -52,7 +51,7 @@ def test_bidirectional(gpu = True, config = None, rnn_layers = 1, evaluate_model
 	if evaluate_model:
 		evaluate(model, validation=True, log_filename = config.name)
 
-def fit_validate(gpu = True, balance = False, only_arousal = False, load_path = None, save_path = None):
+def fit_validate(gpu = True, validation = True, balance = False, only_arousal = False, load_path = None, save_path = None):
 	batch_size = get_batch_size(gpu)
 	model = fit(batch_size, balance, only_arousal)
 	model.save()
@@ -71,30 +70,34 @@ def evaluate(model = None, validation = True, log_filename = None):
 	if model is None:
 		model = gru(load_graph=True)
 	files = fs.load_splits()[set]
-	results = validate(model, files[:1])
+	results = validate(model, files, log_results = True, validation = True)
 	log_results(results, validation=validation, filename=log_filename)
 	return results
 
-def validate(model, files):
+def validate(model, files, log_results = False, validation = True):
+	if log_results:
+		filename = 'Validation' if validation else 'Evaluation'
+		log = get_log(filename, echo=True)
 	TP=FP=TN=FN=0
 	count = len(files)
 	for file in files:
 		try:
 			tp, fp, tn, fn = validate_file(file, model, overlap_score, sample_rate)
 			TP += tp ; FP += fp ; TN += tn ; FN += fn
+			file_score = metrics.compute_cm_score(tp, fp, tn, fn)
+			log.print(file + ' -- Se: ' + '{0:.2f}'.format(file_score['score']['sensitivity']) + ',  P+: ' + '{0:.2f}'.format(file_score['score']['precision']))
 		except Exception as e:
 			print(e)
 	return metrics.compute_cm_score(TP, FP, TN, FN)
 
 def validate_file(file, model, overlap_score, sample_rate):
 	y, yhat, timecol = predict_file(file, model)
-	print(file, '--', int(sum(y)), int(sum(yhat)))
 	TP, FP, TN, FN = metrics.cm_overlap(y, yhat, timecol, overlap_score, sample_rate)
 	return TP, FP, TN, FN
 
 def predict_file(filename, model, filter = False, removal = True):
 	X,y = fs.load_csv(filename)
-	epochs = epochs_from_prep(X, y, epoch_length, overlap_factor, sample_rate, filter, removal)
+	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter, removal)
 	epochs = model.predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
 	yhat, timecol = reconstruct(X, y, epochs)

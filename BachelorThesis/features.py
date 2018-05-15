@@ -5,6 +5,7 @@ from log import get_log
 from stopwatch import stopwatch
 from plots import plot_data
 import epoch
+import settings
 import filesystem as fs
 
 """
@@ -91,7 +92,7 @@ def compile_epochs(files, save = True):
 		log.printHL()
 	return epochs
 
-def epochs_from_prep(X, y, epoch_length=epoch.EPOCH_LENGTH, overlap_factor=epoch.OVERLAP_FACTOR, sample_rate = epoch.SAMPLE_RATE, filter = True, removal = True):
+def epochs_from_prep(X, y, epoch_length=settings.EPOCH_LENGTH, overlap_factor=settings.OVERLAP_FACTOR, sample_rate = settings.SAMPLE_RATE, filter = True, removal = True):
 	X,y,mask = make_features(X, y, sample_rate, removal)
 	return epoch.get_epochs(X, y, mask, epoch_length, overlap_factor, filter)
 
@@ -103,7 +104,7 @@ def make_features(X, y, sample_rate, removal = True, old_removal = False, onehot
 			X,y,mask = sleep_removal_new(X, y, mask, sample_rate)
 		else: 
 			X,y,mask = sleep_removal_old(X, y, mask, sample_rate)
-	X = median_filt(X)
+	#X = median_filt(X)
 	X = quantile_norm(X, 1000)
 	if onehot:
 		X = sleep_onehot(X)
@@ -121,7 +122,7 @@ def make_masks(X):
 		# or value is -1 (i.e. no PTT value)
 		return [(1 if x == -1 or abs(mu-x) > std3 else 0) for x in data]
 
-	masklist = [threeSigmaRule(x_feat) for x_feat in Xt[1:5]] # DR, RPA, PTT, PWA
+	masklist = [threeSigmaRule(x_feat) for x_feat in Xt[1:5]] # RR, RPA, PTT, PWA
 	mask = [sum(tub) for tub in zip(*masklist)]
 
 	return masklist, mask

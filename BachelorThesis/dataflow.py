@@ -8,47 +8,44 @@ from model_selection import add_predictions, reconstruct
 from plots import plot_results
 from log import Log, get_log
 import filesystem as fs
+import settings
 
 """
 WRITTEN BY:
 Nicklas Hansen
 """
 
-epoch_length, overlap_factor, overlap_score, sample_rate = 120, 2, 10, 256
-
 def test_dataflow():
-	X,y = fs.load_csv('mesa-sleep-0002')
-	epochs = epochs_from_prep(X, y, epoch_length, overlap_factor, sample_rate, filter=False, removal=True)
+	X,y = fs.load_csv('mesa-sleep-2472')
+	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter=False, removal=True)
 	epochs = gru(load_graph=True).predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
 	yhat, _ = reconstruct(X, y, epochs)
-	X,_,mask = make_features(X, None, sample_rate, removal=False)
+	X,_,mask = make_features(X, None, settings.SAMPLE_RATE, removal=False)
 	X = transpose(X)
-	wake = [1 if x == -1 else 0 for i,x in enumerate(X[5])]
-	rem = [1 if x == 1 else 0 for i,x in enumerate(X[5])]
-	ill = [1 if x >= 1 and wake[i] == 0 else 0 for i,x in enumerate(mask)]
-	plot_results(X[0]/sample_rate, [X[1], y], ['RR interval', 'y'], region(wake), region(rem), region(ill), region(yhat), int(X[0,-1]/sample_rate))
+	ill = [1 if x >= 1 and X[5,i] == 0 else 0 for i,x in enumerate(mask)]
+	plot_results(X[0]/settings.SAMPLE_RATE, [X[1], y], ['RR interval', 'y'], region(X[5]), region(X[7]), region(ill), region(yhat), int(X[0,-1]/settings.SAMPLE_RATE))
 
 def dataflow(X, cmd_plot = False):
 	epochs,yhat,wake,rem,illegal = get_timeseries_prediction(X, gru(load_graph=True))
 	summary = summary_statistics(X, epochs, yhat, wake, rem, illegal)
 	X = transpose(X)
 	if cmd_plot:
-		plot_results(X[0]/sample_rate, [X[1]], ['RR interval'], region(wake), region(rem), add_ECG_overhead(epochs[0], region(illegal)), region(yhat), int(epochs[-1].index_stop/sample_rate))
-	return (X[0]/sample_rate, [X[1], X[3]], ['RR interval', 'PTT'], region(wake), region(rem), add_ECG_overhead(epochs[0], region(illegal)), region(yhat), int(epochs[-1].index_stop/sample_rate)), summary
+		plot_results(X[0]/settings.SAMPLE_RATE, [X[1]], ['RR interval'], region(wake), region(rem), add_ECG_overhead(epochs[0], region(illegal)), region(yhat), int(epochs[-1].index_stop/settings.SAMPLE_RATE))
+	return (X[0]/settings.SAMPLE_RATE, [X[1], X[3]], ['RR interval', 'PTT'], region(wake), region(rem), add_ECG_overhead(epochs[0], region(illegal)), region(yhat), int(epochs[-1].index_stop/settings.SAMPLE_RATE)), summary
 
 def get_timeseries_prediction(X, model, y=None):
-	epochs = epochs_from_prep(X, y, epoch_length, overlap_factor, filter = False, removal=True)
+	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, filter = False, removal=True)
 	epochs = model.predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
-	y, yhat, wake, rem, illegal, timecol = timeseries(epochs, epochs, epoch_length, overlap_factor, sample_rate)
+	y, yhat, wake, rem, illegal, timecol = timeseries(epochs, epochs, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE)
 	if y is not None:
 		return epochs, y, yhat, wake, rem, illegal, timecol
 	return epochs, yhat, wake, rem, illegal, timecol
 
 def summary_statistics(X, epochs, yhat, wake, rem, illegal):
 	timecol = transpose(X)[0]
-	rec_dur_float = ((timecol[-1]-timecol[0])/sample_rate)/60
+	rec_dur_float = ((timecol[-1]-timecol[0])/settings.SAMPLE_RATE)/60
 	rec_dur = str(int(rec_dur_float)) + ' min'
 	_, n_wake = region(wake, count = True)
 	p_wake = n_wake/len(wake)
