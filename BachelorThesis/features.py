@@ -26,7 +26,7 @@ def process_epochs():
 	train = fs.load_splits()[0]
 	epochs = compile_epochs(train)
 
-def reliableFiles(files, ai_all5=10.0, overall5=4.0, slewake5=0.0, maskThreshold_all=0.05, maskTreshhold_single=0.05):
+def reliableFiles(files, ai_all5=10.0, overall5=4.0, slewake5=0.0, maskThreshold_all=0.1, maskTreshhold_single=0.05):
 	log = get_log('Discard', echo=False)
 	datasetCsv = fs.getDataset_csv()
 
