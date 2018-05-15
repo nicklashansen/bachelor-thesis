@@ -14,26 +14,56 @@ Michael Kirkegaard,
 Nicklas Hansen
 """
 
+GOOD = ['mesa-sleep-0064','mesa-sleep-2685','mesa-sleep-2260','mesa-sleep-6176','mesa-sleep-6419','mesa-sleep-5221','mesa-sleep-3267','mesa-sleep-2821','mesa-sleep-4588']
+BAD = ['mesa-sleep-1035','mesa-sleep-6614','mesa-sleep-5339','mesa-sleep-4379','mesa-sleep-4178','mesa-sleep-5734','mesa-sleep-0718','mesa-sleep-3692','mesa-sleep-2472']
+
+def test_reliableFiles():
+	before = fs.getAllSubjectFilenames(preprocessed=True)
+	#before = GOOD + BAD
+	after = reliableFiles(before)
+	#tr,ev,te = train_vali_test_split(after, save=False)
+	None
+
 def process_epochs():
 	train = fs.load_splits()[0]
 	epochs = compile_epochs(train)
 
-def reliableFiles(files):
+def reliableFiles(files, ai_all5=15.0, overall5=4.0, slewake5=0.0, maskThreshold_all=1/16, maskTreshhold_single=1/32):
 	log = get_log('Discard', echo=False)
 	datasetCsv = fs.getDataset_csv()
 
 	def isReliable(filename):
+		# Target file
 		mesaid = int(filename[-4:])
+		X,y = fs.load_csv(filename)
+		criteria = []
+
+		# MESA variables
 		filter = ['ai_all5','overall5','slewake5',]
 		# ai_all5  = arousal index
 		# overall5 = overall study quality 
 		# slewake5 = poor quailty EEG (sleep stage)
 		df = datasetCsv[datasetCsv['mesaid'] == mesaid][filter].iloc[0]
-		criteria = [
-			df[0] > 10.0,	# low ai index
-			df[1] > 3.0,	# low overall quality
-			df[2] == 0.0	# poor EEG (sleep stage scoring)
-			]	
+		criteria += [
+			df[0] >= ai_all5,	# low ai index (events per hour)
+			df[1] >= overall5,	# low overall quality
+			df[2] == slewake5,	# poor EEG (sleep stage scoring)
+			]
+
+		# Doublecheck arousals
+		criteria += [sum(y) > 0]
+
+		# Mask threshhold
+		X,_,_ = sleep_removal_new(X,y,None,256) # TODO: REMOVE HARDCODE -----------------------------
+		masklist, mask = make_masks(X)
+		criteria += [sum(m)/len(m) <= maskTreshhold_single for m in masklist]
+		criteria += [sum(mask)/len(mask) <= maskThreshold_all]
+
+		sums = [sum(m)/len(m) for m in masklist]
+		msum = sum(mask)/len(mask)
+
+		if filename in ['mesa-sleep-1035','mesa-sleep-3267','mesa-sleep-2821','mesa-sleep-5734']:
+			None
 		return criteria
 
 	reliable = [isReliable(fn) for fn in files]
@@ -56,13 +86,14 @@ def reliableFiles(files):
 
 	return reliableFiles
 
-def train_test_eval_split(files, testsize=0.05, evalsize=0.05):
-	shuffle(files)
-	te = int(len(files)*(1.0-testsize))
-	tt = int(len(files)*(1.0-testsize-evalsize))
-	train,test,eval =  files[:tt], files[tt:te], files[te:]
-	fs.write_splits(train,test,eval)
-	return train,test,eval
+def train_vali_test_split(files, valisize=0.05, testsize=0.05, save=True):
+	random.shuffle(files)
+	va = int(len(files)*(1.0-valisize))
+	tr = int(len(files)*(1.0-valisize-testsize))
+	train,vali,test =  files[:tr], files[tr:va], files[va:]
+	if save:
+		fs.write_splits(train,vali,test)
+	return train,vali,test
 
 def compile_epochs(files, save = True):
 	log = get_log('Epochs', True)
@@ -208,3 +239,6 @@ def sleep_onehot(X):
 
 	Xt = array([f for f in Xt[0:5]] + onehot_arr(Xt[5])) # Spline DR,RPA,PTT,PWA
 	return transpose(Xt)
+
+if __name__ == '__main__':
+	test_reliableFiles()
