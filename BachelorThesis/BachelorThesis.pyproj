@@ -25,6 +25,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="BachelorThesis.py" />
+    <Compile Include="settings.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="dataset.py">
       <SubType>Code</SubType>
     </Compile>
