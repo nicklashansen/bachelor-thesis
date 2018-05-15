@@ -34,6 +34,10 @@ class gru_config:
 class gru:
 	def __init__(self, data = None, load_graph = False, path = MODEL, batch_size = 2 ** 8, config = None):
 		self.batch_size = batch_size
+		self.data = None
+		self.timesteps = None
+		self.graph = None
+		self.config = None
 		if load_graph:
 			self.graph = load_model(path)
 		elif data is not None:
