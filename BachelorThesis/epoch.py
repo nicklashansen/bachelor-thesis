@@ -41,8 +41,8 @@ def generate_epochs(X, y, mask, epoch_length, overlap_factor, filter):
 	#print(len(epochs))
 	return epochs
 
-def save_epochs(epochs):
-	fs.write_epochs(epochs)
+def save_epochs(epochs, name = 'epochs'):
+	fs.write_epochs(epochs, name)
 
 class epoch(object):
 	def __init__(self, X, y, timecol, mask = None):

@@ -1,6 +1,6 @@
 from numpy import *
 from features import epochs_from_prep, make_features
-from epoch import epoch
+from epoch import epoch, save_epochs
 from gru import gru, gru_config
 from dataset import dataset
 from log import Log, get_log
@@ -60,11 +60,15 @@ def fit_validate_test(gpu = True, validation = True, balance = False, only_arous
 def fit(batch_size = None, balance = False, only_arousal = False, model = None, load_path = None, data = None, validate = True):
 	if data is None:
 		data = dataset(fs.load_epochs(), balance=balance, only_arousal=only_arousal)
+		if balance or only_arousal:
+			save_epochs(data.epochs)
 	if model is None:
 		model = gru(data, batch_size=batch_size)
 	if validate:
 		val_epochs = fs.load_epochs('validation')
 		valset = dataset(val_epochs, balance=balance, only_arousal=only_arousal)
+		if balance or only_arousal:
+			save_epochs(valset.epochs, 'validation')
 		model.fit(data.epochs, valset.epochs)
 	else:
 		model.fit(data.epochs)
