@@ -140,7 +140,7 @@ class gru:
 				savetxt(HISTVAL, self.return_loss(callbacks[2], 'val_loss'), delimiter=',')
 
 	def return_loss(self, history, metric = 'loss'):
-		items = history.history.items()
+		items = history.history
 		return [item[1] for item in items['loss']]
 
 	def shape_X(self, epoch):

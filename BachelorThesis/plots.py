@@ -8,7 +8,7 @@ Nicklas Hansen,
 Michael Kirkegaard
 """
 
-COLOR = ['black', 'orange', 'cyan', 'green']
+COLOR = ['black', 'orange', 'green', 'red']
 
 def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals, duration = None, figure = None):
 	if figure:
@@ -25,16 +25,47 @@ def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals,
 		a.legend()
 		return figure
 	else:
-		show_signals(timecol, signals, labels, COLOR, duration)
-		show_spans(timecol, wake_states, '0.5')
-		#show_spans(timecol, rem, 'purple', 0.15)
-		show_spans(timecol, illegals, 'red')
-		#show_spans(timecol, arousals, 'green', 0.9)
+		ecg = plt.subplot(411)
+		show_signals(timecol, [signals[0]], [labels[0]], COLOR, duration)
 		plt.xlim(0, duration/60)
-		plt.ylim(-1,1)
-		plt.xlabel('Minutes')
+		plt.ylim(-1,1.5)
+		#plt.xlabel('Minutes')
 		plt.ylabel('Normalised values')
 		plt.legend()
+
+		ptt = plt.subplot(412, sharex=ecg)
+		show_signals(timecol, [signals[1]], [labels[1]], COLOR, duration)
+		plt.xlim(0, duration/60)
+		plt.ylim(-0.5,1.5)
+		#plt.xlabel('Minutes')
+		plt.ylabel('Normalised values')
+		plt.legend()
+
+		aai = plt.subplot(413, sharex=ecg)
+		show_signals(timecol, signals[3:], labels[3:], COLOR, duration)
+		plt.xlim(0, duration/60)
+		plt.ylim(-1.25,1.25)
+		#plt.xlabel('Minutes')
+		plt.ylabel('Arousals')
+		plt.legend()
+
+		ssa = plt.subplot(414, sharex=ecg)
+		show_signals(timecol, [signals[2]], [labels[2]], COLOR, duration)
+		plt.xlim(0, duration/60)
+		plt.ylim(-1.25,1.25)
+		plt.xlabel('Minutes')
+		plt.ylabel('Sleep stage')
+
+		#show_spans(timecol, wake_states, '0.5')
+		#show_spans(timecol, rem, 'purple', 0.15)
+		#show_spans(timecol, illegals, 'red')
+		#show_spans(timecol, arousals, 'green', 0.7)
+
+		plt.setp(ecg.get_xticklabels(), visible=False)
+		plt.setp(ptt.get_xticklabels(), visible=False)
+		plt.setp(aai.get_xticklabels(), visible=False)
+		plt.legend()
+
 		plt.show()
 
 def show_signals(timecol, array, labels = None, colors = COLOR, duration = None, a = None):
@@ -49,9 +80,9 @@ def show_signals(timecol, array, labels = None, colors = COLOR, duration = None,
 	for i,signal in enumerate(array):
 		linewidth = 1.8 if labels[i] == 'y' else 0.6
 		if a:
-			a.plot(x, signal/10, colors[i], label=labels[i], linewidth=linewidth)
+			a.plot(x, signal, colors[i], label=labels[i], linewidth=linewidth)
 		else:
-			plt.plot(x, signal/10, colors[i], label=labels[i], linewidth=linewidth)
+			plt.plot(x, signal, colors[i], label=labels[i], linewidth=linewidth)
 	return a
 
 def show_spans(timecol, array, color, alpha = 0.3, a = None):

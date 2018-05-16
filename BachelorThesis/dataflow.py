@@ -16,7 +16,7 @@ Nicklas Hansen
 """
 
 def test_dataflow():
-	X,y = fs.load_csv('mesa-sleep-2821')
+	X,y = fs.load_csv('mesa-sleep-6789')
 	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter=False, removal=True)
 	epochs = gru(load_graph=True).predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
@@ -24,7 +24,15 @@ def test_dataflow():
 	X,_,mask = make_features(X, None, settings.SAMPLE_RATE, removal=False)
 	X = transpose(X)
 	ill = [1 if x >= 1 and X[5,i] == 0 else 0 for i,x in enumerate(mask)]
-	plot_results(X[0]/settings.SAMPLE_RATE, [X[1], y], ['RR interval', 'y'], region(X[5]), region(X[7]), region(ill), region(yhat), int(X[0,-1]/settings.SAMPLE_RATE))
+	
+	ss = X[6].copy()
+	for i,_ in enumerate(ss):
+		if X[7,i]:
+			ss[i] = 2
+		elif X[5,i]:
+			ss[i] = 0
+
+	plot_results(X[0]/settings.SAMPLE_RATE, [X[1], X[3], ss, yhat, y*(-1)], ['RR interval', 'PTT', 'Sleep stage', 'yhat', 'y'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE))
 
 def dataflow(X, cmd_plot = False):
 	epochs,yhat,wake,rem,illegal = get_timeseries_prediction(X, gru(load_graph=True))
