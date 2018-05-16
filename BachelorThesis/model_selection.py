@@ -51,18 +51,23 @@ def test_bidirectional(gpu = True, config = None, rnn_layers = 1, evaluate_model
 	if evaluate_model:
 		evaluate(model, validation=True, log_filename = config.name)
 
-def fit_validate(gpu = True, validation = True, balance = False, only_arousal = False, load_path = None, save_path = None):
+def fit_validate_test(gpu = True, validation = True, balance = False, only_arousal = False, load_path = None, save_path = None):
 	batch_size = get_batch_size(gpu)
-	model = fit(batch_size, balance, only_arousal)
+	model = fit(batch_size, balance, only_arousal, validate=True)
 	model.save()
-	evaluate(model, validation)
+	evaluate(model, validation=False)
 
-def fit(batch_size = None, balance = False, only_arousal = False, model = None, load_path = None, data = None):
+def fit(batch_size = None, balance = False, only_arousal = False, model = None, load_path = None, data = None, validate = True):
 	if data is None:
 		data = dataset(fs.load_epochs(), balance=balance, only_arousal=only_arousal)
 	if model is None:
 		model = gru(data, batch_size=batch_size)
-	model.fit(data.epochs)
+	if validate:
+		val_epochs = fs.load_epochs('validation')
+		valset = dataset(val_epochs, balance=balance, only_arousal=only_arousal)
+		model.fit(data.epochs, valset.epochs)
+	else:
+		model.fit(data.epochs)
 	return model
 
 def evaluate(model = None, validation = True, log_filename = None):
@@ -82,7 +87,7 @@ def validate(model, files, log_results = False, validation = True):
 	count = len(files)
 	for file in files:
 		try:
-			tp, fp, tn, fn = validate_file(file, model, overlap_score, sample_rate)
+			tp, fp, tn, fn = validate_file(file, model, settings.OVERLAP_SCORE, settings.SAMPLE_RATE)
 			TP += tp ; FP += fp ; TN += tn ; FN += fn
 			file_score = metrics.compute_cm_score(tp, fp, tn, fn)
 			log.print(file + ' -- Se: ' + '{0:.2f}'.format(file_score['score']['sensitivity']) + ',  P+: ' + '{0:.2f}'.format(file_score['score']['precision']))

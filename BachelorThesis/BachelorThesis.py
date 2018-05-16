@@ -12,8 +12,8 @@ Michael Kirkegaard
 if __name__ == '__main__':
 	#parameter_tuning(evaluate_model=False)
 	#test_bidirectional(balance=True)
-	#fit_validate(gpu=True, balance = True)
+	fit_validate_test(only_arousal = True)
 	#evaluate()
 	#test_dataflow()
-	make_splits()
+	#make_splits()
 	process_epochs()

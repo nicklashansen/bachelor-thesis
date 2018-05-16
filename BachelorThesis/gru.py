@@ -1,7 +1,7 @@
 from numpy import *
 from keras.models import Sequential, model_from_json, load_model
 from keras.layers import Dense, Embedding, TimeDistributed, Bidirectional, GRU, Dropout
-from keras.callbacks import EarlyStopping, TensorBoard, History
+from keras.callbacks import EarlyStopping, TensorBoard, History, ModelCheckpoint
 from keras.utils import plot_model
 from stopwatch import *
 from plots import *
@@ -16,6 +16,7 @@ Nicklas Hansen
 
 MODEL = 'gru.h5'
 HIST = 'hist.csv'
+HISTVAL = 'histval.csv'
 PLOT = 'gru.png'
 
 class gru_config:
@@ -96,10 +97,12 @@ class gru:
 		else:
 			plot_model(self.graph, to_file=path)
 
-	def get_callbacks(self):
-		early_stop = EarlyStopping(monitor='loss', patience=3, mode='auto', verbose=1)
+	def get_callbacks(self, validate = True):
+		metric = 'val_loss' if validate else 'loss'
+		early_stop = EarlyStopping(monitor=metric, patience=3, mode='auto', verbose=1)
+		checkpoint = ModelCheckpoint('best.h5', monitor=metric, save_best_only=True)
 		history = History()
-		return [early_stop, history]
+		return [early_stop, checkpoint, history]
 
 	def shape_epochs(self, epochs):
 		if self.config is not None:
@@ -115,21 +118,30 @@ class gru:
 			y[i] = reshape(epoch.y, (epoch.y.size, 1))
 		return X,y
 
-	def fit(self, epochs, iterations=256):
+	def fit(self, epochs, val = None, iterations=256):
 		verbose = 1
+		validate = val is not None
 		if self.config is not None:
 			verbose = self.config.verbose
+		callbacks = self.get_callbacks(validate=validate)
 		X,y = self.shape_epochs(epochs)
-		callbacks = self.get_callbacks()
-		hist = self.graph.fit(X, y, epochs=iterations, batch_size=self.batch_size, verbose=verbose, callbacks=callbacks)
-		if self.config is not None:
-			savetxt(self.config.name + '.csv', self.return_loss(callbacks[1]), delimiter=',')
+		if validate:
+			valX,valy = self.shape_epochs(val)
+			hist = self.graph.fit(X, y, epochs=iterations, validation_data=(valX, valy), batch_size=self.batch_size, verbose=verbose, callbacks=callbacks)
 		else:
-			savetxt(HIST, self.return_loss(callbacks[1]), delimiter=',')
+			hist = self.graph.fit(X, y, epochs=iterations, batch_size=self.batch_size, verbose=verbose, callbacks=callbacks)
+		if self.config is not None:
+			savetxt(self.config.name + '.csv', self.return_loss(callbacks[2], 'loss'), delimiter=',')
+			if validate:
+				savetxt(self.config.name + '_val.csv', self.return_loss(callbacks[2], 'val_loss'), delimiter=',')
+		else:
+			savetxt(HIST, self.return_loss(callbacks[2], 'loss'), delimiter=',')
+			if validate:
+				savetxt(HISTVAL, self.return_loss(callbacks[2], 'val_loss'), delimiter=',')
 
-	def return_loss(self, history):
+	def return_loss(self, history, metric = 'loss'):
 		items = history.history.items()
-		return [item[1] for item in items]
+		return [item[1] for item in items['loss']]
 
 	def shape_X(self, epoch):
 		return reshape(epoch.X, (1, epoch.X.shape[0], epoch.X.shape[1]))
