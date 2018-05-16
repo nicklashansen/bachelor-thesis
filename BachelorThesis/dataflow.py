@@ -20,11 +20,9 @@ def test_dataflow():
 	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter=False, removal=True)
 	epochs = gru(load_graph=True).predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
-	yhat, _ = reconstruct(X, y, epochs)
+	yhat, _ = reconstruct(X, epochs)
 	X,_,mask = make_features(X, None, settings.SAMPLE_RATE, removal=False)
 	X = transpose(X)
-	ill = [1 if x >= 1 and X[5,i] == 0 else 0 for i,x in enumerate(mask)]
-	
 	ss = X[6].copy()
 	for i,_ in enumerate(ss):
 		if X[7,i]:
@@ -35,9 +33,20 @@ def test_dataflow():
 	plot_results(X[0]/settings.SAMPLE_RATE, [X[1], X[3], ss, yhat, y*(-1)], ['RR interval', 'PTT', 'Sleep stage', 'yhat', 'y'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE))
 
 def dataflow(X, cmd_plot = False):
-	epochs,yhat,wake,rem,illegal = get_timeseries_prediction(X, gru(load_graph=True))
-	summary = summary_statistics(X, epochs, yhat, wake, rem, illegal)
+	epochs = epochs_from_prep(X, None, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter=False, removal=True)
+	epochs = gru(load_graph=True).predict(epochs)
+	epochs.sort(key=lambda x: x.index_start, reverse=False)
+	yhat, _ = reconstruct(X, epochs)
+	summary = None
+	#summary = summary_statistics(X, epochs, yhat, wake, rem, illegal)
+	X,_,mask = make_features(X, None, settings.SAMPLE_RATE, removal=False)
 	X = transpose(X)
+	ss = X[6].copy()
+	for i,_ in enumerate(ss):
+		if X[7,i]:
+			ss[i] = 2
+		elif X[5,i]:
+			ss[i] = 0
 	if cmd_plot:
 		plot_results(X[0]/settings.SAMPLE_RATE, [X[1], X[3], ss, yhat, y*(-1)], ['RR interval', 'PTT', 'Sleep stage', 'yhat', 'y'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE))
 	return X[0]/settings.SAMPLE_RATE, [X[1], X[3], ss, yhat, y*(-1)], ['RR interval', 'PTT', 'Sleep stage', 'yhat', 'y'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE), summary
