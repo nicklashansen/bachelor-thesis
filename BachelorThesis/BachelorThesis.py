@@ -1,6 +1,6 @@
 from features import process_epochs, make_splits
 from dataflow import test_dataflow
-from model_selection import parameter_tuning, test_bidirectional, fit_validate, evaluate
+from model_selection import parameter_tuning, test_bidirectional, fit_validate_test, evaluate
 import h5py
 
 """
