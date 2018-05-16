@@ -39,8 +39,8 @@ def dataflow(X, cmd_plot = False):
 	summary = summary_statistics(X, epochs, yhat, wake, rem, illegal)
 	X = transpose(X)
 	if cmd_plot:
-		plot_results(X[0]/settings.SAMPLE_RATE, [X[1]], ['RR interval'], region(wake), None, None, region(yhat), int(epochs[-1].index_stop/settings.SAMPLE_RATE))
-	return (X[0]/settings.SAMPLE_RATE, [X[1], X[3]], ['RR interval', 'PTT'], region(wake), region(rem), add_ECG_overhead(epochs[0], region(illegal)), region(yhat), int(epochs[-1].index_stop/settings.SAMPLE_RATE)), summary
+		plot_results(X[0]/settings.SAMPLE_RATE, [X[1], X[3], ss, yhat, y*(-1)], ['RR interval', 'PTT', 'Sleep stage', 'yhat', 'y'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE))
+	return X[0]/settings.SAMPLE_RATE, [X[1], X[3], ss, yhat, y*(-1)], ['RR interval', 'PTT', 'Sleep stage', 'yhat', 'y'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE), summary
 
 def get_timeseries_prediction(X, model, y=None):
 	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, filter = False, removal=True)

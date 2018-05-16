@@ -11,62 +11,52 @@ Michael Kirkegaard
 COLOR = ['black', 'orange', 'green', 'red']
 
 def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals, duration = None, figure = None):
-	if figure:
-		a = figure.add_subplot(111)
-		a = show_signals(timecol, signals, labels, COLOR, duration, a=a)
-		a = show_spans(wake_states, '0.5', a=a)
-		#a = show_spans(rem, 'purple', a=a)
-		a = show_spans(illegals, 'red', a=a)
-		#a = show_spans(arousals, 'green', 0.9, a=a)
-		a.set_xlim(0, duration/60)
-		a.set_ylim(-1,1)
-		a.set_xlabel('Minutes')
-		a.set_ylabel('Normalised values')
-		a.legend()
-		return figure
-	else:
+	if figure is None:
 		ecg = plt.subplot(411)
 		show_signals(timecol, [signals[0]], [labels[0]], COLOR, duration)
-		plt.xlim(0, duration/60)
-		plt.ylim(-1,1.5)
-		#plt.xlabel('Minutes')
-		plt.ylabel('Normalised values')
-		plt.legend()
-
 		ptt = plt.subplot(412, sharex=ecg)
 		show_signals(timecol, [signals[1]], [labels[1]], COLOR, duration)
-		plt.xlim(0, duration/60)
-		plt.ylim(-0.5,1.5)
-		#plt.xlabel('Minutes')
-		plt.ylabel('Normalised values')
-		plt.legend()
-
 		aai = plt.subplot(413, sharex=ecg)
 		show_signals(timecol, signals[3:], labels[3:], COLOR, duration)
-		plt.xlim(0, duration/60)
-		plt.ylim(-1.25,1.25)
-		#plt.xlabel('Minutes')
-		plt.ylabel('Arousals')
-		plt.legend()
-
 		ssa = plt.subplot(414, sharex=ecg)
 		show_signals(timecol, [signals[2]], [labels[2]], COLOR, duration)
-		plt.xlim(0, duration/60)
-		plt.ylim(-1.25,1.25)
-		plt.xlabel('Minutes')
-		plt.ylabel('Sleep stage')
+	else:
+		ecg = figure.add_subplot(411)
+		show_signals(timecol, [signals[0]], [labels[0]], COLOR, duration, a = ecg)
+		ptt = figure.add_subplot(412, sharex=ecg)
+		show_signals(timecol, [signals[1]], [labels[1]], COLOR, duration, a = ptt)
+		aai = figure.add_subplot(413, sharex=ecg)
+		show_signals(timecol, [signals[3]], [labels[3]], COLOR, duration)
+		ssa = figure.add_subplot(414, sharex=ecg)
+		show_signals(timecol, [signals[2]], [labels[2]], COLOR, duration, a = ssa)
 
-		#show_spans(timecol, wake_states, '0.5')
-		#show_spans(timecol, rem, 'purple', 0.15)
-		#show_spans(timecol, illegals, 'red')
-		#show_spans(timecol, arousals, 'green', 0.7)
+	ecg.set_xlim(0, duration/60)
+	ecg.set_ylim(-1,1.5)
+	ecg.set_ylabel('Normalised values')
+	ecg.legend()
 
-		plt.setp(ecg.get_xticklabels(), visible=False)
-		plt.setp(ptt.get_xticklabels(), visible=False)
-		plt.setp(aai.get_xticklabels(), visible=False)
-		plt.legend()
+	ptt.set_xlim(0, duration/60)
+	ptt.set_ylim(-0.5,1.5)
+	ptt.set_ylabel('Normalised values')
+	ptt.legend()
 
+	aai.set_xlim(0, duration/60)
+	aai.set_ylim(-0.25,1.25)
+	aai.set_ylabel('Arousals')
+	aai.legend()
+
+	ssa.set_xlim(0, duration/60)
+	ssa.set_ylim(-0.25,2.25)
+	ssa.set_xlabel('Minutes')
+	ssa.set_ylabel('Sleep stage')
+
+	plt.setp(ecg.get_xticklabels(), visible=False)
+	plt.setp(ptt.get_xticklabels(), visible=False)
+	plt.setp(aai.get_xticklabels(), visible=False)
+	if figure is None:
 		plt.show()
+	else:
+		return figure
 
 def show_signals(timecol, array, labels = None, colors = COLOR, duration = None, a = None):
 	if array is None:
@@ -79,7 +69,7 @@ def show_signals(timecol, array, labels = None, colors = COLOR, duration = None,
 	x = timecol/60
 	for i,signal in enumerate(array):
 		linewidth = 1.8 if labels[i] == 'y' else 0.6
-		if a:
+		if a is not None:
 			a.plot(x, signal, colors[i], label=labels[i], linewidth=linewidth)
 		else:
 			plt.plot(x, signal, colors[i], label=labels[i], linewidth=linewidth)
@@ -90,7 +80,7 @@ def show_spans(timecol, array, color, alpha = 0.3, a = None):
 		return a
 	x = timecol/60
 	for _,obj in enumerate(array):
-		if a:
+		if a is not None:
 			a.axvspan(x[obj[0]], x[obj[1]], color=color, alpha=alpha)
 		else:
 			plt.axvspan(x[obj[0]], x[obj[1]], color=color, alpha=alpha)
