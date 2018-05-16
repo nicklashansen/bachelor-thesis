@@ -16,4 +16,4 @@ if __name__ == '__main__':
 	#evaluate()
 	#test_dataflow()
 	#make_splits()
-	process_epochs()
+	#process_epochs()
