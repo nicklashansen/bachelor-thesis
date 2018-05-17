@@ -13,12 +13,16 @@ COLOR = ['black', 'orange', 'green', 'red']
 def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals, duration = None, figure = None):
 	if figure is None:
 		ecg = plt.subplot(411)
+		plt.Axes.autoscale(ecg, True, axis = 'y')
 		show_signals(timecol, [signals[0]], [labels[0]], COLOR, duration)
 		ptt = plt.subplot(412, sharex=ecg)
+		plt.Axes.autoscale(ptt, True, axis = 'y')
 		show_signals(timecol, [signals[1]], [labels[1]], COLOR, duration)
 		aai = plt.subplot(413, sharex=ecg)
+		plt.Axes.autoscale(aai, True, axis = 'y')
 		show_signals(timecol, signals[3:], labels[3:], COLOR, duration)
 		ssa = plt.subplot(414, sharex=ecg)
+		plt.Axes.autoscale(ssa, True, axis = 'y')
 		show_signals(timecol, [signals[2]], [labels[2]], COLOR, duration)
 	else:
 		ecg = figure.add_subplot(411)
@@ -31,17 +35,17 @@ def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals,
 		show_signals(timecol, [signals[2]], [labels[2]], COLOR, duration, a = ssa)
 
 	ecg.set_xlim(0, duration/60)
-	ecg.set_ylim(-1,1.5)
+	ecg.set_ylim(-1,2)
 	ecg.set_ylabel('Normalised values')
 	ecg.legend()
 
 	ptt.set_xlim(0, duration/60)
-	ptt.set_ylim(-0.5,1.5)
+	ptt.set_ylim(-1.5,2.25)
 	ptt.set_ylabel('Normalised values')
 	ptt.legend()
 
 	aai.set_xlim(0, duration/60)
-	aai.set_ylim(-0.25,1.25)
+	aai.set_ylim(-1.25,1.25)
 	aai.set_ylabel('Arousals')
 	aai.legend()
 

@@ -112,18 +112,14 @@ def predict_file(filename, model, filter = False, removal = True):
 	yhat, timecol = reconstruct(X, y, epochs)
 	return y, yhat, timecol
 
-def reconstruct(X, y, epochs):
+def reconstruct(X, epochs):
 	timecol = transpose(X)[0]
-	yhat = zeros(y.size)
+	yhat = zeros(timecol.size)
 	for _,e in enumerate(epochs):
 		index = where(timecol == e.index_start)[0][0]
 		for i,val in enumerate(e.yhat):
 			if val == 1:
-				d = timecol[index]
-				sample = y[index+i-30:index+i+30]
 				yhat[index + i] = val
-				sample2 = yhat[index+i-30:index+i+30]
-				breakpoint = 0
 	return yhat, timecol
 
 def add_predictions(yhat1, yhat2):
