@@ -57,6 +57,7 @@ def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals,
 	plt.setp(ecg.get_xticklabels(), visible=False)
 	plt.setp(ptt.get_xticklabels(), visible=False)
 	plt.setp(aai.get_xticklabels(), visible=False)
+	plt.Axes.autoscale(ssa, True, axis = 'y')
 	if figure is None:
 		plt.show()
 	else:

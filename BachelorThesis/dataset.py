@@ -6,7 +6,7 @@ import random
 SEED = 22
 
 class dataset:
-	def __init__(self, epochs, shuffle=True, adjust_sleep=False, balance=False, only_arousal=False):
+	def __init__(self, epochs, shuffle=True, balance=False, only_arousal=False, exclude_ptt=False):
 		self.epochs = epochs
 		self.size = len(epochs)
 		self.timesteps = epochs[0].timesteps
@@ -17,8 +17,9 @@ class dataset:
 			self.balance()
 		if shuffle:
 			self.shuffle()
-		if adjust_sleep:
-			self.adjust_sleep()
+		if exclude_ptt:
+			self.exclude_ptt()
+		
 
 	def shuffle(self, seed = SEED):
 		random.Random(seed).shuffle(self.epochs)
@@ -43,11 +44,12 @@ class dataset:
 				self.epochs.remove(obj)
 		self.size = len(self.epochs)
 
-	def adjust_sleep(self):
-		index = self.features - 1
-		for j,e in enumerate(self.epochs):
-			for i,val in enumerate(transpose(e.X)[index]):
-				self.epochs[j].X[i, index] = val + 1
+	def exclude_ptt(self):
+		for i,obj in enumerate(self.epochs):
+			obj.X = delete(obj.X, 2, 1)
+			obj.X = delete(obj.X, 2, 1)
+			self.epochs[i].X = obj.X
+		self.features = self.epochs[0].X.shape[1]
 
 	def get_split(self):
 		split = 0.9

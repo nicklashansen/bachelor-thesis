@@ -29,7 +29,6 @@ def test_dataflow():
 			ss[i] = 2
 		elif X[5,i]:
 			ss[i] = 0
-
 	plot_results(X[0]/settings.SAMPLE_RATE, [X[1], X[3], ss, yhat, y*(-1)], ['RR interval', 'PTT', 'Sleep stage', 'yhat', 'y'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE))
 
 def dataflow(X, cmd_plot = False):
@@ -37,7 +36,7 @@ def dataflow(X, cmd_plot = False):
 	epochs = gru(load_graph=True).predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
 	yhat, _ = reconstruct(X, epochs)
-	summary = None
+	summary = {}
 	#summary = summary_statistics(X, epochs, yhat, wake, rem, illegal)
 	X,_,mask = make_features(X, None, settings.SAMPLE_RATE, removal=False)
 	X = transpose(X)

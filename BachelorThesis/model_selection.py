@@ -41,8 +41,8 @@ def parameter_tuning(gpu = True, evaluate_model = True, balance = False, only_ar
 					evaluate(model, validation=True, log_filename = config.name)
 				step += 1
 
-def test_bidirectional(gpu = True, config = None, rnn_layers = 1, evaluate_model = True, balance = False, only_arousal = False):
-	data = dataset(fs.load_epochs()[:12], balance=balance, only_arousal=only_arousal)
+def test_bidirectional(gpu = True, config = None, rnn_layers = 1, evaluate_model = True, balance = False, only_arousal = False, exclude_ptt = False):
+	data = dataset(fs.load_epochs()[:12], balance=balance, only_arousal=only_arousal, exclude_ptt=exclude_ptt)
 	if config is None:
 		config = gru_config('bidir_' + str(rnn_layers) + 'layer', rnn_layers=rnn_layers, bidirectional=True, bidirectional_mode='sum')
 	model = gru(batch_size=get_batch_size(), config=config)
@@ -66,7 +66,7 @@ def fit(batch_size = None, balance = False, only_arousal = False, model = None, 
 		model = gru(data, batch_size=batch_size)
 	if validate:
 		val_epochs = fs.load_epochs('validation')
-		valset = dataset(val_epochs, balance=balance, only_arousal=only_arousal)
+		valset = dataset(val_epochs, balance=balance, only_arousal=only_arousal, exclude_ptt=True)
 		if balance or only_arousal:
 			save_epochs(valset.epochs, 'validation')
 		model.fit(data.epochs, valset.epochs)
@@ -107,6 +107,7 @@ def validate_file(file, model, overlap_score, sample_rate):
 def predict_file(filename, model, filter = False, removal = True):
 	X,y = fs.load_csv(filename)
 	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter, removal)
+	epochs = dataset(epochs, shuffle=False, exclude_ptt=True).epochs
 	epochs = model.predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
 	yhat, timecol = reconstruct(X, y, epochs)
