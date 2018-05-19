@@ -4,7 +4,7 @@ from epoch import epoch
 from gru import gru, gru_config
 from timeseries import timeseries, region, add_ECG_overhead
 from dataset import dataset
-from model_selection import add_predictions, reconstruct
+#from model_selection import add_predictions, reconstruct
 from plots import plot_results
 from log import Log, get_log
 import filesystem as fs
@@ -58,6 +58,73 @@ def get_timeseries_prediction(X, model, y=None):
 	if y is not None:
 		return epochs, y, yhat, wake, rem, illegal, timecol
 	return epochs, yhat, wake, rem, illegal, timecol
+
+def postprocess(timecol, yhat, combine = False, remove = False):
+	prev, start, bin, n = None, 0, False, 0
+	for i,p in enumerate(yhat):
+		if p:
+			if not bin:
+				start, bin = i, True
+		elif bin:
+			bin = False
+			curr = [start, i-1]
+			if remove:
+				timecol, yhat, n = conditional_remove(timecol, yhat, curr, n)
+			if combine and prev is not None:
+				timecol, yhat, n = conditional_combine(timecol, yhat, curr, prev, n)
+			prev = [start, i-1]
+	return yhat, n
+
+def conditional_remove(timecol, yhat, curr, n):
+	dur = timecol[curr[1]] - timecol[curr[0]]
+	if dur < 1 * settings.SAMPLE_RATE:
+		n += 1
+		for j in range(curr[0], curr[1]+1):
+			yhat[j] = 0
+	return timecol, yhat, n
+		
+
+def conditional_combine(timecol, yhat, curr, prev, n):
+	diff = timecol[curr[0]] - timecol[prev[1]]
+	if diff < 3 * settings.SAMPLE_RATE:
+		n += 1
+		for j in range(prev[1], curr[0]):
+			yhat[j] = 1
+	return timecol, yhat, n
+
+
+
+#time = [200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4400, 4600, 4800, 5000, 5200, 5400, 5600]
+#y	 = [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0]
+
+#yhat = postprocess(time, y)
+#breakpoint = 0
+
+def region(array, count = False):
+	regions, start, bin, n = [], 0, False, 0
+	for i,val in enumerate(array):
+		if val == 1:
+			if not bin:
+				start, bin = i, True
+		elif bin:
+			bin = False
+			n += 1
+			regions.append([start, i-1])
+			#if i-1-start <= 3 and start > 2:
+			#	regions.append([start-2,i-1])
+			#else:
+			#	regions.append([start, i-1])
+	if bin:
+		regions.append([start, i])
+		n += 1
+	if count:
+		return regions, n
+	return regions
+
+
+
+
+
 
 def summary_statistics(X, epochs, yhat, wake, rem, illegal):
 	timecol = transpose(X)[0]

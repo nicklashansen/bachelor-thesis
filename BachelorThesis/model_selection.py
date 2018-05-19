@@ -4,6 +4,7 @@ from epoch import epoch, save_epochs
 from gru import gru, gru_config
 from dataset import dataset
 from log import Log, get_log
+from dataflow import postprocess
 import filesystem as fs
 import metrics
 import settings
@@ -42,7 +43,7 @@ def parameter_tuning(gpu = True, evaluate_model = True, balance = False, only_ar
 				step += 1
 
 def test_bidirectional(gpu = True, config = None, rnn_layers = 1, evaluate_model = True, balance = False, only_arousal = False, exclude_ptt = False):
-	data = dataset(fs.load_epochs()[:12], balance=balance, only_arousal=only_arousal, exclude_ptt=exclude_ptt)
+	data = dataset(fs.load_epochs(), balance=balance, only_arousal=only_arousal, exclude_ptt=exclude_ptt)
 	if config is None:
 		config = gru_config('bidir_' + str(rnn_layers) + 'layer', rnn_layers=rnn_layers, bidirectional=True, bidirectional_mode='sum')
 	model = gru(batch_size=get_batch_size(), config=config)
@@ -77,9 +78,9 @@ def fit(batch_size = None, balance = False, only_arousal = False, model = None, 
 def evaluate(model = None, validation = True, log_filename = None):
 	set = 1 if validation else 2
 	if model is None:
-		model = gru(load_graph=True)
+		model = gru(load_graph=True, path = 'best_triple.h5')
 	files = fs.load_splits()[set]
-	results = validate(model, files, log_results = True, validation = True)
+	results = validate(model, files, log_results = True, validation = False)
 	log_results(results, validation=validation, filename=log_filename)
 	return results
 
@@ -101,16 +102,20 @@ def validate(model, files, log_results = False, validation = True):
 
 def validate_file(file, model, overlap_score, sample_rate):
 	y, yhat, timecol = predict_file(file, model)
+	_, yhat2, __ = predict_file(file, gru(load_graph=True, path = 'best_double_bidir.h5'))
+	_, yhat3, __ = predict_file(file, gru(load_graph=True, path = 'gru_val_loss.h5'))
+	yhat = majority_vote(yhat, yhat2, yhat3)
+	yhat, n = postprocess(timecol, yhat, combine=False, remove=True)
 	TP, FP, TN, FN = metrics.cm_overlap(y, yhat, timecol, overlap_score, sample_rate)
 	return TP, FP, TN, FN
 
 def predict_file(filename, model, filter = False, removal = True):
 	X,y = fs.load_csv(filename)
 	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter, removal)
-	epochs = dataset(epochs, shuffle=False, exclude_ptt=True).epochs
+	#epochs = dataset(epochs, shuffle=False, exclude_ptt=True).epochs
 	epochs = model.predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
-	yhat, timecol = reconstruct(X, y, epochs)
+	yhat, timecol = reconstruct(X, epochs)
 	return y, yhat, timecol
 
 def reconstruct(X, epochs):
@@ -129,6 +134,11 @@ def add_predictions(yhat1, yhat2):
 		if yhat2[i] == 1:
 			yhat1[i] = 1
 	return yhat1
+
+def majority_vote(yhat1, yhat2, yhat3):
+	assert len(yhat1) == len(yhat2)
+	assert len(yhat1) == len(yhat3)
+	return [1 if sum([yhat1[i], yhat2[i], yhat3[i]]) > 1 else 0 for i in range(len(yhat1))]
 
 def log_results(results, validation = True, filename = None):
 	if filename is None:
