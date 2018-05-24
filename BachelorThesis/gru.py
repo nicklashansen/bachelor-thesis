@@ -150,10 +150,10 @@ class gru:
 	def shape_y(self, epoch):
 		return reshape(epoch.y, (1, epoch.y.size, 1))
 
-	def predict(self, epochs):
+	def predict(self, epochs, return_probabilities = False):
 		predictions = []
 		for epoch in epochs:
-			yhat = self.graph.predict_classes(self.shape_X(epoch))
+			yhat = self.graph.predict_classes(self.shape_X(epoch)) if not return_probabilities else self.graph.predict(self.shape_X(epoch))
 			epoch.yhat = squeeze(yhat)
 		return epochs
 

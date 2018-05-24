@@ -75,16 +75,38 @@ def fit(batch_size = None, balance = False, only_arousal = False, model = None, 
 		model.fit(data.epochs)
 	return model
 
-def evaluate(model = None, validation = True, log_filename = None):
+def evaluate(model = None, validation = False, log_filename = None, return_probabilities = False):
 	set = 1 if validation else 2
 	if model is None:
-		model = gru(load_graph=True, path = 'best_4layer.h5')
+		model = gru(load_graph=True, path = 'gru.h5')
 	files = fs.load_splits()[set]
-	results = validate(model, files, log_results = True, validation = False)
+	results = validate(model, files, log_results = True, validation = False, return_probabilities=return_probabilities)
 	log_results(results, validation=validation, filename=log_filename)
 	return results
 
-def validate(model, files, log_results = False, validation = True):
+def p_threshold_cv(start = 0.1, stop = 0.9, step = 0.1):
+	vals = arange(start, stop, step)
+	for i,val in enumerate(vals):
+		evaluate_p_threshold(val, validation=False)
+
+def evaluate_p_threshold(threshold = settings.PREDICT_THRESHOLD, validation = False):
+	log = get_log('Thresholds', echo=True)
+	set = 1 if validation else 2
+	files = fs.load_splits()[set]
+	TP=FP=TN=FN=0
+	for file in files:
+		try:
+			arr = genfromtxt('p-' + file + '.csv', delimiter=',')
+			yhat = [1 if val >= threshold else 0 for i,val in enumerate(arr[1])]
+			tp, fp, tn, fn = metrics.cm_overlap(arr[0], yhat, arr[2], settings.OVERLAP_SCORE, settings.SAMPLE_RATE)
+			TP += tp ; FP += fp ; TN += tn ; FN += fn
+		except Exception as e:
+			print(e)
+	results = metrics.compute_cm_score(TP, FP, TN, FN)
+	log.print('\nThreshold: ' + str(threshold))
+	log_results(results, validation=validation, filename='Thresholds')
+
+def validate(model, files, log_results = False, validation = True, return_probabilities = False):
 	if log_results:
 		filename = 'Validation' if validation else 'Evaluation'
 		log = get_log(filename, echo=True)
@@ -92,40 +114,50 @@ def validate(model, files, log_results = False, validation = True):
 	count = len(files)
 	for file in files:
 		try:
-			tp, fp, tn, fn = validate_file(file, model, settings.OVERLAP_SCORE, settings.SAMPLE_RATE)
-			TP += tp ; FP += fp ; TN += tn ; FN += fn
-			file_score = metrics.compute_cm_score(tp, fp, tn, fn)
-			log.print(file + ' -- Se: ' + '{0:.2f}'.format(file_score['score']['sensitivity']) + ',  P+: ' + '{0:.2f}'.format(file_score['score']['precision']))
+			if return_probabilities:
+				validate_file(file, model, settings.OVERLAP_SCORE, settings.SAMPLE_RATE, return_probabilities=return_probabilities)
+			else:
+				tp, fp, tn, fn = validate_file(file, model, settings.OVERLAP_SCORE, settings.SAMPLE_RATE)
+				TP += tp ; FP += fp ; TN += tn ; FN += fn
+				file_score = metrics.compute_cm_score(tp, fp, tn, fn)
+				log.print(file + ', ' + '{0:.2f}'.format(file_score['score']['sensitivity']) + ', ' + '{0:.2f}'.format(file_score['score']['precision']))
 		except Exception as e:
 			print(e)
 	return metrics.compute_cm_score(TP, FP, TN, FN)
 
-def validate_file(file, model, overlap_score, sample_rate):
-	y, yhat, timecol = predict_file(file, model)
+def validate_file(file, model, overlap_score, sample_rate, return_probabilities = False):
+	y, yhat, timecol = predict_file(file, model, return_probabilities=return_probabilities)
 	#_, yhat2, __ = predict_file(file, gru(load_graph=True, path = 'best_double_bidir.h5'))
 	#_, yhat3, __ = predict_file(file, gru(load_graph=True, path = 'gru_val_loss.h5'))
 	#yhat = majority_vote(yhat, yhat2, yhat3)
 	#yhat, n = postprocess(timecol, yhat, combine=False, remove=True)
-	TP, FP, TN, FN = metrics.cm_overlap(y, yhat, timecol, overlap_score, sample_rate)
-	return TP, FP, TN, FN
+	if return_probabilities:
+		arr = zeros((3, y.size))
+		arr[0] = y
+		arr[1] = yhat
+		arr[2] = timecol
+		savetxt('p-' + file + '.csv', arr, delimiter=',')
+	else:
+		TP, FP, TN, FN = metrics.cm_overlap(y, yhat, timecol, overlap_score, sample_rate)
+		return TP, FP, TN, FN
 
-def predict_file(filename, model, filter = False, removal = True):
+def predict_file(filename, model, filter = False, removal = True, return_probabilities = False):
 	X,y = fs.load_csv(filename)
 	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter, removal)
 	#epochs = dataset(epochs, shuffle=False, exclude_ptt=True).epochs
-	epochs = model.predict(epochs)
+	epochs = model.predict(epochs, return_probabilities=return_probabilities)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
-	yhat, timecol = reconstruct(X, epochs)
+	yhat, timecol = reconstruct(X, epochs, settings.PREDICT_THRESHOLD)
 	return y, yhat, timecol
 
-def reconstruct(X, epochs):
+def reconstruct(X, epochs, threshold = 1):
 	timecol = transpose(X)[0]
 	yhat = zeros(timecol.size)
 	for _,e in enumerate(epochs):
 		index = where(timecol == e.index_start)[0][0]
 		for i,val in enumerate(e.yhat):
-			if val == 1:
-				yhat[index + i] = val
+			if val == 1 or val >= threshold:
+				yhat[index + i] = max(yhat[index + i], val)
 	return yhat, timecol
 
 def add_predictions(yhat1, yhat2):
