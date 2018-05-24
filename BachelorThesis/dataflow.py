@@ -4,7 +4,7 @@ from epoch import epoch
 from gru import gru, gru_config
 from timeseries import timeseries, region, add_ECG_overhead
 from dataset import dataset
-#from model_selection import add_predictions, reconstruct
+from model_selection import add_predictions, reconstruct
 from plots import plot_results
 from log import Log, get_log
 import filesystem as fs
@@ -16,7 +16,7 @@ Nicklas Hansen
 """
 
 def test_dataflow():
-	X,y = fs.load_csv('mesa-sleep-6789')
+	X,y = fs.load_csv('mesa-sleep-2472')
 	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter=False, removal=True)
 	epochs = gru(load_graph=True).predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)

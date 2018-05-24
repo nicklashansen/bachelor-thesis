@@ -4,7 +4,7 @@ from epoch import epoch, save_epochs
 from gru import gru, gru_config
 from dataset import dataset
 from log import Log, get_log
-from dataflow import postprocess
+#from dataflow import postprocess
 import filesystem as fs
 import metrics
 import settings
@@ -67,7 +67,7 @@ def fit(batch_size = None, balance = False, only_arousal = False, model = None, 
 		model = gru(data, batch_size=batch_size)
 	if validate:
 		val_epochs = fs.load_epochs('validation')
-		valset = dataset(val_epochs, balance=balance, only_arousal=only_arousal, exclude_ptt=True)
+		valset = dataset(val_epochs, balance=balance, only_arousal=only_arousal, exclude_ptt=False)
 		if balance or only_arousal:
 			save_epochs(valset.epochs, 'validation')
 		model.fit(data.epochs, valset.epochs)
@@ -78,7 +78,7 @@ def fit(batch_size = None, balance = False, only_arousal = False, model = None, 
 def evaluate(model = None, validation = True, log_filename = None):
 	set = 1 if validation else 2
 	if model is None:
-		model = gru(load_graph=True, path = 'best_triple.h5')
+		model = gru(load_graph=True, path = 'best_4layer.h5')
 	files = fs.load_splits()[set]
 	results = validate(model, files, log_results = True, validation = False)
 	log_results(results, validation=validation, filename=log_filename)
@@ -102,10 +102,10 @@ def validate(model, files, log_results = False, validation = True):
 
 def validate_file(file, model, overlap_score, sample_rate):
 	y, yhat, timecol = predict_file(file, model)
-	_, yhat2, __ = predict_file(file, gru(load_graph=True, path = 'best_double_bidir.h5'))
-	_, yhat3, __ = predict_file(file, gru(load_graph=True, path = 'gru_val_loss.h5'))
-	yhat = majority_vote(yhat, yhat2, yhat3)
-	yhat, n = postprocess(timecol, yhat, combine=False, remove=True)
+	#_, yhat2, __ = predict_file(file, gru(load_graph=True, path = 'best_double_bidir.h5'))
+	#_, yhat3, __ = predict_file(file, gru(load_graph=True, path = 'gru_val_loss.h5'))
+	#yhat = majority_vote(yhat, yhat2, yhat3)
+	#yhat, n = postprocess(timecol, yhat, combine=False, remove=True)
 	TP, FP, TN, FN = metrics.cm_overlap(y, yhat, timecol, overlap_score, sample_rate)
 	return TP, FP, TN, FN
 
