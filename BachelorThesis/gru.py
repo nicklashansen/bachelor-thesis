@@ -5,6 +5,7 @@ from keras.callbacks import EarlyStopping, TensorBoard, History, ModelCheckpoint
 from keras.utils import plot_model
 from stopwatch import *
 from plots import *
+import settings
 import sys
 import metrics
 import filesystem as fs
@@ -20,7 +21,7 @@ HISTVAL = 'histval.csv'
 PLOT = 'gru.png'
 
 class gru_config:
-	def __init__(self, name = 'gru', rnn_layers = 1, dense_layers_before = 0, dense_layers_after = 1, bidirectional = False, bidirectional_mode = 'sum', dropout = 0, timesteps = 120, features = 5, verbose = 1):
+	def __init__(self, name = 'gru', rnn_layers = 1, dense_layers_before = 0, dense_layers_after = 1, bidirectional = False, bidirectional_mode = 'sum', dropout = 0, timesteps = settings.EPOCH_LENGTH, features = settings.FEATURES, verbose = 1):
 		self.name = name
 		self.rnn_layers = rnn_layers
 		self.dense_layers_before = dense_layers_before
@@ -141,7 +142,7 @@ class gru:
 
 	def return_loss(self, history, metric = 'loss'):
 		items = history.history
-		return [item[1] for item in items['loss']]
+		return [item for item in items[metric]]
 
 	def shape_X(self, epoch):
 		return reshape(epoch.X, (1, epoch.X.shape[0], epoch.X.shape[1]))
@@ -149,10 +150,10 @@ class gru:
 	def shape_y(self, epoch):
 		return reshape(epoch.y, (1, epoch.y.size, 1))
 
-	def predict(self, epochs):
+	def predict(self, epochs, return_probabilities = False):
 		predictions = []
 		for epoch in epochs:
-			yhat = self.graph.predict_classes(self.shape_X(epoch))
+			yhat = self.graph.predict_classes(self.shape_X(epoch)) if not return_probabilities else self.graph.predict(self.shape_X(epoch))
 			epoch.yhat = squeeze(yhat)
 		return epochs
 

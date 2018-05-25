@@ -11,7 +11,7 @@ Michael Kirkegaard
 
 if __name__ == '__main__':
 	#parameter_tuning(evaluate_model=False)
-	#test_bidirectional(balance=True)
+	#test_bidirectional()
 	#fit_validate_test(only_arousal = True)
 	#evaluate(validation=False)
 	#test_dataflow()
