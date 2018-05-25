@@ -15,6 +15,43 @@ WRITTEN BY:
 Nicklas Hansen
 """
 
+def test_dataflow_LR(file='mesa-sleep-2451'):
+	import os, matlab.engine, preprocessing
+
+	eng = matlab.engine.start_matlab()
+	os.makedirs(fs.Filepaths.Matlab, exist_ok=True)
+	eng.cd(fs.Filepaths.Matlab)
+
+	def transform_yhat(yhat,timecol_hat,timecol_removal,timecol):
+		n = len(timecol_hat)
+		yhat_new = zeros(len(timecol))
+		j = 1
+		for i,t in enumerate(timecol_removal):
+			while(j < n and timecol_hat[j] < t):
+				j += 1
+			jx = j if j < n and abs(timecol_hat[j] - t) > abs(t - timecol_hat[j-1]) else j-1
+			jx_t = list(timecol).index(t)
+			yhat_new[jx_t] = yhat[jx]
+		return yhat_new
+
+	X_,y = fs.load_csv(file)
+	X,_,mask = make_features(X_, None, settings.SAMPLE_RATE, removal=True)
+
+	yhat, timecol_hat = eng.LR_classify(fs.directory(), file+'.edf', float(settings.SAMPLE_RATE), nargout=2)
+	timecol_hat = array([t[0] for t in timecol_hat])
+	yhat = transform_yhat([1. if yh[0] else 0. for yh in yhat], timecol_hat, transpose(X)[0], transpose(X_)[0])
+
+	X,_,mask = make_features(X_, None, settings.SAMPLE_RATE, removal=False)
+	X = transpose(X)
+	ss = X[6].copy()
+	for i,_ in enumerate(ss):
+		if X[7,i]:
+			ss[i] = 2
+		elif X[5,i]:
+			ss[i] = 0
+
+	plot_results(X[0]/settings.SAMPLE_RATE, [X[1], X[3], ss, yhat, y*(-1)], ['RR interval', 'PTT', 'Sleep stage', 'yhat', 'y'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE))
+
 def test_dataflow():
 	X,y = fs.load_csv('mesa-sleep-6789')
 	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter=False, removal=True)

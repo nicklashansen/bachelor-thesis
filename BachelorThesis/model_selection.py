@@ -13,6 +13,49 @@ WRITTEN BY:
 Nicklas Hansen
 """
 
+def evaluate_LR():
+	import os, matlab.engine, preprocessing
+
+	import os, matlab.engine, preprocessing
+
+	eng = matlab.engine.start_matlab()
+	os.makedirs(fs.Filepaths.Matlab, exist_ok=True)
+	eng.cd(fs.Filepaths.Matlab)
+
+	def transform_yhat(yhat,timecol_hat,timecol_removal,timecol):
+		n = len(timecol_hat)
+		yhat_new = zeros(len(timecol))
+		j = 1
+		for i,t in enumerate(timecol_removal):
+			while(j < n and timecol_hat[j] < t):
+				j += 1
+			jx = j if j < n and abs(timecol_hat[j] - t) > abs(t - timecol_hat[j-1]) else j-1
+			jx_t = list(timecol).index(t)
+			yhat_new[jx_t] = yhat[jx]
+		return yhat_new
+
+	log = get_log('LR-evaluation', echo=True)
+	TP=FP=TN=FN = 0
+	for file in fs.load_splits()[2]:
+		try:
+			X_,y = fs.load_csv(file)
+			X,_,_ = make_features(X_, None, settings.SAMPLE_RATE, removal=True)
+
+			yhat, timecol_hat = eng.LR_classify(fs.directory(), file+'.edf', float(settings.SAMPLE_RATE), nargout=2)
+			timecol_hat = array([t[0] for t in timecol_hat])
+			yhat = transform_yhat([1. if yh[0] else 0. for yh in yhat], timecol_hat, transpose(X)[0], transpose(X_)[0])
+
+			tp,fp,tn,fn = metrics.cm_overlap(y, yhat, transpose(X_)[0], settings.OVERLAP_SCORE, settings.SAMPLE_RATE)
+			TP += tp ; FP += fp ; TN += tn ; FN += fn
+			file_score = metrics.compute_cm_score(tp, fp, tn, fn)
+			log.print(file + ' -- Se: ' + '{0:.2f}'.format(file_score['score']['sensitivity']) + ',  P+: ' + '{0:.2f}'.format(file_score['score']['precision']))
+		except Exception as e:
+			print(e)
+	log.printHL()
+	log.print('TOTAL')
+	score = metrics.compute_cm_score(TP, FP, TN, FN)
+	log.print('Se: ' + '{0:.2f}'.format(score['score']['sensitivity']) + ',  P+: ' + '{0:.2f}'.format(score['score']['precision']))
+
 def get_batch_size(gpu = True):
 	return 2 ** 8 if gpu else 2 ** 6
 

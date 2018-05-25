@@ -163,5 +163,5 @@ def ArousalBin(anno_Arousal, frequency, index):
 		for i in range(int(start*frequency), int((start+dur)*frequency)):
 			AA[i] = 1
 
-	AA = array([AA[idx] for idx in index]).astype(float)
+	AA = array([AA[int(idx)] for idx in index]).astype(float)
 	return AA

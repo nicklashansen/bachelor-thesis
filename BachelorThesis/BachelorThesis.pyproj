@@ -73,9 +73,6 @@
     <Compile Include="preprocessing.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="qrs_detector.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="stopwatch.py">
       <SubType>Code</SubType>
     </Compile>
