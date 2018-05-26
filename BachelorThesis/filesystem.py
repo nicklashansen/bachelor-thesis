@@ -56,29 +56,34 @@ class Signal(object):
 		self.duration = dur
 
 class Subject(object):
-	def __init__(self, filename, edfPath=None, annoPath=None, ArousalAnno=True):
-		if filename:
-			self.id = int(filename[-4:])
-			self.filename = filename
+	def __init__(self, filename, edfPath=None, annoPath=None, ArousalAnno=True, ArousalOnly=False):
+		if not ArousalOnly:
+			if filename:
+				self.id = int(filename[-4:])
+				self.filename = filename
+			else:
+				self.id = None
+				self.filename = None
+			self.edfPath = edfPath
+			self.annoPath = annoPath
+
+			self.ECG_signal = self.get_signal('EKG')
+			self.PPG_signal = self.get_signal('Pleth')
+			self.SleepStage_anno = self.get_anno('Stages')
+			self.Arousal_anno = self.get_anno('Arousal') if ArousalAnno else None
+
+			assert(self.ECG_signal.duration == self.PPG_signal.duration)
+			assert(self.ECG_signal.duration <= self.SleepStage_anno.duration)
+			if ArousalAnno:
+				assert(self.ECG_signal.duration <= self.Arousal_anno.duration)
+			self.duration = self.ECG_signal.duration
+
+			assert(self.ECG_signal.sampleFrequency == self.PPG_signal.sampleFrequency)
+			self.frequency = self.ECG_signal.sampleFrequency
 		else:
-			self.id = None
-			self.filename = None
-		self.edfPath = edfPath
-		self.annoPath = annoPath
-
-		self.ECG_signal = self.get_signal('EKG')
-		self.PPG_signal = self.get_signal('Pleth')
-		self.SleepStage_anno = self.get_anno('Stages')
-		self.Arousal_anno = self.get_anno('Arousal') if ArousalAnno else None
-
-		assert(self.ECG_signal.duration == self.PPG_signal.duration)
-		assert(self.ECG_signal.duration <= self.SleepStage_anno.duration)
-		if ArousalAnno:
-			assert(self.ECG_signal.duration <= self.Arousal_anno.duration)
-		self.duration = self.ECG_signal.duration
-
-		assert(self.ECG_signal.sampleFrequency == self.PPG_signal.sampleFrequency)
-		self.frequency = self.ECG_signal.sampleFrequency
+			self.filename = filename
+			self.annoPath = annoPath
+			self.Arousal_anno = self.get_anno('Arousal')
 
 	def get_signal(self, label):
 		filepath = Filepaths.LoadPsg + self.filename + ".edf" if not self.edfPath else self.edfPath

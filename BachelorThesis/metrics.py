@@ -6,11 +6,11 @@ Nicklas Hansen,
 Michael Kirkegaard
 """
 
-def compute_score(y, yhat, secOverlap=3.0, sampleRate=256):
+def compute_score(y, yhat, timecol, secOverlap=3.0, sampleRate=256):
 	scores = {}
 	for cm in [cm_standard, cm_overlap]:
 		d = scores[cm.__name__] = {}
-		TP,FP,TN,FN = cm(y, yhat, secOverlap, sampleRate)
+		TP,FP,TN,FN = cm(y, yhat, timecol, secOverlap, sampleRate)
 		d['TP_FP_TN_FN'] = TP,FP,TN,FN
 		for metric in [accuracy, sensitivity, specificity, precision, f1_score, mcc]:
 			d[metric.__name__] = metric(TP,FP,TN,FN)
@@ -45,7 +45,7 @@ def mcc(TP,FP,TN,FN):
 def divide(a, b):
 	return b if b==0 else a/b
 
-def cm_standard(y, yhat, secOverlap=None, sampleRate=None):
+def cm_standard(y, yhat, timecol=None, secOverlap=None, sampleRate=None):
 	assert(len(y) == len(yhat))
 	n = len(y)
 	TP=FP=TN=FN=0

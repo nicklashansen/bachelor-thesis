@@ -27,7 +27,7 @@ def process_epochs():
 	epochs = compile_epochs(train)
 
 def reliableFiles(files, ai_all5=10.0, overall5=4.0, slewake5=0.0, maskThreshold_all=0.1, maskTreshhold_single=0.05):
-	log = get_log('Discard', echo=False)
+	log = get_log('Discard', echo=True)
 	datasetCsv = fs.getDataset_csv()
 
 	def isReliable(filename):
@@ -89,8 +89,8 @@ def reliableFiles(files, ai_all5=10.0, overall5=4.0, slewake5=0.0, maskThreshold
 	log.print('Removed by mask PWA: {0}'.format(h))
 	log.print('Removed by mask all: {0}'.format(i))
 	log.printHL()
-	for fn in [f for f in files if f not in reliableFiles]:
-		log.print(fn)
+	for i in [i for i,r in enumerate(reliable) if not all(r)]:
+		log.print(files[i] + ' -- ' + ','.join(['T' if r else 'F' for r in reliable[i]]))
 
 	return reliableFiles
 

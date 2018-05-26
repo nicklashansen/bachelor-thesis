@@ -1,6 +1,6 @@
 from features import process_epochs, make_splits
-from dataflow import test_dataflow
-from model_selection import parameter_tuning, test_bidirectional, fit_validate_test, evaluate
+from dataflow import test_dataflow, test_dataflow_LR
+from model_selection import parameter_tuning, test_bidirectional, fit_validate_test, evaluate, evaluate_LR
 import h5py
 
 """
@@ -14,6 +14,8 @@ if __name__ == '__main__':
 	#test_bidirectional()
 	#fit_validate_test(only_arousal = True)
 	#evaluate(validation=False)
-	test_dataflow()
-	#make_splits()
+	#test_dataflow()
+	#test_dataflow_LR()
+	#evaluate_LR()
+	make_splits()
 	#process_epochs()
