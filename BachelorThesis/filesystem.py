@@ -5,6 +5,7 @@ import pyedflib
 import pandas as pd
 import pickle as pck
 import xml.etree.ElementTree as xmlTree
+import settings
 
 """
 WRITTEN BY:
@@ -19,8 +20,8 @@ def directory():
 		i = i-1
 		if path[i] == '\\':
 			j = j + 1
-	return path[0:i+1]
-	#return 'D:\\BachelorThesis\\' # Michael Path
+	#return path[0:i+1]
+	return 'D:\\BachelorThesis\\' # Michael Path
 
 class Filepaths(object):
 	# Folder 
@@ -38,6 +39,20 @@ class Filepaths(object):
 	LoadDatabaseCsv = Files + 'Data\\mesa\\datasets\\mesa-sleep-dataset-0.3.0.csv'
 	LoadPsg = Files + 'Data\\mesa\\polysomnography\\edfs\\'
 	LoadAnno = Files + 'Data\\mesa\\polysomnography\\annotations-events-nsrr\\'
+
+	if settings.SHHS:
+		LoadPsg = LoadPsg.replace('mesa','shhs2')
+		loadAnno = LoadAnno.replace('mesa','shhs2')
+
+		# Save paths
+		SaveSubject = Files + 'Subjects_shhs\\'
+		SaveSplits  = Files + 'Splits_shhs\\'
+		SaveEpochs = Files + 'Epochs_shhs\\'
+
+		# Load paths
+		LoadDatabaseCsv = Files + 'Data\\mesa\\datasets\\mesa-sleep-dataset-0.3.0.csv'.replace('mesa','shhs2')
+		LoadPsg = Files + 'Data\\mesa\\polysomnography\\edfs\\'.replace('mesa','shhs2')
+		LoadAnno = Files + 'Data\\mesa\\polysomnography\\annotations-events-nsrr\\'.replace('mesa','shhs2')
 
 	# GUI
 	TempAplotFile = Files + 'temp.aplot' 
@@ -67,8 +82,8 @@ class Subject(object):
 			self.edfPath = edfPath
 			self.annoPath = annoPath
 
-			self.ECG_signal = self.get_signal('EKG')
-			self.PPG_signal = self.get_signal('Pleth')
+			self.ECG_signal = self.get_signal('EKG|ECG')
+			self.PPG_signal = self.get_signal('Pleth') if not settings.SHHS else Signal('Pleth', array([0., 1.] + [0.]*int(self.ECG_signal.duration-4) + [1., 0.]), self.ECG_signal.sampleFrequency, self.ECG_signal.duration)
 			self.SleepStage_anno = self.get_anno('Stages')
 			self.Arousal_anno = self.get_anno('Arousal') if ArousalAnno else None
 
@@ -87,8 +102,15 @@ class Subject(object):
 
 	def get_signal(self, label):
 		filepath = Filepaths.LoadPsg + self.filename + ".edf" if not self.edfPath else self.edfPath
+		labels = label.split('|')
 		with pyedflib.EdfReader(filepath) as file:
-			id = file.getSignalLabels().index(label)
+			for i,l in enumerate(labels):
+				try:
+					id = file.getSignalLabels().index(l)
+					break
+				except:
+					if i == len(labels)-1:
+						raise
 			sig = file.readSignal(id)
 			freq = file.getSampleFrequency(id)
 			dur = len(sig) / freq
@@ -192,9 +214,9 @@ def load_splits(name='splits'):
 	with open(file, 'r') as f:
 		tte = list(f.readlines())
 	train = tte[0].replace('\n','').split(',')
-	test = tte[1].replace('\n','').split(',')
-	eval = tte[2].replace('\n','').split(',')
-	return train,test,eval
+	vali = tte[1].replace('\n','').split(',')
+	test = tte[2].replace('\n','').split(',')
+	return train,vali,test
 
 def write_splits(train, test, eval, name='splits'):
 	os.makedirs(Filepaths.SaveSplits, exist_ok=True)

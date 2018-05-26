@@ -1,4 +1,5 @@
 from numpy import *
+import settings
 
 """
 WRITTEN BY:
@@ -6,7 +7,7 @@ Nicklas Hansen,
 Michael Kirkegaard
 """
 
-def compute_score(y, yhat, timecol, secOverlap=3.0, sampleRate=256):
+def compute_score(y, yhat, timecol, secOverlap=settings.OVERLAP_SCORE, sampleRate=settings.SAMPLE_RATE):
 	scores = {}
 	for cm in [cm_standard, cm_overlap]:
 		d = scores[cm.__name__] = {}

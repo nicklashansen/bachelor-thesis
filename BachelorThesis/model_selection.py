@@ -121,8 +121,8 @@ def fit(batch_size = None, balance = False, only_arousal = False, model = None, 
 def evaluate(model = None, validation = False, path = 'gru.h5', log_filename = None, return_probabilities = False):
 	set = 1 if validation else 2
 	if model is None:
-		model = gru(load_graph=True, path=path)
-	files = fs.load_splits()[set]
+		model = gru(load_graph=True, path = path)
+	files = fs.load_splits()[set] if not settings.SHHS else fs.getAllSubjectFilenames(preprocessed=True)
 	results = validate(model, files, log_results = True, validation = False, return_probabilities=return_probabilities)
 	log_results(results, validation=validation, filename=log_filename)
 	return results
@@ -184,9 +184,11 @@ def validate_file(file, model, overlap_score, sample_rate, return_probabilities 
 		TP, FP, TN, FN = metrics.cm_overlap(y, yhat, timecol, overlap_score, sample_rate)
 		return TP, FP, TN, FN
 
-def predict_file(filename, model, filter = False, removal = True, return_probabilities = False):
+def predict_file(filename, model = None, filter = False, removal = True, return_probabilities = False):
 	X,y = fs.load_csv(filename)
 	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter, removal)
+	if model == None:
+		model = gru(load_graph=True, path = 'gru.h5')
 	#epochs = dataset(epochs, shuffle=False, exclude_ptt=True).epochs
 	epochs = model.predict(epochs, return_probabilities=return_probabilities)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
