@@ -5,6 +5,7 @@ import matlab.engine
 import os
 from log import get_log
 from stopwatch import stopwatch
+import settings
 
 """
 WRITTEN BY:
@@ -91,7 +92,10 @@ def QRS(subject):
 		edf = subject.filename + '.edf'
 	else:
 		edf = subject.edfPath
-	index, amp = eng.peak_detect(fs.directory(), edf, float(subject.frequency), nargout=2)
+	if not settings.SHHS:
+		index, amp = eng.peak_detect(fs.directory(), edf, float(subject.frequency), nargout=2)
+	else:
+		index, amp = eng.peak_detect_shhs(fs.directory(), edf, float(subject.frequency), nargout=2)
 	index = [int(i) for i in index[0]]
 	amp = [float(i) for i in amp[0]]
 	return index, amp
@@ -144,11 +148,14 @@ def SleepStageBin(anno_SleepStage, frequency, index):
 		ran = range(int(start*frequency), int((start+dur)*frequency))
 		if stage > 0 and stage < 5:
 			for i in ran:
-				SS[i] = 0
+				SS[i] = 0	
 		elif stage >= 5:
 			for i in ran:
 				SS[i] = 1
 	
+	ls = len(SS)
+	ii = index[-1]
+
 	SS = array([SS[idx] for idx in index]).astype(float)
 	return SS
 

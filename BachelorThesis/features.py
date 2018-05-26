@@ -52,7 +52,7 @@ def reliableFiles(files, ai_all5=10.0, overall5=4.0, slewake5=0.0, maskThreshold
 		criteria += [sum(y) > 0]
 
 		# Mask threshhold
-		X,_,_ = sleep_removal_new(X,y,None,256) # TODO: REMOVE HARDCODE -----------------------------
+		X,_,_ = sleep_removal_new(X,y,None,settings.SAMPLE_RATE)
 		masklist, mask = make_masks(X)
 		criteria += [sum(m)/len(m) <= maskTreshhold_single for m in masklist]
 		criteria += [sum(mask)/len(mask) <= maskThreshold_all]
