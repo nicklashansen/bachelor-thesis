@@ -118,10 +118,10 @@ def fit(batch_size = None, balance = False, only_arousal = False, model = None, 
 		model.fit(data.epochs)
 	return model
 
-def evaluate(model = None, validation = False, log_filename = None, return_probabilities = False):
+def evaluate(model = None, validation = False, path = 'gru.h5', log_filename = None, return_probabilities = False):
 	set = 1 if validation else 2
 	if model is None:
-		model = gru(load_graph=True, path = 'gru.h5')
+		model = gru(load_graph=True, path = path)
 	files = fs.load_splits()[set] if not settings.SHHS else fs.getAllSubjectFilenames(preprocessed=True)
 	results = validate(model, files, log_results = True, validation = False, return_probabilities=return_probabilities)
 	log_results(results, validation=validation, filename=log_filename)
