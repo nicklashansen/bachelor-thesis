@@ -53,8 +53,14 @@ def test_dataflow_LR(file='mesa-sleep-2451'):
 
 	plot_results(X[0]/settings.SAMPLE_RATE, [X[1], X[3], ss, yhat, y*(-1)], ['RR interval', 'PTT', 'Sleep stage', 'yhat', 'y'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE))
 
-def test_dataflow():
-	X,y = fs.load_csv('mesa-sleep-2472')
+def count_epochs_removed():
+	files = fs.load_splits()[1]
+	for file in files:
+		X,y = fs.load_csv(file)
+		epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter=True, removal=True)
+
+def test_dataflow(file = 'mesa-sleep-2472'):
+	X,y = fs.load_csv(file)
 	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter=False, removal=True)
 	epochs = gru(load_graph=True).predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)

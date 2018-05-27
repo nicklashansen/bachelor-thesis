@@ -20,7 +20,7 @@ def extract_timecol(X):
 def generate_epochs(X, y, mask, epoch_length, overlap_factor, filter):
 	epochs, index, length = [], int(0), X.shape[0]-epoch_length
 	X, timecol = extract_timecol(X)
-	#a=b=c=overlap_factor*(length/epoch_length)
+	#a=b=c=d=0
 	while (index < length):
 		index = int(index)
 		end = int(index+epoch_length)
@@ -29,16 +29,16 @@ def generate_epochs(X, y, mask, epoch_length, overlap_factor, filter):
 		else:
 			e = epoch(X[index:end], None, timecol[index:end], mask[index:end])
 		#if (e.continuous()):
-		#	a -= 1
+		#	a += 1
 		#if (e.acceptable()):
-		#	b -= 1
+		#	b += 1
 		#if (e.no_cut()):
-		#	c -= 1
+		#	c += 1
+		#d += 1
 		if not filter or (e.continuous() and e.acceptable() and e.no_cut()):
 			epochs.append(e)
 		index += epoch_length/overlap_factor
-	#print(a,b,c)
-	#print(len(epochs))
+	#print(a,b,c,d,len(epochs))
 	return epochs
 
 def save_epochs(epochs, name = 'epochs'):
