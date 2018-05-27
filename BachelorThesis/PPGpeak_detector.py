@@ -15,17 +15,20 @@ def lowpass_butter_filter(data, Norder=5, lowcut=0.03):
 def cubing_filter(data):
 	return data**3 #power of three to keep negative values negative
 
-def PPG_Peaks(data, freq, plot=False):
+def PPG_Peaks(data, freq, plot=True):
 	_data = data
 	_data = lowpass_butter_filter(_data)
 	_data = cubing_filter(_data)
 
 	slice = 1/2
-	peaks = indexes(_data, min_dist=freq*slice) # Heartbeat should not be faster than 120 BPM (2 Beats per second)
-	peaks, amps = zip(*[getMax(data, i, freq) for i in peaks])
+	_peaks = indexes(_data, min_dist=freq*slice) # Heartbeat should not be faster than 2 Beats per second
+	peaks, amps = zip(*[getMax(data, i, freq) for i in _peaks])
 
 	if plot:
-		plot_data([data, _data], peaksIndexs=[peaks], labels=['Signal','Filtered'], normalization=True)
+		plot_data([data, _data], peaksIndexs=None, labels=['PPG','PPG Filtered'], normalization=True, indice = (0,10000)) # filtered
+		plot_data([None, _data], peaksIndexs=[None, _peaks], labels=['PPG','PPG Filtered'], normalization=True, indice = (0,10000)) # non-corrected peaks
+		#plot_data([data], peaksIndexs=[peaks], labels=['PPG','PPG Filtered'], normalization=True, indice = (0,10000)) # Final
+		#plot_data([data, _data], peaksIndexs=[peaks, _peaks], labels=['PPG','PPG Filtered'], normalization=True, indice = (0,10000)) # Eveerything
 
 	return peaks, amps
 

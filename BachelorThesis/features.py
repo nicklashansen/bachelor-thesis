@@ -17,6 +17,29 @@ Nicklas Hansen
 GOOD = ['mesa-sleep-0064','mesa-sleep-2685','mesa-sleep-2260','mesa-sleep-6176','mesa-sleep-6419','mesa-sleep-5221','mesa-sleep-3267','mesa-sleep-2821','mesa-sleep-4588']
 BAD = ['mesa-sleep-1035','mesa-sleep-6614','mesa-sleep-5339','mesa-sleep-4379','mesa-sleep-4178','mesa-sleep-5734','mesa-sleep-0718','mesa-sleep-3692','mesa-sleep-2472']
 
+def hours_of_sleep_files(files=[f for f in fs.getAllSubjectFilenames(preprocessed=True) if f not in fs.load_splits()[0]+fs.load_splits()[1]+fs.load_splits()[2]]):
+	total = 0.0
+	log = get_log("SleepHour", echo=True)
+	for file in files:
+		X,y = fs.load_csv(file)
+		X,_,_ = make_features(X,y,settings.SAMPLE_RATE)
+		timecol = transpose(X)[0]
+		t = count_hours_of_sleep(timecol)
+		log.print(file + ' -- {0} hours'.format(t))
+		total += t
+	log.printHL()
+	log.print('total -- {0} hours'.format(total))
+	return total
+
+def count_hours_of_sleep(timecol): # Assumes sleep-removal
+	t = 0.0
+	j = 0
+	for i in range(1, len(timecol)+1):
+		if i == len(timecol) or (timecol[i] - timecol[i-1]) >= settings.SAMPLE_RATE * 5:
+			t += timecol[i-1] - timecol[j] 
+			j = i
+	return t/settings.SAMPLE_RATE/60/60 # samples / simple_rate / 60 seconds / 60 minutes => amount in hours
+
 def make_splits():
 	before = fs.getAllSubjectFilenames(preprocessed=True)
 	after = reliableFiles(before)
@@ -67,30 +90,18 @@ def reliableFiles(files, ai_all5=10.0, overall5=4.0, slewake5=0.0, maskThreshold
 	
 	# Log Status
 	arr = array(reliable)
-	a = list(arr[:,0]).count(False)
-	b = list(arr[:,1]).count(False)
-	c = list(arr[:,2]).count(False)
-	d = list(arr[:,3]).count(False)
-	e = list(arr[:,4]).count(False)
-	f = list(arr[:,5]).count(False)
-	g = list(arr[:,6]).count(False)
-	h = list(arr[:,7]).count(False)
-	i = list(arr[:,8]).count(False)
+	labels = ['ai_all5 ', 'overall5', 'slewake5', 'sum(y)=0', 'mask RR ', 'mask RPA', 'mask PTT', 'mask PWA', 'mask all']
 
 	log.print('Preprocessed files:  {0}'.format(len(files)))
+	log.print('Removed files:       {0}'.format(len(files) - len(reliableFiles)))
 	log.print('Reliable files:      {0}'.format(len(reliableFiles)))
-	log.print('Removed by ai_all5:  {0}'.format(a))
-	log.print('Removed by overall5: {0}'.format(b))
-	log.print('Removed by slewake5: {0}'.format(c))
-	log.print('Removed by sum(y)=0: {0}'.format(d))
-	log.print('Removed by mask RR:  {0}'.format(e))
-	log.print('Removed by mask RPA: {0}'.format(f))
-	log.print('Removed by mask PTT: {0}'.format(g))
-	log.print('Removed by mask PWA: {0}'.format(h))
-	log.print('Removed by mask all: {0}'.format(i))
+	for i,l in enumerate(labels):
+		a = list(arr[:,i]).count(False)
+		log.print('Removed by {0}: {1}'.format(l,a))
 	log.printHL()
-	for i in [i for i,r in enumerate(reliable) if not all(r)]:
-		log.print(files[i] + ' -- ' + ','.join(['T' if r else 'F' for r in reliable[i]]))
+	for i,rl in enumerate(reliable):
+		if not all(rl):
+			log.print(files[i] + ' -- ' + ', '.join([labels[j] for j,r in enumerate(rl) if not r]))
 
 	return reliableFiles
 

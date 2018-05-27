@@ -12,7 +12,8 @@ import settings
 
 """
 WRITTEN BY:
-Nicklas Hansen
+Nicklas Hansen,
+Michael Kirkegaard
 """
 
 def test_dataflow_LR(file='mesa-sleep-2451'):

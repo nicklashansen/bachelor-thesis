@@ -1,4 +1,4 @@
-from numpy import array
+from numpy import *
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 
@@ -91,21 +91,28 @@ def show_spans(timecol, array, color, alpha = 0.3, a = None):
 			plt.axvspan(x[obj[0]], x[obj[1]], color=color, alpha=alpha)
 	return a
 
-def plot_data(signals, peaksIndexs=None, labels=None, normalization=False):
+def plot_data(signals, peaksIndexs=None, labels=None, normalization=False, indice = (0,10000)):
 	def normalize(X, scaler=MinMaxScaler()):
 		return squeeze(scaler.fit_transform(X.reshape(X.shape[0], 1)))
-	
-	if normalization:
-		signals = [normalize(sig) for sig in signals]
 
-	color = ['b-', 'g-', 'r-']
-	peakcolor = ['rx','bx','gx']
-	x = range(0,len(signals[0]))
+	for i,sig in enumerate(signals):
+		if sig is not None:
+			sig = sig[indice[0]:indice[1]]
+			if normalization:
+				sig = normalize(sig)
+			signals[i] = sig
+
+	color = ['b-', 'g-']
+	peakcolor = ['rx','kx']
 	for i,signal in enumerate(signals):
-		plt.plot(x, signal, color[i], label=(labels[i] if labels else 'signal'+str(i+1)))
+		if signal is not None:
+			x = range(0,indice[1]-indice[0])
+			plt.plot(x, signal, color[i], label=(labels[i] if labels else 'signal'+str(i+1)))
 	if peaksIndexs != None:
 		for i,peaks in enumerate(peaksIndexs):
-			plt.plot(peaks, [signals[i][j] for j in peaks], peakcolor[i], label=(labels[i]+' peaks' if labels else 'signal'+str(i+1)+' peaks'))
-			plt.plot()
+			if peaks is not None and signals[i] is not None:
+				peaks = [j for j in peaks[indice[0]:indice[1]] if indice[0] <= j <= indice[1]]
+				plt.plot(peaks, [signals[i][j] for j in peaks], peakcolor[i],label=(labels[i]+' peaks' if labels else 'signal'+str(i+1)+' peaks'))
+				plt.plot()
 	plt.legend()
 	plt.show()
