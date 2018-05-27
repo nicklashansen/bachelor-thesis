@@ -62,11 +62,11 @@ def preprocess(subject, arousals = True):
 	anno_SleepStage = subject.SleepStage_anno
 	
 	# Get Index
-	index, amp = QRS(subject)
+	#index, amp = QRS(subject)
 	
 	# Preprocess Features
-	x_DR, x_RPA = ECG(sig_ECG, index), array(amp).astype(float)
-	x_PTT, x_PWA = PPG(sig_PPG, index)
+	#x_DR, x_RPA = ECG(sig_ECG, index), array(amp).astype(float)
+	x_PTT, x_PWA = PPG(sig_PPG, None)
 	x_SS = SleepStageBin(anno_SleepStage, subject.frequency, index)
 
 	# Collect Matrix
