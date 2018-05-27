@@ -20,8 +20,8 @@ def directory():
 		i = i-1
 		if path[i] == '\\':
 			j = j + 1
-	#return path[0:i+1]
-	return 'D:\\BachelorThesis\\' # Michael Path
+	return path[0:i+1]
+	#return 'D:\\BachelorThesis\\' # Michael Path
 
 class Filepaths(object):
 	# Folder 
