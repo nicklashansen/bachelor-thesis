@@ -80,8 +80,7 @@ def dataflow(X, cmd_plot = False):
 	epochs = gru(load_graph=True).predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
 	yhat, _ = reconstruct(X, epochs)
-	summary = {}
-	#summary = summary_statistics(X, epochs, yhat, wake, rem, illegal)
+	summary = [] #summary_statistics(X, epochs, yhat, wake, rem, illegal)
 	X,_,mask = make_features(X, None, settings.SAMPLE_RATE, removal=False)
 	X = transpose(X)
 	ss = X[6].copy()
@@ -90,9 +89,10 @@ def dataflow(X, cmd_plot = False):
 			ss[i] = 2
 		elif X[5,i]:
 			ss[i] = 0
+	data = X[0]/settings.SAMPLE_RATE, [X[1], X[3], ss, yhat], ['RR interval', 'PTT', 'Sleep stage', 'Arousals'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE)
 	if cmd_plot:
-		plot_results(X[0]/settings.SAMPLE_RATE, [X[1], X[3], ss, yhat, y*(-1)], ['RR interval', 'PTT', 'Sleep stage', 'yhat', 'y'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE))
-	return X[0]/settings.SAMPLE_RATE, [X[1], X[3], ss, yhat, y*(-1)], ['RR interval', 'PTT', 'Sleep stage', 'yhat', 'y'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE), summary
+		plot_results(*list(data))
+	return data, summary
 
 def get_timeseries_prediction(X, model, y=None):
 	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, filter = False, removal=True)
@@ -102,22 +102,6 @@ def get_timeseries_prediction(X, model, y=None):
 	if y is not None:
 		return epochs, y, yhat, wake, rem, illegal, timecol
 	return epochs, yhat, wake, rem, illegal, timecol
-
-def postprocess(timecol, yhat, combine = False, remove = False):
-	prev, start, bin, n = None, 0, False, 0
-	for i,p in enumerate(yhat):
-		if p:
-			if not bin:
-				start, bin = i, True
-		elif bin:
-			bin = False
-			curr = [start, i-1]
-			if remove:
-				timecol, yhat, n = conditional_remove(timecol, yhat, curr, n)
-			if combine and prev is not None:
-				timecol, yhat, n = conditional_combine(timecol, yhat, curr, prev, n)
-			prev = [start, i-1]
-	return yhat, n
 
 def conditional_remove(timecol, yhat, curr, n):
 	dur = timecol[curr[1]] - timecol[curr[0]]
@@ -137,12 +121,6 @@ def conditional_combine(timecol, yhat, curr, prev, n):
 	return timecol, yhat, n
 
 
-
-#time = [200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4400, 4600, 4800, 5000, 5200, 5400, 5600]
-#y	 = [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0]
-
-#yhat = postprocess(time, y)
-#breakpoint = 0
 
 def region(array, count = False):
 	regions, start, bin, n = [], 0, False, 0

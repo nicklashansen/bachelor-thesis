@@ -15,7 +15,7 @@ def lowpass_butter_filter(data, Norder=5, lowcut=0.03):
 def cubing_filter(data):
 	return data**3 #power of three to keep negative values negative
 
-def PPG_Peaks(data, freq, plot=True):
+def PPG_Peaks(data, freq, plot=False):
 	_data = data
 	_data = lowpass_butter_filter(_data)
 	_data = cubing_filter(_data)

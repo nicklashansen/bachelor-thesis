@@ -4,21 +4,42 @@ from epoch import epoch, save_epochs
 from gru import gru, gru_config
 from dataset import dataset
 from log import Log, get_log
-#from dataflow import postprocess
 import filesystem as fs
 import metrics
 import settings
+import os, matlab.engine, preprocessing
 
 """
 WRITTEN BY:
-Nicklas Hansen
+Nicklas Hansen,
+Michael Kirkegaard
 """
 
+#time = [200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4400, 4600, 4800, 5000, 5200, 5400, 5600]
+#y	 = [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0]
+
+#yhat = postprocess(time, y)
+#breakpoint = 0
+
+def postprocess(timecol, yhat, combine = False, remove = False):
+	prev, start, bin, n = None, 0, False, 0
+	for i,p in enumerate(yhat):
+		if p:
+			if not bin:
+				start, bin = i, True
+		elif bin:
+			bin = False
+			curr = [start, i-1]
+			if remove:
+				timecol, yhat, n = conditional_remove(timecol, yhat, curr, n)
+			if combine and prev is not None:
+				timecol, yhat, n = conditional_combine(timecol, yhat, curr, prev, n)
+			prev = [start, i-1]
+	return yhat, n
+
+
 def evaluate_LR():
-	import os, matlab.engine, preprocessing
-
-	import os, matlab.engine, preprocessing
-
+	
 	eng = matlab.engine.start_matlab()
 	os.makedirs(fs.Filepaths.Matlab, exist_ok=True)
 	eng.cd(fs.Filepaths.Matlab)
@@ -37,12 +58,12 @@ def evaluate_LR():
 
 	log = get_log('LR-evaluation', echo=True)
 	TP=FP=TN=FN = 0
-	for file in fs.load_splits()[2]:
+	for file in fs.load_splits()[2] if not settings.SHHS else fs.getAllSubjectFilenames(preprocessed=True):
 		try:
 			X_,y = fs.load_csv(file)
 			X,_,_ = make_features(X_, None, settings.SAMPLE_RATE, removal=True)
 
-			yhat, timecol_hat = eng.LR_classify(fs.directory(), file+'.edf', float(settings.SAMPLE_RATE), nargout=2)
+			yhat, timecol_hat = eng.LR_classify(fs.directory(), file+'.edf', float(settings.SAMPLE_RATE), nargout=2) if not settings.SHHS else eng.LR_classify_shhs(fs.directory(), file+'.edf', float(settings.SAMPLE_RATE), nargout=2)
 			timecol_hat = array([t[0] for t in timecol_hat])
 			yhat = transform_yhat([1. if yh[0] else 0. for yh in yhat], timecol_hat, transpose(X)[0], transpose(X_)[0])
 

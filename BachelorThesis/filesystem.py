@@ -158,7 +158,7 @@ def validate_edf(edfpath):
 	try:
 		with pyedflib.EdfReader(edfpath) as file:
 			signals = file.getSignalLabels()
-		return all(label in signals for label in ['EKG', 'Pleth'])
+		return all(any(l in signals for l in label.split('|')) for label in ['EKG|ECG', 'Pleth'])
 	except Exception as e:
 		return False
 
@@ -210,6 +210,8 @@ def write_csv(filename, X, y):
 			f.write(s + '\n')
 
 def load_splits(name='splits'):
+	if settings.SHHS:
+		return [],[],[]
 	file = Filepaths.SaveSplits + name + '.txt'
 	with open(file, 'r') as f:
 		tte = list(f.readlines())

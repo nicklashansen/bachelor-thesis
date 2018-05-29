@@ -167,10 +167,10 @@ def make_masks(X):
 	def threeSigmaRule(data):
 		_data = [x for x in data if x != -1]
 		mu = mean(_data)
-		std3 = std(_data)*3
-		# if datapoint's distance from mu is above 3 times the standard deviation
+		std4 = std(_data)*4
+		# if datapoint's distance from mu is above 4 times the standard deviation
 		# or value is -1 (i.e. no PTT value)
-		return [(1 if x == -1 or abs(mu-x) > std3 else 0) for x in data]
+		return [(1 if x == -1 or abs(mu-x) > std4 else 0) for x in data]
 
 	masklist = [threeSigmaRule(x_feat) for x_feat in Xt[1:5]] # RR, RPA, PTT, PWA
 	mask = [sum(tub) for tub in zip(*masklist)]
@@ -186,8 +186,9 @@ def cubic_spline(X, masks, plot=False):
 		if(len(datamask) >= 2):
 			cs = CubicSpline(range(len(datamask)),datamask)
 			datacs = cs(range(len(mask)))
+			datacs = [d if mask[i] == 0 else datacs[i] for i,d in enumerate(data)]
 			if plot:
-				plot_data([data, datacs], labels=['Signal','Spline Correction'])
+				plot_data([data, datacs], labels=['Signal','Spline Correction'], indice=(0,30000))
 			return array(datacs)
 		return data
 

@@ -30,17 +30,17 @@ def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals,
 		ptt = figure.add_subplot(412, sharex=ecg)
 		show_signals(timecol, [signals[1]], [labels[1]], COLOR, duration, a = ptt)
 		aai = figure.add_subplot(413, sharex=ecg)
-		show_signals(timecol, [signals[3]], [labels[3]], COLOR, duration)
+		show_signals(timecol, [signals[3]], [labels[3]], COLOR, duration, a = aai)
 		ssa = figure.add_subplot(414, sharex=ecg)
 		show_signals(timecol, [signals[2]], [labels[2]], COLOR, duration, a = ssa)
 
 	ecg.set_xlim(0, duration/60)
-	ecg.set_ylim(-1,2)
+	ecg.set_ylim(-0.25,1.25)
 	ecg.set_ylabel('Normalised values')
 	ecg.legend()
 
 	ptt.set_xlim(0, duration/60)
-	ptt.set_ylim(-1.5,2.25)
+	ptt.set_ylim(-0.25,1.25)
 	ptt.set_ylabel('Normalised values')
 	ptt.legend()
 
@@ -53,6 +53,7 @@ def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals,
 	ssa.set_ylim(-0.25,2.25)
 	ssa.set_xlabel('Minutes')
 	ssa.set_ylabel('Sleep stage')
+	ssa.legend()
 
 	plt.setp(ecg.get_xticklabels(), visible=False)
 	plt.setp(ptt.get_xticklabels(), visible=False)
