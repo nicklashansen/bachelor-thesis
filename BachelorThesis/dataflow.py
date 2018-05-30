@@ -59,12 +59,17 @@ def count_epochs_removed():
 		X,y = fs.load_csv(file)
 		epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter=True, removal=True)
 
-def test_dataflow(file = 'mesa-sleep-2472'):
+def test_dataflow(file = 'mesa-sleep-1541'):
 	X,y = fs.load_csv(file)
 	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter=False, removal=True)
 	epochs = gru(load_graph=True).predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
-	yhat, _ = reconstruct(X, epochs)
+	yhat,timecol = reconstruct(X, epochs)
+	full = epochs_from_prep(X, None, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter=False, removal=False)
+	full.sort(key=lambda x: x.index_start, reverse=False)
+	wake, nrem, rem, illegal = timeseries(full)
+	summary = summary_statistics(timecol, yhat, wake, nrem, rem, illegal)
+	print(summary)
 	X,_,mask = make_features(X, None, settings.SAMPLE_RATE, removal=False)
 	X = transpose(X)
 	ss = X[6].copy()
@@ -79,9 +84,11 @@ def dataflow(X, cmd_plot = False):
 	epochs = epochs_from_prep(X, None, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter=False, removal=True)
 	epochs = gru(load_graph=True).predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
-	yhat, _ = reconstruct(X, epochs)
-	summary = {}
-	#summary = summary_statistics(X, epochs, yhat, wake, rem, illegal)
+	yhat,timecol = reconstruct(X, epochs)
+	full = epochs_from_prep(X, None, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter=False, removal=False)
+	full.sort(key=lambda x: x.index_start, reverse=False)
+	wake, nrem, rem, illegal = timeseries(full)
+	summary = summary_statistics(timecol, yhat, wake, rem, illegal)
 	X,_,mask = make_features(X, None, settings.SAMPLE_RATE, removal=False)
 	X = transpose(X)
 	ss = X[6].copy()
@@ -136,14 +143,6 @@ def conditional_combine(timecol, yhat, curr, prev, n):
 			yhat[j] = 1
 	return timecol, yhat, n
 
-
-
-#time = [200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4400, 4600, 4800, 5000, 5200, 5400, 5600]
-#y	 = [0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0]
-
-#yhat = postprocess(time, y)
-#breakpoint = 0
-
 def region(array, count = False):
 	regions, start, bin, n = [], 0, False, 0
 	for i,val in enumerate(array):
@@ -154,10 +153,6 @@ def region(array, count = False):
 			bin = False
 			n += 1
 			regions.append([start, i-1])
-			#if i-1-start <= 3 and start > 2:
-			#	regions.append([start-2,i-1])
-			#else:
-			#	regions.append([start, i-1])
 	if bin:
 		regions.append([start, i])
 		n += 1
@@ -165,20 +160,20 @@ def region(array, count = False):
 		return regions, n
 	return regions
 
-
-
-
-
-
-def summary_statistics(X, epochs, yhat, wake, rem, illegal):
-	timecol = transpose(X)[0]
+def summary_statistics(timecol, yhat, wake, nrem, rem, illegal):
 	rec_dur_float = ((timecol[-1]-timecol[0])/settings.SAMPLE_RATE)/60
 	rec_dur = str(int(rec_dur_float)) + ' min'
-	_, n_wake = region(wake, count = True)
-	p_wake = n_wake/len(wake)
-	pct_wake = str(int(p_wake*100)) + '%'
-	_, n_rem = region(rem, count = True)
-	pct_rem = str(int((n_rem/len(rem))*100)) + '%'
+	print(sum(wake), sum(nrem), sum(rem))
+	ss_total = sum(wake) + sum(nrem) + sum(rem)
+	p_wake = int((sum(wake)/ss_total)*100)
+	pct_wake = str(p_wake) + '%'
+	p_rem = int((sum(rem)/ss_total)*100)
+	pct_rem = str(p_rem) + '%'
+	#_, n_wake = region(wake, count = True)
+	#p_wake = n_wake/len(wake)
+	#pct_wake = str(int(p_wake*100)) + '%'
+	#_, n_rem = region(rem, count = True)
+	#pct_rem = str(int((n_rem/len(rem))*100)) + '%'
 	_, n_ill = region(illegal, count = True)
 	ill_score = str(int((n_ill/len(illegal))*(10**5)))
 	arousals, n = region(yhat, count = True)

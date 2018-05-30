@@ -162,8 +162,8 @@ def validate(model, files, log_results = False, validation = True, return_probab
 			else:
 				tp, fp, tn, fn = validate_file(file, model, settings.OVERLAP_SCORE, settings.SAMPLE_RATE)
 				TP += tp ; FP += fp ; TN += tn ; FN += fn
-				file_score = metrics.compute_cm_score(tp, fp, tn, fn)
-				log.print(file + ', ' + '{0:.2f}'.format(file_score['score']['sensitivity']) + ', ' + '{0:.2f}'.format(file_score['score']['precision']))
+				#file_score = metrics.compute_cm_score(tp, fp, tn, fn)
+				#log.print(file + ', ' + '{0:.2f}'.format(file_score['score']['sensitivity']) + ', ' + '{0:.2f}'.format(file_score['score']['precision']))
 		except Exception as e:
 			print(e)
 	return metrics.compute_cm_score(TP, FP, TN, FN)
@@ -181,15 +181,18 @@ def validate_file(file, model, overlap_score, sample_rate, return_probabilities 
 		arr[2] = timecol
 		savetxt('p-' + file + '.csv', arr, delimiter=',')
 	else:
-		TP, FP, TN, FN = metrics.cm_overlap(y, yhat, timecol, overlap_score, sample_rate)
-		return TP, FP, TN, FN
+		#TP, FP, TN, FN = metrics.cm_overlap(y, yhat, timecol, overlap_score, sample_rate)
+		return 1, 1, 1, 1
+		#return TP, FP, TN, FN
 
 def predict_file(filename, model = None, filter = False, removal = True, return_probabilities = False):
 	X,y = fs.load_csv(filename)
 	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter, removal)
 	if model == None:
 		model = gru(load_graph=True, path = 'gru.h5')
-	#epochs = dataset(epochs, shuffle=False, exclude_ptt=True).epochs
+	elen = len(epochs)
+	epochs = dataset(epochs, shuffle=False, exclude_ptt=True, only_arousal = True).epochs
+	print(elen, ',', len(epochs))
 	epochs = model.predict(epochs, return_probabilities=return_probabilities)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
 	yhat, timecol = reconstruct(X, epochs, settings.PREDICT_THRESHOLD)

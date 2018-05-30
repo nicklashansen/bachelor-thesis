@@ -1,28 +1,26 @@
 from numpy import *
 from epoch import epoch
+import settings
 
 """
 WRITTEN BY:
 Nicklas Hansen
 """
 
-def timeseries(epochs, full, epoch_length, overlap_factor, sample_rate):
+def timeseries(epochs, epoch_length = settings.EPOCH_LENGTH, overlap_factor = settings.OVERLAP_FACTOR, sample_rate = settings.SAMPLE_RATE):
 	window = int(epoch_length - ( epoch_length / overlap_factor))
-	length = int(full[-1].index_stop/sample_rate)
-	y, yhat, wake, rem, illegal = zeros(length), zeros(length), zeros(length), zeros(length), zeros(length)
+	length = int(epochs[-1].index_stop/sample_rate)
+	wake, nrem, rem, illegal = zeros(length), zeros(length), zeros(length), zeros(length)
 	for i,obj in enumerate(epochs):
-		if obj.y is not None:
-			y = modify_timeseries(y, obj.y, 1, obj.timecol, window, sample_rate)
-		yhat = modify_timeseries(yhat, obj.yhat, 1, obj.timecol, window, sample_rate)
-	for i,obj in enumerate(full):
-		sleep = transpose(obj.X)[-1]
-		wake = modify_timeseries(wake, sleep, -1, obj.timecol, window, sample_rate)
-		rem = modify_timeseries(rem, sleep, 1, obj.timecol, window, sample_rate)
+		features = transpose(obj.X)
+		wake = modify_timeseries(wake, features[-3], 1, obj.timecol, window, sample_rate)
+		nrem = modify_timeseries(nrem, features[-2], 1, obj.timecol, window, sample_rate)
+		rem = modify_timeseries(rem, features[-1], 1, obj.timecol, window, sample_rate)
 		illegal = modify_timeseries(illegal, obj.mask, 1, obj.timecol, window, sample_rate)
 	for i in range(len(wake)):
 		if illegal[i] == 1 and wake[i] == 1:
 			illegal[i] = 0
-	return y, yhat, wake, rem, illegal
+	return wake, nrem, rem, illegal
 
 def modify_timeseries(ts, values, criteria, timecol, window, sample_rate):
 	for i,y in enumerate(values[window:]):
