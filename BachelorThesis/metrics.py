@@ -65,6 +65,8 @@ def cm_overlap(y, yhat, timecol, secOverlap, sampleRate):
 	
 	class Arousal:
 		def __init__(self, start, end):
+			self.start = start
+			self.end = end
 			self.min = self.__getVal(start, -1) ; self.min = 0 if self.min < 0 else self.min
 			self.max = self.__getVal(end, 1) ; self.max = n if self.max > n else self.max
 
@@ -94,39 +96,75 @@ def cm_overlap(y, yhat, timecol, secOverlap, sampleRate):
 	y = a_transform(y)
 	yhat = a_transform(yhat)
 
+	m = [0]*n
 	TP=FP=TN=FN = 0
 	i=j = 0
 	while (i<len(y) or j<len(yhat)):
 		# Previous checked Scored Arousal overlaps
 		if(i > 0 and j < len(yhat) and y[i-1].compareTo(yhat[j])==0):
+			#
+			for z in range(yhat[j].start if yhat[j].start >= 0 else 0, yhat[j].end if yhat[j].end < n else n):
+				m[z] = -1 # Positive
+			#
 			TP += 1
 			j += 1
 		# Previous checked predicted arousal
 		elif(j > 0 and i < len(y) and y[i].compareTo(yhat[j-1])==0):
+			#
+			for z in range(y[i].start if y[i].start >= 0 else 0, y[i].end if y[i].end < n else n):
+				m[z] = -1 # Positive
+			#
 			TP += 1
 			i += 1
 		# All scored arousals checked => rest of predicted = FP
 		elif i == len(y):
-			FP += len(yhat)-j
-			j = len(yhat)
+			#
+			for z in range(yhat[j].start if yhat[j].start >= 0 else 0, yhat[j].end if yhat[j].end < n else n):
+				m[z] = -1 # Positive
+			#
+			FP += 1
+			j += 1
 		# All predicted arousals checked => rest of scored = FN
 		elif j == len(yhat):
-			FN += len(y)-i
-			i = len(y)
+			#
+			for z in range(y[i].start if y[i].start >= 0 else 0, y[i].end if y[i].end < n else n):
+				m[z] = 1 # False Negative
+			#
+			FN += 1
+			i += 1
 		else:
 			co = y[i].compareTo(yhat[j])
 			# y_i and yhat_i overlaps => TP++, increase i,j
 			if co == 0:
+				#
+				for z in range(yhat[j].start if yhat[j].start >= 0 else 0, yhat[j].end if yhat[j].end < n else n):
+					m[z] = -1 # Positive
+				for z in range(y[i].start if y[i].start >= 0 else 0, y[i].end if y[i].end < n else n):
+					m[z] = -1 # Positive
+				#
 				TP += 1
 				i += 1
 				j += 1
 			# y_i comes before yhat_j => FN++, increase i
 			elif co < 0:
+				#
+				for z in range(y[i].start if y[i].start >= 0 else 0, y[i].end if y[i].end < n else n):
+					m[z] = 1 # False Negative
+				#
 				FN += 1
 				i += 1
 			# yhat_j comes before y_i => FP++, increase j
 			else: #co > 0
+				#
+				for z in range(yhat[j].start if yhat[j].start >= 0 else 0, yhat[j].end if yhat[j].end < n else n):
+					m[z] = -1 # Positive
+				#
 				FP += 1
 				j += 1
+
+	m = [mm for mm in m if mm >= 0]
+	_n = len(m)
+	_m = sum(m)
+	TN = int(FN * ((_n/_m)-1))
 
 	return TP,FP,TN,FN

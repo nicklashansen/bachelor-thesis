@@ -15,6 +15,7 @@ if __name__ == '__main__':
 from plots import plot_results
 from preprocessing import prep_X
 import filesystem as fs
+import traceback
 
 """
 WRITTEN BY
@@ -65,7 +66,8 @@ class AppUI(Tk):
 				self.Show_Plot(plot_data, property_dict)
 		except Exception as e:
 			self.Close_File()
-			messagebox.showwarning("Warning", "Error loading system aplot file.\n"+str(e))
+			ex = traceback.format_exc()
+			messagebox.showwarning("Warning", "Error loading system aplot file.\n\n"+str(e)+'\n'+ex)
 
 		# Init
 		self.mainloop()
@@ -113,10 +115,11 @@ class AppUI(Tk):
 					if this.getName() == 'cancel': # Shutdown Flags
 						raise
 					X = prep_X(edf, anno)
+					#X,_ = fs.load_csv(edf[-19:-4])
 
 					# Step 2 Tensorflow
 					progresbar.step(int(100/steps))
-					statuslabel['text'] = 'Loading tensorflow...'
+					statuslabel['text'] = 'Loading keras and tensorflow...'
 					if this.getName() == 'cancel': # Shutdown Flags
 						raise
 					from dataflow import dataflow
@@ -141,10 +144,11 @@ class AppUI(Tk):
 					self.Close_File()
 					self.Show_Plot(plot_data, property_dict)
 					toplevel.destroy()
-
+				
 				except Exception as e:
 					if(this.getName() != 'cancel'):
-						messagebox.showerror("Error", "Error loading file.\n"+str(e))
+						ex = traceback.format_exc()
+						messagebox.showerror("Error", "Error loading file\n\n"+str(e)+"\n"+ex)
 				finally:
 					if(this.getName() != 'cancel'):
 						canceltask(toplevel, edf_e, edf_b, anno_e, anno_b, b_go,cancelbutton,statuslabel,progresbar)
@@ -207,7 +211,8 @@ class AppUI(Tk):
 						return
 					svar.set(filepath)
 				except Exception as e:
-					messagebox.showerror("Error", "Error loading file.\n"+str(e))
+					ex = traceback.format_exc()
+					messagebox.showerror("Error", "Error loading file.\n\n"+str(e)+"\n"+ex)
 					svar.set("Error Loading File...")
 				finally:
 					callback()
@@ -249,7 +254,12 @@ class AppUI(Tk):
 
 			# Binds
 			file_toplevel.bind('<Return>', lambda e: starttask(file_toplevel, entry_edf, b_edf, entry_anno, b_anno, b_go, filepath_edf.get(), filepath_anno.get()))
-			file_toplevel.bind('<Escape>', lambda e: file_toplevel.destroy())			
+			file_toplevel.bind('<Escape>', lambda e: file_toplevel.destroy())
+			
+			# Top level position
+			x = self.winfo_x()
+			y = self.winfo_y()
+			file_toplevel.geometry("+%d+%d" % (x+5, y+55))		
 
 	# Open already formatted plots
 	def Open_File(self):
@@ -261,7 +271,8 @@ class AppUI(Tk):
 				plot_data, property_dict = fs.load_aplot(filepath)
 				property_dict = [('aplot_path',filepath)] + property_dict
 			except Exception as e:
-				messagebox.showerror("Error", "Error loading file.\n"+str(e))
+				ex = traceback.format_exc()
+				messagebox.showerror("Error", "Error loading file.\n\n"+str(e)+"\n"+ex)
 				return
 			self.Close_File()
 			self.Show_Plot(plot_data, property_dict)
@@ -287,7 +298,8 @@ class AppUI(Tk):
 				self.main_frame.prop_frame.update_properties()
 				messagebox.showinfo("Succes", "Succesfully saved file.")
 			except Exception as e:
-				messagebox.showerror("Error", "Error saving file.\n"+str(e))
+				ex = traceback.format_exc()
+				messagebox.showerror("Error", "Error saving file.\n\n"+str(e)+'\n'+ex)
 				return 
 
 	# Close
@@ -299,6 +311,7 @@ class AppUI(Tk):
 	# Text Popup
 	def popup(self, text):
 		toplevel = Toplevel()
+
 		# Title
 		for s in text[:2]:
 			label = Label(toplevel, text=s, font=res.FONT)
@@ -324,6 +337,11 @@ class AppUI(Tk):
 		toplevel.lift()
 		toplevel.focus_force()
 		toplevel.grab_set()
+
+		# Position
+		x = self.winfo_x()
+		y = self.winfo_y()
+		toplevel.geometry("+%d+%d" % (x+5, y+55))
 	
 	# press button
 	def plot_btn_state_swap(self, btn, id):
@@ -354,7 +372,6 @@ class AppUI(Tk):
 
 		# Show plot
 		def open_plot(self):
-			self.plot_frame.update_menu()
 			self.update_plot()
 			self.plot_frame.grid()
 			
@@ -363,8 +380,8 @@ class AppUI(Tk):
 
 		# Update plot
 		def update_plot(self):
-			plot = [self.controller.plot_data[0]] + [data if self.controller.btn_plot_states[i] else None for i,data in enumerate(self.controller.plot_data[1:7])] + [self.controller.plot_data[7]]
-			self.controller.plot_figure = plot_results(*(plot + [Figure(figsize=(res.ss_PLOT_WIDTH/res.ss_PLOT_DPI, res.ss_PLOT_HEIGHT/res.ss_PLOT_DPI), dpi=res.ss_PLOT_DPI)]))
+			plot = self.controller.plot_data
+			self.controller.plot_figure = plot_results(*(list(plot) + [Figure(figsize=(res.ss_PLOT_WIDTH/res.ss_PLOT_DPI, res.ss_PLOT_HEIGHT/res.ss_PLOT_DPI), dpi=res.ss_PLOT_DPI)]))
 			self.plot_frame.update_plot()
 
 		# Close plot
@@ -378,56 +395,10 @@ class AppUI(Tk):
 				self.controller = controller
 
 				# Widget Packing
-				self.menu = None
 				self.plot = None
 
 				# Grid
-				self.update_menu()
 				self.update_plot()
-
-			# plot menus
-			def update_menu(self):
-				subframe = Frame(self)
-
-				w = res.ss_BUTTON_WIDTH
-
-				# Buttons
-				b_0 = Button(subframe, width=w, text='Raw ECG : ON')
-				self.controller.btn_plot_states += [True]
-				b_0['command'] = lambda: self.controller.plot_btn_state_swap(b_0, 0)
-
-				b_1 = Button(subframe, width=w, text='Raw PPG : ON')
-				self.controller.btn_plot_states += [True]
-				b_1['command'] = lambda:self.controller.plot_btn_state_swap(b_1, 1)
-
-				b_2 = Button(subframe, width=w, text='Arousals : ON')
-				self.controller.btn_plot_states += [True]
-				b_2['command'] = lambda: self.controller.plot_btn_state_swap(b_2, 2)
-
-				b_3 = Button(subframe, width=w, text='Wake State Regions: ON')
-				self.controller.btn_plot_states += [True]
-				b_3['command'] = lambda: self.controller.plot_btn_state_swap(b_3, 3)
-
-				b_4 = Button(subframe, width=w, text='REM state Regions: ON')
-				self.controller.btn_plot_states += [True]
-				b_4['command'] = lambda: self.controller.plot_btn_state_swap(b_4, 4)
-
-				b_5 = Button(subframe, width=w, text='nREM state Regions: ON')
-				self.controller.btn_plot_states += [True]
-				b_5['command'] = lambda: self.controller.plot_btn_state_swap(b_5, 5)
-
-				# Grid
-				b_0.grid(row=0, column=0, sticky=W)
-				b_1.grid(row=0, column=1, sticky=W)
-				b_2.grid(row=0, column=2, sticky=W)
-				b_3.grid(row=0, column=3, sticky=W)
-				b_4.grid(row=0, column=4, sticky=W)
-				b_5.grid(row=0, column=5, sticky=W)
-
-				if(self.menu):
-					self.menu.grid_forget()
-				self.menu = subframe
-				subframe.grid(row=0, column=0, sticky=N)
 
 			# update plot
 			def update_plot(self):
