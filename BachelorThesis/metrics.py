@@ -19,7 +19,7 @@ def compute_score(y, yhat, timecol, secOverlap=settings.OVERLAP_SCORE, sampleRat
 	scores = {}
 	for cm in [cm_standard, cm_overlap]:
 		TP,FP,TN,FN = cm(y, yhat, timecol, secOverlap, sampleRate)
-		scores[cm.__name__] = compute_cm_score(TP,FP,TN,FN)
+		scores[cm.__name__] = compute_cm_score(TP,FP,TN,FN)['score']
 	return scores
 
 def compute_cm_score(TP, FP, TN, FN):
