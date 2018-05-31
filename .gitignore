@@ -6,6 +6,7 @@
 *.txt
 *.edf
 *.xml
+*.h5
 
 # User-specific files
 *.suo
