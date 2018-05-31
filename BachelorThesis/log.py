@@ -42,7 +42,7 @@ class Log:
 		'''
 		Prints a line to a given log.
 		'''
-		fs.write(self.directory, self.filename, line)
+		fs.append_log(self.directory, self.filename, line)
 		if self.echo:
 			try:
 				print(line)
