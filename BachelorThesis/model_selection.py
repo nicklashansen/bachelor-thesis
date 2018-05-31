@@ -59,7 +59,10 @@ def evaluate_LR():
 	log.printHL()
 	log.print('TOTAL')
 	score = metrics.compute_cm_score(TP, FP, TN, FN)
-	log.print('Se: ' + '{0:.2f}'.format(score['score']['sensitivity']) + ',  P+: ' + '{0:.2f}'.format(score['score']['precision']))
+	for k,d in score.items():
+		log.print(str(k))
+		for key,val in d.items():
+			log.print(str(key)+':'+str(val))
 
 def get_batch_size(gpu = True):
 	'''
