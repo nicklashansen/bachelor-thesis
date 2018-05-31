@@ -194,7 +194,8 @@ def validate(model, files, log_results = False, validation = True, return_probab
 
 def validate_file(file, model, overlap_score, sample_rate, return_probabilities = False):
 	y, yhat, timecol = predict_file(file, model, return_probabilities=return_probabilities)
-	#_, yhat2, __ = predict_file(file, gru(load_graph=True, path = 'best_double_bidir.h5'))
+	#_, yhat2, __ = predict_file(file, gru(load_graph=True, path = 'ppg_2layer.h5'))
+	#yhat = add_predictions(yhat, yhat2)
 	#_, yhat3, __ = predict_file(file, gru(load_graph=True, path = 'gru_val_loss.h5'))
 	#yhat = majority_vote(yhat, yhat2, yhat3)
 	#yhat, n = postprocess(timecol, yhat, combine=False, remove=True)
@@ -213,8 +214,8 @@ def predict_file(filename, model = None, filter = False, removal = True, return_
 	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter, removal)
 	if model == None:
 		model = gru(load_graph=True, path = 'gru.h5')
-	epochs = dataset(epochs, shuffle=False, exclude_ptt=True).epochs # ----------------------------- #
-	epochs = model.predict(epochs, return_probabilities=return_probabilities) 
+	#epochs = dataset(epochs, shuffle=False, exclude_ptt=True, only_arousal = True).epochs
+	epochs = model.predict(epochs, return_probabilities=return_probabilities)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
 	yhat, timecol = reconstruct(X, epochs, settings.PREDICT_THRESHOLD)
 	return y, yhat, timecol

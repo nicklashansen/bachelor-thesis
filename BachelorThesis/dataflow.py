@@ -59,12 +59,17 @@ def count_epochs_removed():
 		X,y = fs.load_csv(file)
 		epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter=True, removal=True)
 
-def test_dataflow(file = 'mesa-sleep-2472'):
+def test_dataflow(file = 'mesa-sleep-1541'):
 	X,y = fs.load_csv(file)
 	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter=False, removal=True)
 	epochs = gru(load_graph=True).predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
-	yhat, _ = reconstruct(X, epochs)
+	yhat,timecol = reconstruct(X, epochs)
+	full = epochs_from_prep(X, None, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter=False, removal=False)
+	full.sort(key=lambda x: x.index_start, reverse=False)
+	wake, nrem, rem, illegal = timeseries(full)
+	summary = summary_statistics(timecol, yhat, wake, nrem, rem, illegal)
+	print(summary)
 	X,_,mask = make_features(X, None, settings.SAMPLE_RATE, removal=False)
 	X = transpose(X)
 	ss = X[6].copy()
@@ -79,8 +84,11 @@ def dataflow(X, cmd_plot = False):
 	epochs = epochs_from_prep(X, None, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter=False, removal=True)
 	epochs = gru(load_graph=True).predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
-	yhat, _ = reconstruct(X, epochs)
-	summary = [] #summary_statistics(X, epochs, yhat, wake, rem, illegal)
+	yhat,timecol = reconstruct(X, epochs)
+	full = epochs_from_prep(X, None, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter=False, removal=False)
+	full.sort(key=lambda x: x.index_start, reverse=False)
+	wake, nrem, rem, illegal = timeseries(full)
+	summary = summary_statistics(timecol, yhat, wake, rem, illegal)
 	X,_,mask = make_features(X, None, settings.SAMPLE_RATE, removal=False)
 	X = transpose(X)
 	ss = X[6].copy()
@@ -91,8 +99,8 @@ def dataflow(X, cmd_plot = False):
 			ss[i] = 0
 	data = X[0]/settings.SAMPLE_RATE, [X[1], X[2], X[3], X[4], ss, yhat], ['RR', 'RWA', 'PTT', 'PWA', 'Sleep stage', 'Arousals'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE)
 	if cmd_plot:
-		plot_results(*list(data))
-	return data, summary
+		plot_results(X[0]/settings.SAMPLE_RATE, [X[1], X[3], ss, yhat, y*(-1)], ['RR interval', 'PTT', 'Sleep stage', 'yhat', 'y'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE))
+	return X[0]/settings.SAMPLE_RATE, [X[1], X[3], ss, yhat, y*(-1)], ['RR interval', 'PTT', 'Sleep stage', 'yhat', 'y'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE), summary
 
 def get_timeseries_prediction(X, model, y=None):
 	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, filter = False, removal=True)
@@ -102,6 +110,22 @@ def get_timeseries_prediction(X, model, y=None):
 	if y is not None:
 		return epochs, y, yhat, wake, rem, illegal, timecol
 	return epochs, yhat, wake, rem, illegal, timecol
+
+def postprocess(timecol, yhat, combine = False, remove = False):
+	prev, start, bin, n = None, 0, False, 0
+	for i,p in enumerate(yhat):
+		if p:
+			if not bin:
+				start, bin = i, True
+		elif bin:
+			bin = False
+			curr = [start, i-1]
+			if remove:
+				timecol, yhat, n = conditional_remove(timecol, yhat, curr, n)
+			if combine and prev is not None:
+				timecol, yhat, n = conditional_combine(timecol, yhat, curr, prev, n)
+			prev = [start, i-1]
+	return yhat, n
 
 def conditional_remove(timecol, yhat, curr, n):
 	dur = timecol[curr[1]] - timecol[curr[0]]
@@ -120,8 +144,6 @@ def conditional_combine(timecol, yhat, curr, prev, n):
 			yhat[j] = 1
 	return timecol, yhat, n
 
-
-
 def region(array, count = False):
 	regions, start, bin, n = [], 0, False, 0
 	for i,val in enumerate(array):
@@ -132,10 +154,6 @@ def region(array, count = False):
 			bin = False
 			n += 1
 			regions.append([start, i-1])
-			#if i-1-start <= 3 and start > 2:
-			#	regions.append([start-2,i-1])
-			#else:
-			#	regions.append([start, i-1])
 	if bin:
 		regions.append([start, i])
 		n += 1
@@ -143,20 +161,20 @@ def region(array, count = False):
 		return regions, n
 	return regions
 
-
-
-
-
-
-def summary_statistics(X, epochs, yhat, wake, rem, illegal):
-	timecol = transpose(X)[0]
+def summary_statistics(timecol, yhat, wake, nrem, rem, illegal):
 	rec_dur_float = ((timecol[-1]-timecol[0])/settings.SAMPLE_RATE)/60
 	rec_dur = str(int(rec_dur_float)) + ' min'
-	_, n_wake = region(wake, count = True)
-	p_wake = n_wake/len(wake)
-	pct_wake = str(int(p_wake*100)) + '%'
-	_, n_rem = region(rem, count = True)
-	pct_rem = str(int((n_rem/len(rem))*100)) + '%'
+	print(sum(wake), sum(nrem), sum(rem))
+	ss_total = sum(wake) + sum(nrem) + sum(rem)
+	p_wake = int((sum(wake)/ss_total)*100)
+	pct_wake = str(p_wake) + '%'
+	p_rem = int((sum(rem)/ss_total)*100)
+	pct_rem = str(p_rem) + '%'
+	#_, n_wake = region(wake, count = True)
+	#p_wake = n_wake/len(wake)
+	#pct_wake = str(int(p_wake*100)) + '%'
+	#_, n_rem = region(rem, count = True)
+	#pct_rem = str(int((n_rem/len(rem))*100)) + '%'
 	_, n_ill = region(illegal, count = True)
 	ill_score = str(int((n_ill/len(illegal))*(10**5)))
 	arousals, n = region(yhat, count = True)
