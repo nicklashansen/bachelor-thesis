@@ -1,3 +1,12 @@
+'''
+AUTHOR(S):
+Nicklas Hansen,
+Michael Kirkegaard
+
+Converting raw signals into measurable values. This file is responsible for
+the main chunk of pre-processing, while sorting of reliable files, correcting
+extreme outliers and epoch generations is handles in features.py and epoch.py 
+'''
 from numpy import *
 from PPGpeak_detector import PPG_Peaks
 import filesystem as fs
@@ -7,28 +16,33 @@ from log import get_log
 from stopwatch import stopwatch
 import settings
 
-"""
-WRITTEN BY:
-Nicklas Hansen,
-Michael Kirkegaard
-"""
-
 def prep_X(edf, anno):
-	sub = fs.Subject(None, edf, anno, ArousalAnno=False)
+	'''
+	converts two edf and anno filepaths into X
+	'''
+	sub = fs.Subject(edfPath = edf, annoPath = anno, ArousalAnno=False)
 	return preprocess(sub, arousals=False)
 
 def prepSingle(filename, save = True):
-	sub = fs.Subject(filename)
+	'''
+	preprocesses a single file by name - used for testing
+	'''
+	sub = fs.Subject(filename=filename)
 	X, y = preprocess(sub)
 	if save:
 		fs.write_csv(filename, X, y)
 	return X, y
 
 def prepAll(force=False):
+	'''
+	preprocesses all files stored on properly on the drive. either mesa or shhs.
+	the amount of time and errors are logged for testing purposes. optionally
+	re-processing already completed files is possible.
+	'''
 	log, clock = get_log('Preprocessing', echo=True), stopwatch()
 	filenames = fs.getAllSubjectFilenames(preprocessed=False)
 
-	# already completed files
+	# determines already completed files
 	oldFiles = fs.getAllSubjectFilenames(preprocessed=True)
 	if not force:
 		filenames = [fn for fn in filenames if fn not in oldFiles]
@@ -43,11 +57,11 @@ def prepAll(force=False):
 		log.print('Files remaining:           {0}'.format(len(filenames)))
 	log.printHL()
 
-	# extract all subjects
+	# processes each file with try/catch loop incase of errors in single files.
 	clock.round()
 	for i, filename in enumerate(filenames):
 		try:
-			subject = fs.Subject(filename)
+			subject = fs.Subject(filename=filename)
 			X, y = preprocess(subject)
 			fs.write_csv(filename, X, y)
 			log.print('{0} preprocessed in {1}s'.format(filename, clock.round()))
@@ -57,21 +71,26 @@ def prepAll(force=False):
 	clock.stop()
 
 def preprocess(subject, arousals = True):
+	'''
+	Preprocessing of a single subject. each feature and annotation is
+	handled by submodules. This method creates X matrix and y vector.
+	'''
+	# Get data signals from container
 	sig_ECG = subject.ECG_signal
 	sig_PPG = subject.PPG_signal
 	anno_SleepStage = subject.SleepStage_anno
 	
-	# Get Index
+	# Gets R-peak indexes and amplitudes
 	index, amp = QRS(subject)
 	
 	# Preprocess Features
-	x_DR, x_RPA = ECG(sig_ECG, index), array(amp).astype(float)
+	x_RR, x_RWA = RR(subject.frequency, index), array(amp).astype(float)
 	x_PTT, x_PWA = PPG(sig_PPG, index)
 	x_SS = SleepStageBin(anno_SleepStage, subject.frequency, index)
 
 	# Collect Matrix
-	features = [index, x_DR, x_RPA, x_PTT, x_PWA, x_SS]
-	X = empty((len(features), len(x_DR)-1))
+	features = [index, x_RR, x_RWA, x_PTT, x_PWA, x_SS]
+	X = empty((len(features), len(x_RR)-1))
 	for i,feat in enumerate(features):
 		X[i] = feat[1:len(feat)]
 	X = transpose(X)
@@ -85,6 +104,10 @@ def preprocess(subject, arousals = True):
 	return X
 
 def QRS(subject):
+	'''
+	Get R-peak indeses and amplitudes from Mads Olsens QRS algorithm using matlab engine
+	'''
+	# Start Matlab Engine
 	eng = matlab.engine.start_matlab()
 	os.makedirs(fs.Filepaths.Matlab, exist_ok=True)
 	eng.cd(fs.Filepaths.Matlab)
@@ -100,14 +123,22 @@ def QRS(subject):
 	amp = [float(i) for i in amp[0]]
 	return index, amp
 
-def ECG(sig_ECG, index):
+def RR(freq, index):
+	'''
+	Calculates RR distance for each peak after the first
+	'''
 	DR = array([0]+[index[i]-index[i-1] for i in range(1,len(index))]).astype(float)
-	return DR/sig_ECG.sampleFrequency
+	return DR/freq # durations in seconds
 
 def PPG(sig_PPG, index):
+	'''
+	Calculates PTT for each R-index
+	'''
+	# peaks and amplitudes from PPGpeak_detector.py
 	peaks, amps = PPG_Peaks(sig_PPG.signal, sig_PPG.sampleFrequency)
 	
-	def find_ptt(idx, idxplus, h):
+	# finds P-peak between two r-peaks
+	def find_RpR(idx, idxplus, h):
 		# Find h index of peak after R-peak
 		while h < len(peaks) and peaks[h] < idx:
 			h += 1
@@ -117,29 +148,35 @@ def PPG(sig_PPG, index):
 		# peakid, index of ppg-peakid
 		return peaks[h], h
 
+	# attempts to find a peak between all RR-intervals
 	PTT = []
 	PWA = []
 	h = -1
 	for i,idx in enumerate(index):
-		if i < len(index)-1:	idxplus = index[i+1]
-		else:					idxplus = sig_PPG.duration
-		peak, h = find_ptt(idx,idxplus,h+1)
+		idxplus = index[i+1] if i < len(index)-1 else sig_PPG.duration
+		peak, h = find_RpR(idx,idxplus,h+1)
+		# if peak is found, store both ptt and pwa, else mark as error '-1'
 		if(peak != -1):
 			PTT += [(peak-idx) / sig_PPG.sampleFrequency]
 			PWA += [amps[h]]
 		else:
 			PTT += [-1]
 			PWA += [-1]
-
+	
+	# store as floats
 	PTT = array(PTT).astype(float)
 	PWA = array(PWA).astype(float)
 
 	return PTT, PWA
 
 def SleepStageBin(anno_SleepStage, frequency, index):
-	# 0			= WAKE	=> -1
-	# 1,2,3,4	= NREM	=>  0
-	# 5			= REM	=>  1
+	'''
+	converts sleep stage containers into a value sleep stage
+	scorings into series of {-1,0,1} for each R-index.
+	'''
+	#	0		= WAKE	=> -1
+	#	1,2,3,4	= NREM	=>  0
+	#	5		= REM	=>  1
 	SS = [-1]*int(anno_SleepStage.duration*frequency)
 	for start,dur,stage in anno_SleepStage.annolist:
 		start = float(start)
@@ -152,14 +189,16 @@ def SleepStageBin(anno_SleepStage, frequency, index):
 		elif stage >= 5:
 			for i in ran:
 				SS[i] = 1
-	
-	ls = len(SS)
-	ii = index[-1]
 
+	# Extracts sleep stage for each R-index
 	SS = array([SS[idx] for idx in index]).astype(float)
 	return SS
 
+
 def ArousalBin(anno_Arousal, frequency, index):
+	'''
+	converts arousal containers into a value for each R-index
+	'''
 	# 0 = not arousal
 	# 1 =     arousal
 	AA = [0]*int(anno_Arousal.duration*frequency)
@@ -170,5 +209,6 @@ def ArousalBin(anno_Arousal, frequency, index):
 		for i in range(int(start*frequency), int((start+dur)*frequency)):
 			AA[i] = 1
 
+	# Extracts arousal score for each R-peak
 	AA = array([AA[int(idx)] for idx in index]).astype(float)
 	return AA

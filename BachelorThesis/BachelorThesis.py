@@ -7,7 +7,7 @@ from preprocessing import prepAll, prepSingle
 #import h5py
 
 """
-WRITTEN BY:
+AUTHOR(S):
 Nicklas Hansen
 Michael Kirkegaard
 """

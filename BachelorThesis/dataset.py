@@ -1,5 +1,5 @@
 '''
-WRITTEN BY:
+AUTHOR(S):
 NICKLAS HANSEN
 
 Module is responsible for data-set manipulation using a dedicated object.

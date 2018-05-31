@@ -1,5 +1,5 @@
 '''
-WRITTEN BY:
+AUTHOR(S):
 Nicklas Hansen
 
 Module is a framework for evaluating time durations for use in other modules.

@@ -1,3 +1,11 @@
+'''
+AUTHOR(S):
+Nicklas Hansen,
+Micael Kirkegaard
+
+Setting used across the solution
+'''
+
 SHHS = False
 
 SAMPLE_RATE = 250 if SHHS else 256

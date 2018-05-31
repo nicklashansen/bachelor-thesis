@@ -1,9 +1,8 @@
 '''
-WRITTEN BY:
+AUTHOR(S):
 Nicklas Hansen,
 Michael Kirkegaard
 
-MAIN PURPOSE:
 Module contains functions developed for the model and feature selection procedure,
 including training, validation and testing phases.
 '''
@@ -21,7 +20,7 @@ import os, matlab.engine, preprocessing
 
 def evaluate_LR():
 	'''
-	REMOVE?
+	Evaluate dataset using LR model, results are logged for evaluation and testing purposes.
 	'''
 	eng = matlab.engine.start_matlab()
 	os.makedirs(fs.Filepaths.Matlab, exist_ok=True)
@@ -45,8 +44,10 @@ def evaluate_LR():
 		try:
 			X_,y = fs.load_csv(file)
 			X,_,_ = make_features(X_, None, settings.SAMPLE_RATE, removal=True)
-
-			yhat, timecol_hat = eng.LR_classify(fs.directory(), file+'.edf', float(settings.SAMPLE_RATE), nargout=2) if not settings.SHHS else eng.LR_classify_shhs(fs.directory(), file+'.edf', float(settings.SAMPLE_RATE), nargout=2)
+			if not settings.SHHS:
+				yhat, timecol_hat = eng.LR_classify_shhs(fs.directory(), file+'.edf', float(settings.SAMPLE_RATE), nargout=2)
+			else:
+				yhat, timecol_hat = eng.LR_classify(fs.directory(), file+'.edf', float(settings.SAMPLE_RATE), nargout=2)
 			timecol_hat = array([t[0] for t in timecol_hat])
 			yhat = transform_yhat([1. if yh[0] else 0. for yh in yhat], timecol_hat, transpose(X)[0], transpose(X_)[0])
 

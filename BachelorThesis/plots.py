@@ -1,16 +1,21 @@
+'''
+AUTHOR(S):
+Nicklas Hansen,
+Michael Kirkegaard
+
+modules is responsible for creating figures and plots for evaluation, testing and also for the GUI
+'''
+
 from numpy import *
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 
-"""
-WRITTEN BY:
-Nicklas Hansen,
-Michael Kirkegaard
-"""
-
 COLOR = ['black', 'orange', 'green', 'red']
-
 def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals, duration = None, figure = None):
+	'''
+	plotting of signals (with labels) into subplots with a shared x-axis,
+	will return a figure if given, as is the case of the GUI.
+	'''
 	if figure is None:
 		rr = plt.add_subplot(611)
 		plt.Axes.autoscale(rr, True, axis = 'y')
@@ -90,6 +95,9 @@ def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals,
 		return figure
 
 def show_signals(timecol, array, labels = None, colors = COLOR, duration = None, a = None):
+	'''
+	plots a signals of signal into on plot
+	'''
 	if array is None:
 		return a
 	if duration is None:
@@ -106,18 +114,11 @@ def show_signals(timecol, array, labels = None, colors = COLOR, duration = None,
 			plt.plot(x, signal, colors[i], label=labels[i], linewidth=linewidth)
 	return a
 
-def show_spans(timecol, array, color, alpha = 0.3, a = None):
-	if array is None:
-		return a
-	x = timecol/60
-	for _,obj in enumerate(array):
-		if a is not None:
-			a.axvspan(x[obj[0]], x[obj[1]], color=color, alpha=alpha)
-		else:
-			plt.axvspan(x[obj[0]], x[obj[1]], color=color, alpha=alpha)
-	return a
-
 def plot_data(signals, peaksIndexs=None, labels=None, normalization=False, indice = (0,10000)):
+	'''
+	plots list of signals (with labesl) and peak-markings into one plot
+	'''
+
 	def normalize(X, scaler=MinMaxScaler()):
 		return squeeze(scaler.fit_transform(X.reshape(X.shape[0], 1)))
 
