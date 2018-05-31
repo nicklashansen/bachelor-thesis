@@ -1,5 +1,5 @@
 '''
-WRITTEN BY:
+AUTHOR(S):
 Nicklas Hansen
 
 Module is responsible for time series manipulation used by other modules.

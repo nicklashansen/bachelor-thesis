@@ -1,5 +1,5 @@
 '''
-WRITTEN BY:
+AUTHOR(S):
 Nicklas Hansen,
 Michael Kirkegaard
 

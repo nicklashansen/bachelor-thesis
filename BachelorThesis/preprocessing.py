@@ -1,9 +1,8 @@
 '''
-WRITTEN BY:
+AUTHOR(S):
 Nicklas Hansen,
 Michael Kirkegaard
 
-MAIN PURPOSE:
 Converting raw signals into measurable values. This file is responsible for
 the main chunk of pre-processing, while sorting of reliable files, correcting
 extreme outliers and epoch generations is handles in features.py and epoch.py 
@@ -17,13 +16,17 @@ from log import get_log
 from stopwatch import stopwatch
 import settings
 
-# converts two edf and anno filepaths into X
 def prep_X(edf, anno):
+	'''
+	converts two edf and anno filepaths into X
+	'''
 	sub = fs.Subject(edfPath = edf, annoPath = anno, ArousalAnno=False)
 	return preprocess(sub, arousals=False)
 
-# preprocesses a single file by name - used for testing
 def prepSingle(filename, save = True):
+	'''
+	preprocesses a single file by name - used for testing
+	'''
 	sub = fs.Subject(filename=filename)
 	X, y = preprocess(sub)
 	if save:
@@ -100,8 +103,10 @@ def preprocess(subject, arousals = True):
 		return X, y
 	return X
 
-# Runs Mads Olsens' QRS algorithm using matlab engine
 def QRS(subject):
+	'''
+	Get R-peak indeses and amplitudes from Mads Olsens QRS algorithm using matlab engine
+	'''
 	# Start Matlab Engine
 	eng = matlab.engine.start_matlab()
 	os.makedirs(fs.Filepaths.Matlab, exist_ok=True)
@@ -118,13 +123,17 @@ def QRS(subject):
 	amp = [float(i) for i in amp[0]]
 	return index, amp
 
-# Calculates RR distance for each peak after the first
 def RR(freq, index):
+	'''
+	Calculates RR distance for each peak after the first
+	'''
 	DR = array([0]+[index[i]-index[i-1] for i in range(1,len(index))]).astype(float)
 	return DR/freq # durations in seconds
 
-# Calculates PTT for each R-index
 def PPG(sig_PPG, index):
+	'''
+	Calculates PTT for each R-index
+	'''
 	# peaks and amplitudes from PPGpeak_detector.py
 	peaks, amps = PPG_Peaks(sig_PPG.signal, sig_PPG.sampleFrequency)
 	
@@ -160,12 +169,14 @@ def PPG(sig_PPG, index):
 
 	return PTT, PWA
 
-# converts sleep stage containers into a value for each R-index
 def SleepStageBin(anno_SleepStage, frequency, index):
-	# Extracts all sleep stage scoring into series of {-1,0,1}
-	# 0			= WAKE	=> -1
-	# 1,2,3,4	= NREM	=>  0
-	# 5			= REM	=>  1
+	'''
+	converts sleep stage containers into a value sleep stage
+	scorings into series of {-1,0,1} for each R-index.
+	'''
+	#	0		= WAKE	=> -1
+	#	1,2,3,4	= NREM	=>  0
+	#	5		= REM	=>  1
 	SS = [-1]*int(anno_SleepStage.duration*frequency)
 	for start,dur,stage in anno_SleepStage.annolist:
 		start = float(start)
@@ -183,8 +194,11 @@ def SleepStageBin(anno_SleepStage, frequency, index):
 	SS = array([SS[idx] for idx in index]).astype(float)
 	return SS
 
-# converts arousal containers into a value for each R-index
+
 def ArousalBin(anno_Arousal, frequency, index):
+	'''
+	converts arousal containers into a value for each R-index
+	'''
 	# 0 = not arousal
 	# 1 =     arousal
 	AA = [0]*int(anno_Arousal.duration*frequency)

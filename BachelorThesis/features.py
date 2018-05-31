@@ -1,9 +1,8 @@
 '''
-WRITTEN BY:
+AUTHOR(S):
 Nicklas Hansen,
 Michael Kirkegaard
 
-MAIN PURPOSE:
 Finilise preprocessed files into feature matrix X and score vector y,
 filter off unreliable files taking MESA variable and masks as criteria
 and serve as wrapper for generating epochs used for model training.
@@ -34,9 +33,11 @@ def hours_of_sleep_files(files):
 	log.printHL()
 	log.print('total -- {0} hours'.format(total))
 	return total
-
-# calculates hours of sleep from time series assuming wake periods are removed
+ 
 def count_hours_of_sleep(timecol):
+	'''
+	calculates hours of sleep from time series assuming wake periods are removed
+	'''
 	t = 0.0
 	j = 0
 	for i in range(1, len(timecol)+1):
@@ -46,14 +47,18 @@ def count_hours_of_sleep(timecol):
 			j = i
 	return t/settings.SAMPLE_RATE/60/60 # samples / simple_rate / 60 seconds / 60 minutes => amount in hours
 
-# split files into training, evaluation and testing after trimming away unreliable files
 def make_splits():
+	'''
+	split files into training, evaluation and testing after trimming away unreliable files
+	'''
 	before = fs.getAllSubjectFilenames(preprocessed=True)
 	after = reliableFiles(before)
 	tr,ev,te = train_vali_test_split(after)
 
-# loads training data and generated epoch file
 def process_epochs():
+	'''
+	loads training data and generated epoch file
+	'''
 	train = fs.load_splits()[0]
 	epochs = compile_epochs(train)
 
@@ -115,8 +120,10 @@ def reliableFiles(files, ai_all5=10.0, overall5=4.0, slewake5=0.0, maskThreshold
 
 	return reliableFiles
 
-# Randomly splits a set of files into training, validation and test data partitions
 def train_vali_test_split(files, valisize=0.05, testsize=0.05, save=True, name=None):
+	'''
+	Randomly splits a set of files into training, validation and test data partitions
+	'''
 	random.shuffle(files)
 	te = int(len(files)*(1.0-testsize))
 	tr = int(len(files)*(1.0-valisize-testsize))
@@ -160,8 +167,10 @@ def compile_epochs(files, save = True):
 		log.printHL()
 	return epochs
 
-# Finalises features and generates epochs
 def epochs_from_prep(X, y, epoch_length=settings.EPOCH_LENGTH, overlap_factor=settings.OVERLAP_FACTOR, sample_rate = settings.SAMPLE_RATE, filter = True, removal = True):
+	'''
+	Finalises features and generates epochs
+	'''
 	X,y,mask = make_features(X, y, sample_rate, removal)
 	return epoch.get_epochs(X, y, mask, epoch_length, overlap_factor, filter)
 
@@ -194,8 +203,10 @@ def make_features(X, y, sample_rate, removal = True, full_removal = False, oneho
 
 	return X, y, mask
 
-# Creates binary error mask
 def make_masks(X):
+	'''
+	Creates binary error mask using three sigma rule outlier detection
+	'''
 	Xt = transpose(X)
 
 	# Outlier detection on each signal not including invalid ones
@@ -213,8 +224,10 @@ def make_masks(X):
 
 	return masklist, mask
 
-# Spline corrects featues where mask error indexes
 def cubic_spline(X, masks, plot=False):
+	'''
+	Spline corrects featues where mask index shows errors
+	'''
 	Xt = transpose(X)
 
 	def spline(maskid, data):
@@ -237,8 +250,10 @@ def cubic_spline(X, masks, plot=False):
 	X = transpose(Xt)
 	return X
 
-# removes all wake state datapoints from X
 def wake_removal_full(X, y, mask, sample_rate):
+	'''
+	Legacy function - removes all wake state datapoints from X
+	'''
 	_X = transpose(X)
 	keep = [i for i,state in enumerate(_X[5]) if state >= 0]
 	X = array([X[i] for i in keep])
@@ -299,8 +314,10 @@ def wake_removal_endpoints(X, y, mask, sample_rate, keep_seconds=30):
 		mask = [mask[i] for i in keep]
 	return X,y,mask
 
-# one hot for sleep stage
 def sleep_onehot(X):
+	'''
+	one hot for sleep stage, transforming signal of {-1,0,1} into three binary arrays
+	'''
 	Xt = transpose(X)
 
 	# onehot
@@ -309,7 +326,7 @@ def sleep_onehot(X):
 		wake,nrem,rem = zeros(n), zeros(n), zeros(n) 
 		arr = [wake,nrem,rem]
 
-		# add binary value to sleep signal {-1,0,1} to index in arr {0,1,2}
+		# add binary value to sleep signal {-1,0,1} to index in arr[3] {0,1}
 		for i,val in enumerate(data):
 			arr[int(val+1)][i] = 1
 

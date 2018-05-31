@@ -9,7 +9,7 @@ import settings
 import filesystem as fs
 
 """
-WRITTEN BY
+AUTHOR(S)
 Michael Kirkegaard,
 Nicklas Hansen
 """

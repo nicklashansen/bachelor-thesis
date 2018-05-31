@@ -1,8 +1,7 @@
 '''
-WRITTEN BY:
+AUTHOR(S):
 Michal Kirkegaard
 
-MAIN PURPOSE:
 This is a resource file used by the GUI created in "BachelorGUI.pyw". It also serves a a settings file.
 '''
 #

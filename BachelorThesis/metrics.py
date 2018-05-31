@@ -1,9 +1,8 @@
 '''
-WRITTEN BY:
+AUTHOR(S):
 Nicklas Hansen,
 Michael Kirkegaard
 
-MAIN PURPOSE:
 Compute performance values for validation and evaluations using
 TP, FP, TN, FN confusion matrix. This module also extracts those
 values given a predicted time series yhat and a score series y.

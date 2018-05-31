@@ -1,9 +1,8 @@
 '''
-WRITTEN BY:
+AUTHOR(S):
 Nicklas Hansen,
 Michael Kirkegaard
 
-MAIN PURPOSE:
 Module contains functions developed for the model and feature selection procedure,
 including training, validation and testing phases.
 '''

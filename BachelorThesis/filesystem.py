@@ -1,9 +1,8 @@
 '''
-WRITTEN BY:
+AUTHOR(S):
 Nicklas Hansen,
 Michael Kirkegaard
 
-MAIN PURPOSE:
 File management for the entire solution. Handles directories, reading- and writing of files.
 csv, xml, edf, aplot, epoch-pickle and log use these functions.
 '''
@@ -66,15 +65,19 @@ class Filepaths:
 	# GUI
 	TempAplotFile = Files + 'temp.aplot' 
 
-# Container class for annotations
 class Annotation:
+	'''
+	Container class for annotations
+	'''
 	def __init__(self, label, annolist, dur):
 		self.label = label
 		self.annolist = annolist
 		self.duration = dur
 
-# Containeer class for signals
 class Signal:
+	'''
+	Containeer class for signals
+	'''
 	def __init__(self, label, sig, freq, dur):
 		self.label = label
 		self.signal = sig
@@ -128,8 +131,10 @@ class Subject:
 			self.annoPath = annoPath
 			self.Arousal_anno = self.get_anno('Arousal')
 	
-	# Reads signal of label from edf-file
 	def get_signal(self, label):
+		'''
+		Reads signal of label from edf-file
+		'''
 		filepath = Filepaths.LoadPsg + self.filename + ".edf" if not self.edfPath else self.edfPath
 
 		# split label-options and find index of first instance 
@@ -152,6 +157,9 @@ class Subject:
 		return Signal(label, sig, freq, dur)
 
 	def get_anno(self, label):
+		'''
+		Reads annotation of label from xml-file
+		'''
 		filepath = Filepaths.LoadAnno + self.filename + "-nsrr.xml" if not self.annoPath else self.annoPath
 
 		# parse tree into dictionary
@@ -169,12 +177,17 @@ class Subject:
 		# returns container
 		return Annotation(label, ax, dur)
 
-# Validates fileformat of edf and xml file
 def validate_fileformat(edfpath, annopath):
+	'''
+	Validates fileformat of edf and xml file
+	'''
 	return validate_edf(edfpath) and validate_anno(annopath)
 
-# validates that edf file contains both ecg and pleth signal
+
 def validate_edf(edfpath):
+	'''
+	validates that edf file contains both ecg and pleth signal
+	'''
 	try:
 		with pyedflib.EdfReader(edfpath) as file:
 			signals = file.getSignalLabels()
@@ -184,8 +197,11 @@ def validate_edf(edfpath):
 		# Exception if no file exists or is corrupt
 		return False
 
-# validates that xml file is properly formatted and contains sleep stage annotations
+
 def validate_anno(annopath):
+	'''
+	validates that xml file is properly formatted and contains sleep stage annotations
+	'''
 	try:
 		xml = xmlTree.parse(annopath).getroot()
 		dict = make_dict_from_tree(xml)
@@ -196,8 +212,10 @@ def validate_anno(annopath):
 		# Exception if no file exists or is corrupt
 		return False
 
-# returns all subject filenames, optinally only preprocessed files
 def getAllSubjectFilenames(preprocessed=False):
+	'''
+	returns all subject filenames, optinally only preprocessed files
+	'''
 	if(preprocessed):
 		path = Filepaths.SaveSubject
 	else:
@@ -206,12 +224,16 @@ def getAllSubjectFilenames(preprocessed=False):
 	filenames = [f[:-4] for f in os.listdir(path) if isfile(join(path, f))]
 	return filenames
 
-# returns the dataset variable container
 def getDataset_csv():
+	'''
+	returns the dataset variable container
+	'''
 	return pd.read_csv(Filepaths.LoadDatabaseCsv)
 
-# loads a preprocessed subject - Deserialing into X,y
 def load_csv(filename):
+	'''
+	loads a preprocessed subject - Deserialing into X,y
+	'''
 	path = Filepaths.SaveSubject + filename + '.csv'
 	data = []
 	with open(path, "r", encoding='utf8') as f:
@@ -224,8 +246,10 @@ def load_csv(filename):
 	y = array(data[:,-1])
 	return X, y
 
-# saves a preprocessed subject - Serialising to .csv
 def write_csv(filename, X, y):
+	'''
+	saves a preprocessed subject - Serialising to .csv
+	'''
 	os.makedirs(Filepaths.SaveSubject, exist_ok=True)
 	path = Filepaths.SaveSubject + filename + '.csv'
 
@@ -238,8 +262,10 @@ def write_csv(filename, X, y):
 			s = s[:-1]
 			f.write(s + '\n')
 
-# loads the training, validation and testing file sets
 def load_splits(name='splits'):
+	'''
+	loads the training, validation and testing file sets
+	'''
 	if settings.SHHS:
 		return [],[],[]
 	file = Filepaths.SaveSplits + name + '.txt'
@@ -250,8 +276,10 @@ def load_splits(name='splits'):
 	test = tte[2].replace('\n','').split(',')
 	return train,vali,test
 
-# saves the training, validation and testing file sets
 def write_splits(train, test, eval, name='splits'):
+	'''
+	saves the training, validation and testing file sets
+	'''
 	os.makedirs(Filepaths.SaveSplits, exist_ok=True)
 	file = Filepaths.SaveSplits + name + '.txt'
 	with open(file, 'w') as f:
@@ -259,33 +287,43 @@ def write_splits(train, test, eval, name='splits'):
 		f.write(','.join(test)+'\n')
 		f.write(','.join(eval))
 
-# loads generated epochs for model training
 def load_epochs(name='epochs'):
+	'''
+	loads generated epochs for model training
+	'''
 	file = Filepaths.SaveEpochs + name +'.pickle'
 	with open(file, 'rb') as f:
 		epochs = pck.load(f)
 	return epochs
 
-# saves generated epochs for model training
 def write_epochs(epochs, name='epochs'):
+	'''
+	saves generated epochs for model training
+	'''
 	os.makedirs(Filepaths.SaveEpochs, exist_ok=True)
 	file = Filepaths.SaveEpochs + name + '.pickle'
 	with open(file, 'wb') as handle:
 		pck.dump(epochs, handle, protocol=pck.HIGHEST_PROTOCOL)
 
-# loads deserialised plot and property data using pickle
 def load_aplot(filepath):
+	'''
+	loads deserialised plot and property data using pickle
+	'''
 	with open(filepath, 'rb') as f:
 		plotdata, properties = pck.load(f)
 	return plotdata, properties
 
-# saves the plot and property data by serilising object with pickle
 def write_aplot(filepath, plotdata, properties):
+	'''
+	saves the plot and property data by serilising object with pickle
+	'''
 	with open(filepath, 'wb') as f:
 		pck.dump([plotdata,properties], f, protocol=pck.HIGHEST_PROTOCOL)
 
-# Creates file if none exists and appends a line to the file.
 def append_log(directory, filename, line=None, wra='a'):
+	'''
+	Creates file if none exists and appends a line to the file.
+	'''
 	os.makedirs(directory, exist_ok=True)
 	with open(directory + filename, wra, encoding='utf8') as f:
 		f.write(line + '\n')

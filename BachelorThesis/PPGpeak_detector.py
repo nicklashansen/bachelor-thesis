@@ -1,8 +1,7 @@
 '''
-WRITTEN BY:
+AUTHOR(S):
 Michal Kirkegaard
 
-MAIN PURPOSE:
 Handle the PPG peak detection using lowpass filter, cubing filter, adaptive thresholds and minimum distance.
 '''
 from scipy.signal import butter, filtfilt
@@ -11,13 +10,19 @@ from peakutils import baseline
 import numpy as np
 from plots import plot_data
 
-# lowpass filter
+
 def lowpass_butter_filter(data, Norder=5, lowcut=0.03):
+	'''
+	lowpass filter
+	'''
 	B, A = butter(Norder, Wn=lowcut, btype='lowpass', output='ba')
 	return filtfilt(B,A, data)
 
-# Cubing filter (instead of squaring, to keep ngative values negativ)
+
 def cubing_filter(data):
+	'''
+	Cubing filter (instead of squaring, to keep ngative values negativ)
+	'''
 	return data**3
 
 def PPG_Peaks(data, freq, plot=False):

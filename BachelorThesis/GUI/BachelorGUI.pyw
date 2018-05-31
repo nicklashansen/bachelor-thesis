@@ -1,8 +1,7 @@
 '''
-WRITTEN BY:
+AUTHOR(S):
 Michael Kirkegaard
 
-MAIN PURPOSE:
 This class contains the code for the prototype of a visual tool, which can aid in diagnosing sleep appnea by visualising features
 of a Gated Recurrent Unit model and its predicted arousals as a set of 6 subplots as well as showing statistic properties of them.
 '''
@@ -319,8 +318,11 @@ class AppUI(Tk):
 				messagebox.showerror("Error", res.ERROR_MSG(e, ex))
 				return 
 	
-	# Controls sub frames to show plot
+	
 	def Show_Plot(self, plot_data, property_dict):
+		'''
+		Controls sub frames to show plot
+		'''
 		self.main_frame.close_plot()
 		self.plot_data = plot_data
 		self.property_dict = property_dict
@@ -328,8 +330,11 @@ class AppUI(Tk):
 		fs.write_aplot(fs.Filepaths.TempAplotFile, self.plot_data, save_property_dict)
 		self.main_frame.open_plot()
 
-	# Controls sub frames to close plot
+	
 	def Close_File(self):
+		'''
+		Controls sub frames to close plot
+		'''
 		self.main_frame.close_plot()
 		self.plot_data = []
 		self.property_dict = {}
@@ -374,8 +379,10 @@ class AppUI(Tk):
 		y = self.winfo_y()
 		toplevel.geometry("+%d+%d" % (x+5, y+55))
 
-	# Main frame resource. It wraps plot frame and property frame unto same frame.
 	class Main_Frame(Frame):
+		'''
+		Main frame resource. It wraps plot frame and property frame unto same frame.
+		'''
 		# initilising
 		def __init__(self, master, controller):
 			Frame.__init__(self, master) # Super.__init__()

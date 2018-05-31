@@ -1,5 +1,5 @@
 '''
-WRITTEN BY:
+AUTHOR(S):
 Nicklas Hansen
 
 Module is responsible for the creation, filtering and manipulation of epochs through high-level functions and a dedicated epoch object.

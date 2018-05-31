@@ -1,5 +1,5 @@
 '''
-WRITTEN BY
+AUTHOR(S)
 Nicklas Hansen
 
 Simple helper module responsible for formatting filters.
