@@ -10,7 +10,7 @@ from numpy import *
 from features import epochs_from_prep, make_features
 from epoch import epoch
 from gru import gru, gru_config
-from timeseries import timeseries, region, add_ECG_overhead
+from timeseries import timeseries, region
 from dataset import dataset
 from model_selection import add_predictions, reconstruct
 from plots import plot_results
@@ -152,26 +152,6 @@ def conditional_combine(timecol, yhat, curr, prev, n):
 		for j in range(prev[1], curr[0]):
 			yhat[j] = 1
 	return timecol, yhat, n
-
-def region(array, count = False):
-	'''
-	Takes an array as input and returns a new array containing all '1'-sequences stored as start and end indices.
-	'''
-	regions, start, bin, n = [], 0, False, 0
-	for i,val in enumerate(array):
-		if val == 1:
-			if not bin:
-				start, bin = i, True
-		elif bin:
-			bin = False
-			n += 1
-			regions.append([start, i-1])
-	if bin:
-		regions.append([start, i])
-		n += 1
-	if count:
-		return regions, n
-	return regions
 
 def summary_statistics(timecol, yhat, wake, nrem, rem, illegal):
 	'''
