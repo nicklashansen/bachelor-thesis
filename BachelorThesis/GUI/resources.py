@@ -1,9 +1,17 @@
+'''
+WRITTEN BY:
+Michal Kirkegaard
+
+MAIN PURPOSE:
+This is a resource file used by the GUI created in "BachelorGUI.pyw". It also serves a a settings file.
+'''
 #
 # General
 #
 FONT = 'monospace 10'
 SHUTDOWNFLAG = 'cancel'
-def ERROR_MSG(e,ex,step=""): return "Error loading file{0}\n\n{1}\n{2}".format(step if step=="" else " at step \"{0}\"".format(step[:-3]),str(e), ex)
+def ERROR_MSG(e,ex,step=""):
+	return "Error loading file{0}\n\n{1}\n{2}".format(step if step=="" else " at step \"{0}\"".format(step[:-3]),str(e), ex)
 
 #
 # Sizes

@@ -4,7 +4,8 @@ import os
 
 """
 WRITTEN BY
-Nicklas Hansen
+Nicklas Hansen,
+Michael Kirkegaard
 """
 
 TABLE = dict()
@@ -26,7 +27,7 @@ class Log:
 		open(self.directory + self.filename, 'w+', encoding='utf8').close()
 
 	def print(self, line):
-		fs.write(self.directory, self.filename, line)
+		fs.append_log(self.directory, self.filename, line)
 		if self.echo:
 			try:
 				print(line)

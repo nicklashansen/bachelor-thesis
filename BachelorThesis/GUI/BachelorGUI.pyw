@@ -1,11 +1,11 @@
 '''
-WRITTENN BY
+WRITTEN BY:
 Michael Kirkegaard
 
 MAIN PURPOSE:
-
+This class contains the code for the prototype of a visual tool, which can aid in diagnosing sleep appnea by visualising features
+of a Gated Recurrent Unit model and its predicted arousals as a set of 6 subplots as well as showing statistic properties of them.
 '''
-
 from tkinter import *
 from tkinter import filedialog
 from tkinter.ttk import Progressbar, Separator
@@ -25,7 +25,14 @@ from preprocessing import prep_X
 import filesystem as fs
 import traceback
 
+
 class AppUI(Tk):
+	'''
+	Main controller class of the GUI. It controls and maps all frame resources
+	and pop-ups together by controlling variables and navigation between windows.
+	'''
+	
+	# Initilisation, will attempt to load last plot displayed before last application shutodwn.
 	def __init__(self, w=res.ss_WIDTH, h=res.ss_HEIGHT):
 		Tk.__init__(self)	
 		# Setup
@@ -69,11 +76,9 @@ class AppUI(Tk):
 		except Exception as e:
 			self.Close_File()
 			ex = traceback.format_exc()
-			messagebox.showwarning("Warning", "Error loading system aplot file.\n\n"+str(e)+'\n'+ex)
-
-		# Init
-		self.mainloop()
+			messagebox.showwarning("Warning", "Error loading latest aplot file.\n\n"+str(e)+'\n'+ex)
 	
+	# Top menubar mappings
 	def __topmenubar(self):
 		menubar = Menu(self)
 
@@ -96,9 +101,17 @@ class AppUI(Tk):
 
 		return menubar
 
-	# New File
 	def New_File(self):
+		'''
+		Controls performing a new analysis on a PSG recording and annotation file. It creates a toplevel window from which the
+		user can choose the two files used for the analysis. The anlysis runs in its own thread and can be canceled at any time.
+		File formats will be verified and forced by file-picker window. An Error is displayed if the analysis fails at any step.
+		'''
+
+		# Cannot run two new files operations at the same time
 		if not self.progbarThread:
+
+			# Perform the analysis task
 			def task(toplevel, edf_e, edf_b, anno_e, anno_b, b_go, edf, anno, cancelbutton, statuslabel, progresbar):
 				this = self.progbarThread
 				destroy = False
@@ -154,7 +167,8 @@ class AppUI(Tk):
 				finally:
 					if(this.getName() != res.SHUTDOWNFLAG):
 						canceltask(toplevel, edf_e, edf_b, anno_e, anno_b, b_go,cancelbutton,statuslabel,progresbar)
-
+			
+			# Cancel the analysis by raising shutdown flag for task-thread, releasing input entries
 			def canceltask(toplevel, edf_e, edf_b, anno_e, anno_b, b_go,cancelbutton,statuslabel,progresbar):
 				if self.progbarThread:
 					# Forget task
@@ -175,6 +189,7 @@ class AppUI(Tk):
 					statuslabel.grid_forget()
 					progresbar.grid_forget()
 			
+			# Begin the analysis, locking input entries
 			def starttask(toplevel, edf_e, edf_b, anno_e, anno_b, b_go, filepath_edf, filepath_anno):
 				if not self.progbarThread:
 
@@ -182,8 +197,6 @@ class AppUI(Tk):
 					edf_b['state'] = 'disabled'
 					anno_e['state'] = 'disabled'
 					anno_b['state'] = 'disabled'
-
-					b_go.grid_remove()
 
 					# Progbar
 					pb = Progressbar(toplevel)
@@ -194,6 +207,7 @@ class AppUI(Tk):
 					sl.grid(row=3, column=1)
 
 					# Cancel Button
+					b_go.grid_remove()
 					b = Button(toplevel, text='Cancel')
 					orig_color = b.cget("background")
 					b.bind('<Button-1>', lambda event: canceltask(toplevel, edf_e, edf_b, anno_e, anno_b, b_go, b, sl, pb))
@@ -206,6 +220,7 @@ class AppUI(Tk):
 					self.progbarThread = threading.Thread(target=task, args=(toplevel, edf_e, edf_b, anno_e, anno_b, b_go, filepath_edf, filepath_anno, b, sl, pb))
 					self.progbarThread.start()
 			
+			# Opens file-picker window, enforcing format of file
 			def getFilePath(svar, filetitle, filetag, callback):
 				try:
 					filepath = filedialog.askopenfilename(title='Choose '+filetitle+' File', filetypes=[(filetitle,'*'+filetag)])
@@ -218,22 +233,24 @@ class AppUI(Tk):
 					svar.set("Error Loading File...")
 				finally:
 					callback()
-
+			
+			# Forced focus of new file wub window
 			def focus(toplevel):
 				toplevel.lift()
 				toplevel.focus_force()
 				toplevel.grab_set()
 
+			# Creates sub-window
 			file_toplevel = Toplevel()
 			focus(file_toplevel)
 
-			# EDF file
+			# EDF file entry
 			filepath_edf = StringVar(value='Choose File...')
 			label_edf = Label(file_toplevel, text=res.ff_FILETITLE_e+':', anchor=E)
 			entry_edf = Entry(file_toplevel, textvariable=filepath_edf, width=res.ss_ENTRY_WIDTH)
 			b_edf = Button(file_toplevel, text='Choose File', command=lambda: getFilePath(filepath_edf, res.ff_FILETITLE_e, res.ff_FILETAG_e, lambda: focus(file_toplevel)))
 
-			# ANN file
+			# ANN file entry
 			filepath_anno = StringVar(value='Choose File...')
 			label_anno = Label(file_toplevel, text=res.ff_FILETITLE_s+':', anchor=E)
 			entry_anno = Entry(file_toplevel, textvariable=filepath_anno, width=res.ss_ENTRY_WIDTH)
@@ -263,8 +280,10 @@ class AppUI(Tk):
 			y = self.winfo_y()
 			file_toplevel.geometry("+%d+%d" % (x+5, y+55))		
 
-	# Open already formatted plots
 	def Load_File(self):
+		'''
+		Loads an already analysed plot file of correct format enforced by tKinter file-picker. An Error is displayed if this fails.
+		'''
 		if not self.progbarThread:
 			try:
 				filepath = filedialog.askopenfilename(title='Choose '+ res.ff_FILETITLE_a +' file', filetypes=[(res.ff_FILETITLE_a,'*'+res.ff_FILETAG_a)])
@@ -278,17 +297,13 @@ class AppUI(Tk):
 				return
 			self.Close_File()
 			self.Show_Plot(plot_data, property_dict)
-	
-	def Show_Plot(self, plot_data, property_dict):
-		self.main_frame.close_plot()
-		self.plot_data = plot_data
-		self.property_dict = property_dict
-		save_property_dict = [x for x in self.property_dict if x[0] not in  ['aplot_path', 'edf_path', 'anno_path']]
-		fs.write_aplot(fs.Filepaths.TempAplotFile, self.plot_data, save_property_dict)
-		self.main_frame.open_plot()
 
 	# Save plotfile
 	def Save_File(self):
+		'''
+		Save the currently analysed plot file of file is format enforced by tKinter file-picker.
+		An Error is displayed if this fails, or an message about succesful saving if it does not.
+		'''
 		if self.plot_data and self.property_dict is not None:
 			try:
 				filepath = filedialog.asksaveasfilename(filetypes=[(res.ff_FILETITLE_a,'*'+res.ff_FILETAG_a)])
@@ -303,15 +318,27 @@ class AppUI(Tk):
 				ex = traceback.format_exc()
 				messagebox.showerror("Error", res.ERROR_MSG(e, ex))
 				return 
+	
+	# Controls sub frames to show plot
+	def Show_Plot(self, plot_data, property_dict):
+		self.main_frame.close_plot()
+		self.plot_data = plot_data
+		self.property_dict = property_dict
+		save_property_dict = [x for x in self.property_dict if x[0] not in  ['aplot_path', 'edf_path', 'anno_path']]
+		fs.write_aplot(fs.Filepaths.TempAplotFile, self.plot_data, save_property_dict)
+		self.main_frame.open_plot()
 
-	# Close
+	# Controls sub frames to close plot
 	def Close_File(self):
 		self.main_frame.close_plot()
 		self.plot_data = []
 		self.property_dict = {}
 	
-	# Text Popup
 	def popup(self, text):
+		'''
+		Creates pop-up shown by choosing help-menu items.
+		'''
+		# Create pop-up window
 		toplevel = Toplevel()
 
 		# Title
@@ -332,10 +359,12 @@ class AppUI(Tk):
 				label = Label(toplevel, text=s, font=res.FONT, anchor=W)
 				label.grid(sticky=N+W)
 
-		# Focus grab
+		# Binds
 		toplevel.bind('<Escape>', lambda e: toplevel.destroy())
 		toplevel.bind('<Return>', lambda e: toplevel.destroy())
 		toplevel.bind('<Shift-C>', lambda e: toplevel.destroy())
+
+		# Focus grab
 		toplevel.lift()
 		toplevel.focus_force()
 		toplevel.grab_set()
@@ -344,19 +373,10 @@ class AppUI(Tk):
 		x = self.winfo_x()
 		y = self.winfo_y()
 		toplevel.geometry("+%d+%d" % (x+5, y+55))
-	
-	# press button
-	def plot_btn_state_swap(self, btn, id):
-		# button state swap
-		if (btn['text'][-2:] == 'ON'):
-			btn['text'] = btn['text'][:-2]+'OFF'
-		else:
-			btn['text'] = btn['text'][:-3]+'ON'
 
-		self.btn_plot_states[id] = not self.btn_plot_states[id] 
-		self.main_frame.update_plot()
-
+	# Main frame resource. It wraps plot frame and property frame unto same frame.
 	class Main_Frame(Frame):
+		# initilising
 		def __init__(self, master, controller):
 			Frame.__init__(self, master) # Super.__init__()
 			self.controller = controller
@@ -372,7 +392,7 @@ class AppUI(Tk):
 			# Default
 			self.close_plot()
 
-		# Show plot
+		# sub control: Show plot
 		def open_plot(self):
 			self.update_plot()
 			self.plot_frame.grid()
@@ -380,18 +400,20 @@ class AppUI(Tk):
 			self.prop_frame.update_properties()
 			self.prop_frame.grid()
 
-		# Update plot
+		# sub control: Update plot
 		def update_plot(self):
 			plot = self.controller.plot_data
 			self.controller.plot_figure = plot_results(*(list(plot) + [Figure(figsize=(res.ss_PLOT_WIDTH/res.ss_PLOT_DPI, res.ss_PLOT_HEIGHT/res.ss_PLOT_DPI), dpi=res.ss_PLOT_DPI)]))
 			self.plot_frame.update_plot()
 
-		# Close plot
+		# sub control: Close plot
 		def close_plot(self):
 			self.plot_frame.grid_remove()
 			self.prop_frame.grid_remove()
-
+		
+		# Plot frame resource
 		class Plot_Frame(Frame):
+			# initilisation
 			def __init__(self, master, controller):
 				Frame.__init__(self, master,bg='white') # Super.__init__()
 				self.controller = controller
@@ -402,7 +424,7 @@ class AppUI(Tk):
 				# Grid
 				self.update_plot()
 
-			# update plot
+			# sub sub control: update plot
 			def update_plot(self):
 				if self.controller.plot_figure: 
 					subframe = Frame(self)
@@ -420,15 +442,17 @@ class AppUI(Tk):
 						self.plot.grid_forget()
 					self.plot = subframe
 					self.plot.grid(row=1, column=0)
-
+		
+		# Property frame resource
 		class Prop_Frame(Frame):
+			# Initilisation
 			def __init__(self, master, controller):
 				Frame.__init__(self, master, bg='white') # Super.__init__()
 				self.controller = controller
 				self.properties = []
 				self.update_properties()
 			
-			# Update
+			# sub sub control: Update properties
 			def update_properties(self):
 				if self.properties != None:
 					for frame in self.properties:
@@ -440,7 +464,7 @@ class AppUI(Tk):
 					subframe.grid(sticky=NE)
 					self.properties += [subframe]
 
-			# Properties
+			# Property sub resource
 			def __property(self, key, val, width, font):
 				subframe = Frame(self)
 				Label(subframe, text=key, font=font, width=width).grid(row=0, column=0)
@@ -451,5 +475,7 @@ class AppUI(Tk):
 				Separator(subframe, orient=HORIZONTAL).grid(row=1, column=2, rowspan=3, sticky=EW)
 				return subframe
 
+# Main method running the application
 if __name__ == '__main__':
 	App = AppUI()
+	App.mainloop() # start GUI thread
