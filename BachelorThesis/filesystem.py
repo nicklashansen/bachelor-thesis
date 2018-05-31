@@ -30,8 +30,8 @@ class Filepaths:
 				j = j + 1
 		return path[0:i+1]
 
-	directory = directory()
-	#directory = 'D:\\BachelorThesis\\' # Michael Path (not enough harddrive space)
+	#directory = directory()
+	directory = 'D:\\BachelorThesis\\' # Michael Path (not enough harddrive space)
 
 	# Folder 
 	Files = directory + 'Files\\'
@@ -53,9 +53,9 @@ class Filepaths:
 	if settings.SHHS:
 
 		# Save paths
-		SaveSubject = SaveSubject[-2] + '_shhs\\'
-		SaveSplits  = SaveSplits[-2] + '_shhs\\'
-		SaveEpochs = SaveEpochs[-2] + '_shhs\\'
+		SaveSubject = SaveSubject[:-2] + '_shhs\\'
+		SaveSplits  = SaveSplits[:-2] + '_shhs\\'
+		SaveEpochs = SaveEpochs[:-2] + '_shhs\\'
 
 		# Load paths
 		LoadDatabaseCsv = Files + 'Data\\mesa\\datasets\\{0}.csv'.format('missing') # Not required
