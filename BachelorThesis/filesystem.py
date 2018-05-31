@@ -16,28 +16,28 @@ import pickle as pck
 import xml.etree.ElementTree as xmlTree
 import settings
 
+def directory():
+	'''
+	returns directory of solution
+	'''
+	path = os.path.dirname(os.path.abspath(__file__))
+	i,j = len(path),0
+	while (j!=1):
+		i = i-1
+		if path[i] == '\\':
+			j = j + 1
+	#return path[0:i+1]
+	return 'D:\\BachelorThesis\\' # Michael Path (not enough harddrive space)
+
 class Filepaths:
 	'''
 	Container class for filespaths
 	'''
-	# Directory
-	def directory():
-		path = os.path.dirname(os.path.abspath(__file__))
-		i,j = len(path),0
-		while (j!=1):
-			i = i-1
-			if path[i] == '\\':
-				j = j + 1
-		return path[0:i+1]
-
-	#directory = directory()
-	directory = 'D:\\BachelorThesis\\' # Michael Path (not enough harddrive space)
-
 	# Folder 
-	Files = directory + 'Files\\'
-	Matlab = directory + 'Matlab\\'
-	Model = directory + 'Model\\'
-	Logs = directory + 'Logs\\'
+	Files = directory() + 'Files\\'
+	Matlab = directory() + 'Matlab\\'
+	Model = directory() + 'Model\\'
+	Logs = directory() + 'Logs\\'
 
 	# Save paths
 	SaveSubject = Files + 'Subjects\\'
@@ -53,9 +53,9 @@ class Filepaths:
 	if settings.SHHS:
 
 		# Save paths
-		SaveSubject = SaveSubject[:-2] + '_shhs\\'
-		SaveSplits  = SaveSplits[:-2] + '_shhs\\'
-		SaveEpochs = SaveEpochs[:-2] + '_shhs\\'
+		SaveSubject = SaveSubject[:-1] + '_shhs\\'
+		SaveSplits  = SaveSplits[:-1] + '_shhs\\'
+		SaveEpochs = SaveEpochs[:-1] + '_shhs\\'
 
 		# Load paths
 		LoadDatabaseCsv = Files + 'Data\\mesa\\datasets\\{0}.csv'.format('missing') # Not required

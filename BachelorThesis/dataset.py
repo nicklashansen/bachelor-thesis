@@ -16,7 +16,7 @@ class dataset:
 	'''
 	Class responsible for handling data-set related activities.
 	'''
-	def __init__(self, epochs, shuffle=True, balance=False, only_arousal=False, exclude_ptt=False):
+	def __init__(self, epochs, shuffle=True, balance=False, only_arousal=False, exclude_ptt=False, only_rwa=False):
 		'''
 		Creates a new data-set object from given array of epochs.
 		Unless disabled, all epochs are shuffled using a fixed seed for reproducibility.
@@ -35,7 +35,8 @@ class dataset:
 			self.shuffle()
 		if exclude_ptt:
 			self.exclude_ptt()
-		
+		if only_rwa:
+			self.only_rwa()
 
 	def shuffle(self, seed = SEED):
 		'''
@@ -79,6 +80,17 @@ class dataset:
 		for i,obj in enumerate(self.epochs):
 			obj.X = delete(obj.X, 2, 1)
 			obj.X = delete(obj.X, 2, 1)
+			self.epochs[i].X = obj.X
+		self.features = self.epochs[0].X.shape[1]
+
+	def only_rwa(self):
+		'''
+		Includes only RWA feature with matrix operations
+		'''
+		for i,obj in enumerate(self.epochs):
+			obj.X = delete(obj.X, 0, 1)
+			obj.X = delete(obj.X, 1, 1)
+			obj.X = delete(obj.X, 1, 1)
 			self.epochs[i].X = obj.X
 		self.features = self.epochs[0].X.shape[1]
 

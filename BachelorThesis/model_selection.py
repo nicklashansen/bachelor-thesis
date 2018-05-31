@@ -194,7 +194,7 @@ def predict_file(filename, model = None, filter = False, removal = True, return_
 	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter, removal)
 	if model == None:
 		model = gru(load_graph=True, path = 'gru.h5')
-	epochs = dataset(epochs, shuffle=False, exclude_ptt=True, only_arousal = True).epochs
+	epochs = dataset(epochs, shuffle=False, exclude_ptt=False, only_arousal = True, only_rwa = True).epochs
 	epochs = model.predict(epochs, return_probabilities=return_probabilities)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
 	yhat, timecol = reconstruct(X, epochs, settings.PREDICT_THRESHOLD)
