@@ -114,20 +114,6 @@ def show_signals(timecol, array, labels = None, colors = COLOR, duration = None,
 			plt.plot(x, signal, colors[i], label=labels[i], linewidth=linewidth)
 	return a
 
-def show_spans(timecol, array, color, alpha = 0.3, a = None):
-	'''
-	REMOVE?
-	'''
-	if array is None:
-		return a
-	x = timecol/60
-	for _,obj in enumerate(array):
-		if a is not None:
-			a.axvspan(x[obj[0]], x[obj[1]], color=color, alpha=alpha)
-		else:
-			plt.axvspan(x[obj[0]], x[obj[1]], color=color, alpha=alpha)
-	return a
-
 def plot_data(signals, peaksIndexs=None, labels=None, normalization=False, indice = (0,10000)):
 	'''
 	plots list of signals (with labesl) and peak-markings into one plot
