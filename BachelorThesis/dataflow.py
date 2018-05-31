@@ -73,7 +73,7 @@ def test_dataflow(file = 'mesa-sleep-2472'):
 			ss[i] = 2
 		elif X[5,i]:
 			ss[i] = 0
-	plot_results(X[0]/settings.SAMPLE_RATE, [X[1], X[3], ss, yhat, y*(-1)], ['RR interval', 'PTT', 'Sleep stage', 'yhat', 'y'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE))
+	plot_results(X[0]/settings.SAMPLE_RATE, [X[1], X[2], X[3], X[4], ss, yhat, y*(-1)], ['RR', 'RWA', 'PTT', 'PWA', 'Sleep stage', 'yhat', 'y'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE))
 
 def dataflow(X, cmd_plot = False):
 	epochs = epochs_from_prep(X, None, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter=False, removal=True)
@@ -89,7 +89,7 @@ def dataflow(X, cmd_plot = False):
 			ss[i] = 2
 		elif X[5,i]:
 			ss[i] = 0
-	data = X[0]/settings.SAMPLE_RATE, [X[1], X[3], ss, yhat], ['RR interval', 'PTT', 'Sleep stage', 'Arousals'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE)
+	data = X[0]/settings.SAMPLE_RATE, [X[1], X[2], X[3], X[4], ss, yhat], ['RR', 'RWA', 'PTT', 'PWA', 'Sleep stage', 'Arousals'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE)
 	if cmd_plot:
 		plot_results(*list(data))
 	return data, summary

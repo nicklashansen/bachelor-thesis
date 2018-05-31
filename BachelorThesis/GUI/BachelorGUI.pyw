@@ -1,3 +1,11 @@
+'''
+WRITTENN BY
+Michael Kirkegaard
+
+MAIN PURPOSE:
+
+'''
+
 from tkinter import *
 from tkinter import filedialog
 from tkinter.ttk import Progressbar, Separator
@@ -17,14 +25,9 @@ from preprocessing import prep_X
 import filesystem as fs
 import traceback
 
-"""
-WRITTEN BY
-Michael Kirkegaard
-"""
-
 class AppUI(Tk):
 	def __init__(self, w=res.ss_WIDTH, h=res.ss_HEIGHT):
-		Tk.__init__(self)
+		Tk.__init__(self)	
 		# Setup
 		self.geometry("{0}x{1}".format(w,h))
 		self.resizable(False, False)
@@ -35,8 +38,6 @@ class AppUI(Tk):
 		self.plot_data = []
 		self.plot_figure = None
 		self.btn_plot_states = []
-
-		# Prop vars
 		self.property_dict = {}
 
 		# New File Thread
@@ -53,16 +54,17 @@ class AppUI(Tk):
 		self.config(menu=self.menubar)
 
 		# Shortcuts
-		self.bind('<Shift-N>', lambda e: self.New_File())
-		self.bind('<Shift-O>', lambda e: self.Open_File())
-		self.bind('<Shift-S>', lambda e: self.Save_File())
-		self.bind('<Shift-C>', lambda e: self.Close_File())
-		self.bind('<Shift-Escape>', lambda e: self.quit())
+		self.bind('<'+res.fm_sc_NEW+'>', lambda e: self.New_File())
+		self.bind('<'+res.fm_sc_LOAD+'>', lambda e: self.Load_File())
+		self.bind('<'+res.fm_sc_SAVE+'>', lambda e: self.Save_File())
+		self.bind('<'+res.fm_sc_CLOSE+'>', lambda e: self.Close_File())
+		self.bind('<'+res.fm_sc_EXIT+'>', lambda e: self.quit())
 
 		# Load last plot
 		try:
 			if os.path.isfile(fs.Filepaths.TempAplotFile):
 				plot_data, property_dict = fs.load_aplot(fs.Filepaths.TempAplotFile)
+				property_dict = [('aplot_path', fs.Filepaths.TempAplotFile.replace('\\','/'))] + property_dict
 				self.Show_Plot(plot_data, property_dict)
 		except Exception as e:
 			self.Close_File()
@@ -77,12 +79,12 @@ class AppUI(Tk):
 
 		# Filemenu
 		filemenu = Menu(menubar, tearoff=0)
-		filemenu.add_command(label="New", command=self.New_File, accelerator='Shift-N')
-		filemenu.add_command(label="Open", command=self.Open_File, accelerator='Shift-O')
-		filemenu.add_command(label="Save", command=self.Save_File, accelerator='Shift-S')
-		filemenu.add_command(label="Close", command=self.Close_File, accelerator='Shift-C')
+		filemenu.add_command(label="New", command=self.New_File, accelerator=res.fm_sc_NEW)
+		filemenu.add_command(label="Load", command=self.Load_File, accelerator=res.fm_sc_LOAD)
+		filemenu.add_command(label="Save", command=self.Save_File, accelerator=res.fm_sc_SAVE)
+		filemenu.add_command(label="Close", command=self.Close_File, accelerator=res.fm_sc_CLOSE)
 		filemenu.add_separator()
-		filemenu.add_command(label="Exit", command=self.quit, accelerator='Shift-Escape')
+		filemenu.add_command(label="Exit", command=self.quit, accelerator=res.fm_sc_EXIT)
 		menubar.add_cascade(label="File", menu=filemenu)
 
 		# Helpmenu
@@ -104,7 +106,7 @@ class AppUI(Tk):
 					steps = 5
 					# Step 0 Load files
 					statuslabel['text'] = 'Loading files...'
-					if this.getName() == 'cancel': # Shutdown Flags
+					if this.getName() == res.SHUTDOWNFLAG: # Shutdown Flags
 						raise
 					if not fs.validate_fileformat(edf, anno):
 						raise Exception('File corrupt or incorrect format.')
@@ -112,7 +114,7 @@ class AppUI(Tk):
 					# Step 1 prep files
 					progresbar.step(int(100/steps))
 					statuslabel['text'] = 'Preprocessing files...'
-					if this.getName() == 'cancel': # Shutdown Flags
+					if this.getName() == res.SHUTDOWNFLAG: # Shutdown Flags
 						raise
 					X = prep_X(edf, anno)
 					#X,_ = fs.load_csv(edf[-19:-4])
@@ -120,14 +122,14 @@ class AppUI(Tk):
 					# Step 2 Tensorflow
 					progresbar.step(int(100/steps))
 					statuslabel['text'] = 'Loading keras and tensorflow...'
-					if this.getName() == 'cancel': # Shutdown Flags
+					if this.getName() == res.SHUTDOWNFLAG: # Shutdown Flags
 						raise
 					from dataflow import dataflow
 
 					# Step 3 - Analyse
 					progresbar.step(int(100/steps))
 					statuslabel['text'] = 'Analysing data...'
-					if this.getName() in ['cancel','close']: # Shutdown Flags
+					if this.getName() in res.SHUTDOWNFLAG: # Shutdown Flags
 						raise
 					plot_data, property_dict = dataflow(X)
 					property_dict = [('edf_path',edf),('anno_path',anno)] + property_dict
@@ -135,7 +137,7 @@ class AppUI(Tk):
 					# Step 4 - Plot data
 					progresbar.step(int(100/steps))
 					statuslabel['text'] = 'Plotting results...'
-					if this.getName() == 'cancel': # Shutdown Flags
+					if this.getName() == res.SHUTDOWNFLAG: # Shutdown Flags
 						raise
 
 					# step 5 - Finished
@@ -146,17 +148,17 @@ class AppUI(Tk):
 					toplevel.destroy()
 				
 				except Exception as e:
-					if(this.getName() != 'cancel'):
+					if(this.getName() != res.SHUTDOWNFLAG):
 						ex = traceback.format_exc()
-						messagebox.showerror("Error", "Error loading file\n\n"+str(e)+"\n"+ex)
+						messagebox.showerror("Error", res.ERROR_MSG(e, ex, statuslabel['text']))
 				finally:
-					if(this.getName() != 'cancel'):
+					if(this.getName() != res.SHUTDOWNFLAG):
 						canceltask(toplevel, edf_e, edf_b, anno_e, anno_b, b_go,cancelbutton,statuslabel,progresbar)
 
 			def canceltask(toplevel, edf_e, edf_b, anno_e, anno_b, b_go,cancelbutton,statuslabel,progresbar):
 				if self.progbarThread:
 					# Forget task
-					self.progbarThread.setName('cancel')
+					self.progbarThread.setName(res.SHUTDOWNFLAG)
 					self.progbarThread = None
 
 					# Reset view
@@ -212,7 +214,7 @@ class AppUI(Tk):
 					svar.set(filepath)
 				except Exception as e:
 					ex = traceback.format_exc()
-					messagebox.showerror("Error", "Error loading file.\n\n"+str(e)+"\n"+ex)
+					messagebox.showerror("Error", res.ERROR_MSG(e, ex))
 					svar.set("Error Loading File...")
 				finally:
 					callback()
@@ -262,17 +264,17 @@ class AppUI(Tk):
 			file_toplevel.geometry("+%d+%d" % (x+5, y+55))		
 
 	# Open already formatted plots
-	def Open_File(self):
+	def Load_File(self):
 		if not self.progbarThread:
 			try:
 				filepath = filedialog.askopenfilename(title='Choose '+ res.ff_FILETITLE_a +' file', filetypes=[(res.ff_FILETITLE_a,'*'+res.ff_FILETAG_a)])
 				if not filepath or filepath == '':
 					return
 				plot_data, property_dict = fs.load_aplot(filepath)
-				property_dict = [('aplot_path',filepath)] + property_dict
+				property_dict = [('aplot_path',filepath)] + [x for x in self.property_dict if x[0] != 'aplot_path']
 			except Exception as e:
 				ex = traceback.format_exc()
-				messagebox.showerror("Error", "Error loading file.\n\n"+str(e)+"\n"+ex)
+				messagebox.showerror("Error", res.ERROR_MSG(e, ex))
 				return
 			self.Close_File()
 			self.Show_Plot(plot_data, property_dict)
@@ -280,14 +282,14 @@ class AppUI(Tk):
 	def Show_Plot(self, plot_data, property_dict):
 		self.main_frame.close_plot()
 		self.plot_data = plot_data
-		self.property_dict = [('aplot_path', fs.Filepaths.TempAplotFile	)] + property_dict
+		self.property_dict = property_dict
 		save_property_dict = [x for x in self.property_dict if x[0] not in  ['aplot_path', 'edf_path', 'anno_path']]
 		fs.write_aplot(fs.Filepaths.TempAplotFile, self.plot_data, save_property_dict)
 		self.main_frame.open_plot()
 
 	# Save plotfile
 	def Save_File(self):
-		if self.plot_data and self.property_dict:
+		if self.plot_data and self.property_dict is not None:
 			try:
 				filepath = filedialog.asksaveasfilename(filetypes=[(res.ff_FILETITLE_a,'*'+res.ff_FILETAG_a)])
 				if not filepath or filepath == '':
@@ -299,7 +301,7 @@ class AppUI(Tk):
 				messagebox.showinfo("Succes", "Succesfully saved file.")
 			except Exception as e:
 				ex = traceback.format_exc()
-				messagebox.showerror("Error", "Error saving file.\n\n"+str(e)+'\n'+ex)
+				messagebox.showerror("Error", res.ERROR_MSG(e, ex))
 				return 
 
 	# Close

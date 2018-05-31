@@ -43,13 +43,36 @@ class dataset:
 			if sum(obj.y) == 0:
 				self.epochs.remove(obj)
 		self.size = len(self.epochs)
+	
+	#def exclude_ptt(self): # ONLY RR
+	#	for i,obj in enumerate(self.epochs):
+	#		obj.X = delete(obj.X, 1, 1)
+	#		obj.X = delete(obj.X, 1, 1)
+	#		obj.X = delete(obj.X, 1, 1)
+	#		self.epochs[i].X = obj.X
+	#	self.features = self.epochs[0].X.shape[1]
 
-	def exclude_ptt(self):
+	def exclude_ptt(self): # ONLY RWA
 		for i,obj in enumerate(self.epochs):
-			obj.X = delete(obj.X, 2, 1)
-			obj.X = delete(obj.X, 2, 1)
+			obj.X = delete(obj.X, 0, 1)
+			obj.X = delete(obj.X, 1, 1)
+			obj.X = delete(obj.X, 1, 1)
 			self.epochs[i].X = obj.X
 		self.features = self.epochs[0].X.shape[1]
+
+	#def exclude_ptt(self): # ONLY PTT
+	#	for i,obj in enumerate(self.epochs):
+	#		obj.X = delete(obj.X, 0, 1)
+	#		obj.X = delete(obj.X, 0, 1)
+	#		self.epochs[i].X = obj.X
+	#	self.features = self.epochs[0].X.shape[1]
+
+	#def exclude_ptt(self): # OVLY ECG
+	#	for i,obj in enumerate(self.epochs):
+	#		obj.X = delete(obj.X, 2, 1)
+	#		obj.X = delete(obj.X, 2, 1)
+	#		self.epochs[i].X = obj.X
+	#	self.features = self.epochs[0].X.shape[1]
 
 	def get_split(self):
 		split = 0.9
