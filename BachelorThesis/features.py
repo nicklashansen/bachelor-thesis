@@ -36,7 +36,7 @@ def hours_of_sleep_files(files):
  
 def count_hours_of_sleep(timecol):
 	'''
-	calculates hours of sleep from time series assuming wake periods are removed
+	Calculates hours of sleep from time series assuming wake periods are removed
 	'''
 	t = 0.0
 	j = 0
@@ -49,7 +49,7 @@ def count_hours_of_sleep(timecol):
 
 def make_splits():
 	'''
-	split files into training, evaluation and testing after trimming away unreliable files
+	Split files into training, evaluation and testing after trimming away unreliable files
 	'''
 	before = fs.getAllSubjectFilenames(preprocessed=True)
 	after = reliableFiles(before)
@@ -57,7 +57,7 @@ def make_splits():
 
 def process_epochs():
 	'''
-	loads training data and generated epoch file
+	Loads training data and generated epoch file
 	'''
 	train = fs.load_splits()[0]
 	epochs = compile_epochs(train)
@@ -177,7 +177,7 @@ def epochs_from_prep(X, y, epoch_length=settings.EPOCH_LENGTH, overlap_factor=se
 
 def make_features(X, y, sample_rate, removal = True, full_removal = False, onehot=True):
 	'''
-	compiles the final features, removing wake periods and correcting extreme outliers
+	Compiles the final features, removing wake periods and correcting extreme outliers
     and invalid values as well as normalising featues and onehotting sleep stage signal
 	'''
 	# Mask are created
@@ -252,7 +252,8 @@ def cubic_spline(X, masks, plot=False):
 
 def wake_removal_full(X, y, mask, sample_rate):
 	'''
-	Legacy function - removes all wake state datapoints from X
+	Legacy function.
+	Removes all wake state datapoints from X.
 	'''
 	_X = transpose(X)
 	keep = [i for i,state in enumerate(_X[5]) if state >= 0]
@@ -266,7 +267,7 @@ def wake_removal_full(X, y, mask, sample_rate):
 
 def wake_removal_endpoints(X, y, mask, sample_rate, keep_seconds=30):
 	'''
-	removes all wake state regions greater than 60 seconds except for the
+	Removes all wake state regions greater than 60 seconds except for the
 	first and last 30 seconds of the region. Mesa and shhs are scored in
 	30 seconds windows, which keeps first and last windows of a wake region.
 	'''
@@ -316,7 +317,7 @@ def wake_removal_endpoints(X, y, mask, sample_rate, keep_seconds=30):
 
 def sleep_onehot(X):
 	'''
-	one hot for sleep stage, transforming signal of {-1,0,1} into three binary arrays
+	One-hot transformation for sleep stage, transforming signal of {-1,0,1} into three binary arrays.
 	'''
 	Xt = transpose(X)
 
