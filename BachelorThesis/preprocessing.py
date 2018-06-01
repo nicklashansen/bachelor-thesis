@@ -80,6 +80,21 @@ def preprocess(subject, arousals = True):
 	sig_PPG = subject.PPG_signal
 	anno_SleepStage = subject.SleepStage_anno
 	
+	# ----- hardcode
+
+	Xt = transpose(fs.load_csv(subject.filename)[0])
+	rpeaks = Xt[0]
+	ppeaks, _ = PPG_Peaks(sig_PPG.signal, sig_PPG.sampleFrequency)
+	from plots import plot_data
+	from peakutils import baseline
+
+	#plot_data([sig_ECG.signal-baseline(sig_ECG.signal)], [None, array([p for i,p in enumerate(rpeaks) if Xt[3,i] == -1]).astype(int), None, rpeaks.astype(int)], ['ECG', 'PTT fail', None, 'R'], False, (0,int(sig_PPG.duration)))
+	#plot_data([sig_ECG.signal-baseline(sig_ECG.signal)-1, sig_PPG.signal-baseline(sig_PPG.signal)+1], [rpeaks.astype(int), array(ppeaks).astype(int)], ['ECG', 'PPG'], False, (0,int(sig_PPG.duration-10)))
+	#plot_data([sig_PPG.signal], [rpeaks.astype(int), array(ppeaks).astype(int)], ['R', 'P'], False, (0,int(sig_PPG.duration-10)))
+	plot_data([sig_PPG.signal], [None, None, array(ppeaks).astype(int), rpeaks.astype(int)], ['PPG', 'PTT Failed', 'P', 'R'], False, (0,int(sig_PPG.duration)))
+
+	# ----- hardcode
+
 	# Gets R-peak indexes and amplitudes
 	index, amp = QRS(subject)
 	

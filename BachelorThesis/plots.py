@@ -129,17 +129,18 @@ def plot_data(signals, peaksIndexs=None, labels=None, normalization=False, indic
 				sig = normalize(sig)
 			signals[i] = sig
 
-	color = ['b-', 'g-']
-	peakcolor = ['rx','kx']
+	color = ['b-','k-', 'g-', 'y-']
+	peakcolor = ['ro','yo','gx', 'rx']
 	for i,signal in enumerate(signals):
 		if signal is not None:
 			x = range(0,indice[1]-indice[0])
 			plt.plot(x, signal, color[i], label=(labels[i] if labels else 'signal'+str(i+1)))
 	if peaksIndexs != None:
 		for i,peaks in enumerate(peaksIndexs):
-			if peaks is not None and signals[i] is not None:
-				peaks = [j for j in peaks[indice[0]:indice[1]] if indice[0] <= j <= indice[1]]
-				plt.plot(peaks, [signals[i][j] for j in peaks], peakcolor[i],label=(labels[i]+' peaks' if labels else 'signal'+str(i+1)+' peaks'))
+			k = i if len(signals) > i else len(signals)-1
+			if peaks is not None and signals[k] is not None:
+				peaks = [j for j in peaks if indice[0] <= j <= indice[1]]
+				plt.plot(peaks, [signals[k][j] for j in peaks], peakcolor[i],label=(labels[i]+' peaks' if labels else 'signal'+str(i+1)+' peaks'))
 				plt.plot()
 	plt.legend()
 	plt.show()

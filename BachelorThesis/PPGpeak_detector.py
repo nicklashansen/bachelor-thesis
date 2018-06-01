@@ -4,7 +4,7 @@ Michal Kirkegaard
 
 Handle the PPG peak detection using lowpass filter, cubing filter, adaptive thresholds and minimum distance.
 '''
-from scipy.signal import butter, filtfilt
+from scipy.signal import butter, filtfilt, medfilt
 from peakutils.peak import indexes
 from peakutils import baseline
 import numpy as np
@@ -25,7 +25,14 @@ def cubing_filter(data):
 	'''
 	return data**3
 
-def PPG_Peaks(data, freq, plot=False):
+def extreme_removal(data):
+	'''
+	Removes extreme values
+	'''
+	mean = np.mean(data)
+	return np.array([d if abs(d) < abs(mean*10) else mean for d in data])
+
+def PPG_Peaks(data, freq, plot=True, remove_extreme=True):
 	'''
 	Performs the peak detection in steps. filtering (lowpass and cubic), peak detections (adaptive treshold
 	and minimum distance) and lastly find the amplitudes for each peak, from the baseline removed signal.
@@ -34,6 +41,7 @@ def PPG_Peaks(data, freq, plot=False):
 	# filters
 	_data = data
 	_data = lowpass_butter_filter(_data)
+	_data = extreme_removal(_data) if remove_extreme else _data
 	_data = cubing_filter(_data)
 
 	# peak detection provided by peakutils package, it uses adaptive treshold and minimum distance
@@ -41,16 +49,15 @@ def PPG_Peaks(data, freq, plot=False):
 	_peaks = indexes(_data, min_dist=freq*slice)
 	peaks = [softTemplate(data, i, freq) for i in _peaks]
 
-	# peak amps from baseline removed data on corrected peaks
-	b_data = data-baseline(data)
-	amps = [b_data[i] for i in peaks]
+	# peak amps from filtered data
+	amps = [_data[i] for i in peaks]
 
-	if plot:
-		plot_data([data, b_data], labels=['PPG', 'Baseline PPG'], normalization=True, indice=(0,10000)) # Baselined
-		plot_data([data, _data], peaksIndexs=None, labels=['PPG','PPG Filtered'], normalization=True, indice = (0,10000)) # filtered
-		plot_data([None, _data], peaksIndexs=[None, _peaks], labels=['PPG','PPG Filtered'], normalization=True, indice = (0,10000)) # non-corrected peaks
-		plot_data([data], peaksIndexs=[peaks], labels=['PPG','PPG Filtered'], normalization=True, indice = (0,10000)) # Final
-		plot_data([data, _data], peaksIndexs=[peaks, _peaks], labels=['PPG','PPG Filtered'], normalization=True, indice = (0,10000)) # Everything
+	if True:
+		b_data = data-baseline(data, 2)
+		plot_data([data+10, b_data], labels=['PPG', 'PPG Baselined'], normalization=True, indice=(0,len(data)))
+		#plot_data([None, b_data], peaksIndexs=[None,peaks], labels=[None,'PPG Baselined'], normalization=False, indice = (0,len(data)))
+		#plot_data([None, None, _data], peaksIndexs=[None, None, _peaks], labels=[None,'PPG Baselined', 'PPG Filtered'], normalization=False, indice = (0,len(data))) 
+		#plot_data([data, None, _data], peaksIndexs=[peaks, None, _peaks], labels=['PPG', 'PPG Baselined','PPG Filtered'], normalization=False, indice = (0,len(data))) 
 
 	return peaks, amps
 
