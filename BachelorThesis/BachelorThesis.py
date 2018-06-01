@@ -2,6 +2,8 @@
 #from model_selection import parameter_tuning, test_bidirectional, fit_validate_test, evaluate, evaluate_LR, predict_file
 #from model_selection import evaluate, evaluate_LR
 from preprocessing import prepAll, prepSingle
+import filesystem as fs
+from dataflow import dataflow
 #from metrics import compute_score
 #import h5py
 
@@ -29,5 +31,7 @@ if __name__ == '__main__':
 	#make_splits()
 	#process_epochs()
 	#prepSingle('mesa-sleep-0085', False) # illustrating errors
-	prepSingle('mesa-sleep-2915', False) #new found
+	#prepSingle('mesa-sleep-2915', False) #new found
 	#prepSingle('mesa-sleep-3150', False) #big errors
+	X,y = fs.load_csv('mesa-sleep-0001')
+	dataflow(X, y,True)

@@ -42,11 +42,11 @@ def dataflow(X, y = None, cmd_plot = False):
 			ss[i] = 0
 	data = X[0]/settings.SAMPLE_RATE, [X[1], X[2], X[3], X[4], ss, yhat], ['RR', 'RWA', 'PTT', 'PWA', 'Sleep stage', 'Arousals'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE)
 	if cmd_plot:
-		data = list(data)
-		if y:
-			data[1][5] = [yhat, y]
-			data[2][5] = ['yhat', 'y']
-		plot_results(*data)
+		d = list(data)
+		if y is not None:
+			d[1][5] = [yhat, y]
+			d[2][5] = ['yhat', 'y']
+		plot_results(*d)
 	return data, summary
 
 def postprocess(timecol, yhat, combine = False, remove = False):
