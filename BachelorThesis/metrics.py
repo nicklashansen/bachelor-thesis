@@ -80,7 +80,7 @@ def cm_overlap(y, yhat, timecol, secOverlap, sampleRate):
 	
 	class Arousal:
 		'''
-		container class for checking overlap between arousals
+		Container class for checking overlap between arousals
 		'''
 		# Initilise
 		def __init__(self, start, end):
@@ -99,7 +99,7 @@ def cm_overlap(y, yhat, timecol, secOverlap, sampleRate):
 		
 		def compareTo(self,other):
 			'''
-			comparsison method for arousal, self, and arousal, other.
+			Comparsison method for arousal, self, and arousal, other.
 			0        : Self == Other
 			negative : Self < Other
 			positive : Other < Self

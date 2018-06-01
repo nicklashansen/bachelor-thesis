@@ -18,7 +18,7 @@ import settings
 
 def directory():
 	'''
-	returns directory of solution
+	Returns directory of solution
 	'''
 	path = os.path.dirname(os.path.abspath(__file__))
 	i,j = len(path),0
@@ -26,8 +26,8 @@ def directory():
 		i = i-1
 		if path[i] == '\\':
 			j = j + 1
-	#return path[0:i+1]
-	return 'D:\\BachelorThesis\\' # Michael Path (not enough harddrive space)
+	return path[0:i+1]
+	#return 'D:\\BachelorThesis\\' # Michael Path (not enough harddrive space)
 
 class Filepaths:
 	'''

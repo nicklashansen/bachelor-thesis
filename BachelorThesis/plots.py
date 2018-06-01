@@ -3,7 +3,7 @@ AUTHOR(S):
 Nicklas Hansen,
 Michael Kirkegaard
 
-modules is responsible for creating figures and plots for evaluation, testing and also for the GUI
+Module is responsible for creating figures and plots for evaluation and testing purposes, as well as for the GUI.
 '''
 
 from numpy import *
@@ -13,28 +13,31 @@ from sklearn.preprocessing import MinMaxScaler
 COLOR = ['black', 'orange', 'green', 'red']
 def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals, duration = None, figure = None):
 	'''
-	plotting of signals (with labels) into subplots with a shared x-axis,
-	will return a figure if given, as is the case of the GUI.
+	Plotting of signals (with labels) into subplots with a shared x-axis.
+	Function returns a figure if one is given, as is the case of the GUI.
 	'''
 	if figure is None:
-		rr = plt.add_subplot(611)
+		rr = plt.subplot(611)
 		plt.Axes.autoscale(rr, True, axis = 'y')
 		show_signals(timecol, [signals[0]], [labels[0]], COLOR, duration)
-		rwa = plt.add_subplot(612, sharex=rr)
-		plt.Axes.autoscale(rwa, True, axis = 'y')
+		rwa = plt.subplot(612, sharex=rr)
+		plt.Axes.autoscale(rr, True, axis = 'y')
 		show_signals(timecol, [signals[1]], [labels[1]], COLOR, duration)
-		ptt = plt.add_subplot(613, sharex=rr)
-		plt.Axes.autoscale(ptt, True, axis = 'y')
+		ptt = plt.subplot(613, sharex=rr)
+		plt.Axes.autoscale(rr, True, axis = 'y')
 		show_signals(timecol, [signals[2]], [labels[2]], COLOR, duration)
-		pwa = plt.add_subplot(614, sharex=rr)
-		plt.Axes.autoscale(pwa, True, axis = 'y')
+		pwa = plt.subplot(614, sharex=rr)
+		plt.Axes.autoscale(rr, True, axis = 'y')
 		show_signals(timecol, [signals[3]], [labels[3]], COLOR, duration)
-		ssa = plt.add_subplot(615, sharex=rr)
-		plt.Axes.autoscale(ssa, True, axis = 'y')
+		ssa = plt.subplot(615, sharex=rr)
+		plt.Axes.autoscale(rr, True, axis = 'y')
 		show_signals(timecol, [signals[4]], [labels[4]], COLOR, duration)
-		aai = plt.add_subplot(616, sharex=rr)
-		plt.Axes.autoscale(aai, True, axis = 'y')
-		show_signals(timecol, [signals[5:]], [labels[5:]], COLOR, duration)
+		aai = plt.subplot(616, sharex=rr)
+		plt.Axes.autoscale(rr, True, axis = 'y')
+		try:
+			show_signals(timecol, [signals[5:]], [labels[5:]], COLOR, duration)
+		except Exception as e:
+			show_signals(timecol, [signals[5]], [labels[5]], COLOR, duration)
 	else:
 		rr = figure.add_subplot(611)
 		show_signals(timecol, [signals[0]], [labels[0]], COLOR, duration, a = rr)
@@ -52,32 +55,32 @@ def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals,
 	stretch = 0.05
 	rr.set_xlim(0, duration/60)
 	rr.set_ylim(0-stretch,1+stretch)
-	rr.set_ylabel('Normalised values')
+	rr.set_ylabel('Norm. val.')
 	rr.legend()
 
 	rwa.set_xlim(0, duration/60)
 	rwa.set_ylim(0-stretch,1+stretch)
-	rwa.set_ylabel('Normalised values')
+	rwa.set_ylabel('Norm. val.')
 	rwa.legend()
 
 	ptt.set_xlim(0, duration/60)
 	ptt.set_ylim(0-stretch,1+stretch)
-	ptt.set_ylabel('Normalised values')
+	ptt.set_ylabel('Norm. val.')
 	ptt.legend()
 
 	pwa.set_xlim(0, duration/60)
 	pwa.set_ylim(0-stretch,1+stretch)
-	pwa.set_ylabel('Normalised values')
+	pwa.set_ylabel('Norm. val.')
 	pwa.legend()
 
 	ssa.set_xlim(0, duration/60)
 	ssa.set_ylim(0-stretch,2+stretch)
-	ssa.set_xlabel('Minutes')
 	ssa.set_ylabel('Sleep stage')
 	ssa.legend()
 
 	aai.set_xlim(0, duration/60)
 	aai.set_ylim(0-stretch,1+stretch) if 'y' not in labels else aai.set_ylim(-1-stretch,1+stretch)
+	aai.set_xlabel('Minutes')
 	aai.set_ylabel('Arousals')
 	aai.legend()
 
@@ -86,8 +89,6 @@ def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals,
 	plt.setp(ptt.get_xticklabels(), visible=False)
 	plt.setp(pwa.get_xticklabels(), visible=False)
 	plt.setp(ssa.get_xticklabels(), visible=False)
-	
-	#plt.Axes.autoscale(ssa, True, axis = 'y')
 	if figure is None:
 		plt.show()
 	else:
@@ -96,7 +97,7 @@ def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals,
 
 def show_signals(timecol, array, labels = None, colors = COLOR, duration = None, a = None):
 	'''
-	plots a signals of signal into on plot
+	Plots a given signal to a subplot with corresponding time axis.
 	'''
 	if array is None:
 		return a
@@ -116,9 +117,8 @@ def show_signals(timecol, array, labels = None, colors = COLOR, duration = None,
 
 def plot_data(signals, peaksIndexs=None, labels=None, normalization=False, indice = (0,10000)):
 	'''
-	plots list of signals (with labesl) and peak-markings into one plot
+	Plots list of signals (with labels) and marked peaks into a plot
 	'''
-
 	def normalize(X, scaler=MinMaxScaler()):
 		return squeeze(scaler.fit_transform(X.reshape(X.shape[0], 1)))
 
