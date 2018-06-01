@@ -44,8 +44,9 @@ def dataflow(X, y = None, cmd_plot = False):
 	if cmd_plot:
 		d = list(data)
 		if y is not None:
-			d[1][5] = [yhat, y]
-			d[2][5] = ['yhat', 'y']
+			d[1] += [y]
+			d[2] += ['y']
+			d[2][5] = 'yhat'
 		plot_results(*d)
 	return data, summary
 
