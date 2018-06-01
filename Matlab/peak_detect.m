@@ -1,7 +1,7 @@
 %% WRITTEN BY:
 %  Nicklas Hansen
 
-function [index, amp] = peak_detect(folder, filename, FS)
+function [index, amp, tm] = peak_detect(folder, filename, FS)
     resources = strcat(folder, 'Matlab\Resources');
     edfs = strcat(folder, 'Files\Data\mesa\polysomnography\edfs');
     addpath(genpath(resources));
