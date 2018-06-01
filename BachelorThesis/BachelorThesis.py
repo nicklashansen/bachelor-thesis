@@ -14,7 +14,8 @@ import filesystem as fs
 if __name__ == '__main__':
 	#train_validate_test()
 	#evaluate(validation=False, path='best_rwa.h5')
-	X, _ = fs.load_csv('mesa-sleep-5810')
-	dataflow(X, cmd_plot=True)
+	X, y = fs.load_csv('mesa-sleep-1128')
+	y = y * (-1)
+	dataflow(X, y, cmd_plot=True)
 	#make_splits()
 	#process_epochs()

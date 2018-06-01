@@ -18,7 +18,7 @@ from log import Log, get_log
 import filesystem as fs
 import settings
 
-def dataflow(X, cmd_plot = False):
+def dataflow(X, y=None, cmd_plot = False):
 	'''
 	Primary function responsible for predictions and GUI output from a pre-processed file.
 	Returns signals used for plotting of features as well as generated summary statistics.
@@ -40,7 +40,7 @@ def dataflow(X, cmd_plot = False):
 			ss[i] = 2
 		elif X[5,i]:
 			ss[i] = 0
-	data = X[0]/settings.SAMPLE_RATE, [X[1], X[2], X[3], X[4], ss, yhat], ['RR', 'RWA', 'PTT', 'PWA', 'Sleep stage', 'Arousals'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE)
+	data = X[0]/settings.SAMPLE_RATE, [X[1], X[2], X[3], X[4], ss, yhat, y], ['RR', 'RWA', 'PTT', 'PWA', 'Sleep stage', 'Arousals', 'y'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE)
 	if cmd_plot:
 		plot_results(*list(data))
 	return data, summary
