@@ -7,6 +7,7 @@ Setting used across the solution
 '''
 
 SHHS = False
+BEST_MODEL = 'best_rwa.h5'
 
 SAMPLE_RATE = 250 if SHHS else 256
 FEATURES = 7

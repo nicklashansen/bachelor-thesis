@@ -92,21 +92,3 @@ class dataset:
 			obj.X = delete(obj.X, 1, 1)
 			self.epochs[i].X = obj.X
 		self.features = self.epochs[0].X.shape[1]
-
-	def holdout(self, split = 0.9):
-		'''
-		Legacy function. Returns training and test splits based on a given split percentage.
-		'''
-		cut = int(self.size * split)
-		return self.epochs[:cut], self.epochs[cut:]
-
-	def kfold(self, folds = 10):
-		'''
-		Legacy function. Returns training and test folds corresponding to the given number of folds.
-		'''
-		kf = KFold(folds)
-		train, test = [], []
-		for train_index, test_index in kf.split(self.epochs):
-			train.append(self.epochs[train_index[0]:train_index[len(train_index)-1]])
-			test.append(self.epochs[test_index[0]:test_index[len(test_index)-1]])
-		return train, test
