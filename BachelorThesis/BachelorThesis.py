@@ -1,28 +1,16 @@
-#from features import process_epochs, make_splits, hours_of_sleep_files
-#from model_selection import parameter_tuning, test_bidirectional, fit_validate_test, evaluate, evaluate_LR, predict_file
-#from model_selection import evaluate, evaluate_LR
-#from preprocessing import prepAll, prepSingle
-import filesystem as fs
-import numpy as np
-#from dataflow import dataflow
-import log
-import metrics
-#import h5py
-
-"""
+'''
 AUTHOR(S):
 Nicklas Hansen
 Michael Kirkegaard
-"""
+'''
+
+from features import process_epochs
+from model_selection import evaluate
+from preprocessing import prepAll
+from dataflow import dataflow
+import filesystem as fs
 
 if __name__ == '__main__':
-	#parameter_tuning(evaluate_model=False)
-	#train_validate_test()
-	#fit_validate_test(only_arousal = True)
-	#evaluate(validation=False, path='FEATURE_SELECTION\\best_rr.h5')
-	#evaluate(validation=False, path='best_rwa.h5')
-	#evaluate(validation=False, path='FEATURE_SELECTION\\best_ecg.h5')
-	#evaluate(validation=False, path='FEATURE_SELECTION\\best_ppg.h5')
 	#evaluate(validation=False, path='FEATURE_SELECTION\\best_rr_ppg.h5')
 	#evaluate(validation=False, path='FEATURE_SELECTION\\best_rwa_ppg.h5')
 	#test_dataflow(file='mesa-sleep-1541')

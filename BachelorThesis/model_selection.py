@@ -1,10 +1,10 @@
 '''
 AUTHOR(S):
-Nicklas Hansen,
-Michael Kirkegaard
+Nicklas Hansen
 
 Module contains functions developed for the model and feature selection procedure,
 including training, validation and testing phases.
+All functions take a range of optional parameters that allow for multi-purpose use.
 '''
 
 from numpy import *
@@ -17,53 +17,6 @@ import filesystem as fs
 import metrics
 import settings
 import os, matlab.engine, preprocessing
-
-def evaluate_LR():
-	'''
-	Evaluate dataset using LR model, results are logged for evaluation and testing purposes.
-	'''
-	eng = matlab.engine.start_matlab()
-	os.makedirs(fs.Filepaths.Matlab, exist_ok=True)
-	eng.cd(fs.Filepaths.Matlab)
-
-	def transform_yhat(yhat,timecol_hat,timecol_removal,timecol):
-		n = len(timecol_hat)
-		yhat_new = zeros(len(timecol))
-		j = 1
-		for i,t in enumerate(timecol_removal):
-			while(j < n and timecol_hat[j] < t):
-				j += 1
-			jx = j if j < n and abs(timecol_hat[j] - t) > abs(t - timecol_hat[j-1]) else j-1
-			jx_t = list(timecol).index(t)
-			yhat_new[jx_t] = yhat[jx]
-		return yhat_new
-
-	log = get_log('LR-evaluation', echo=True)
-	TP=FP=TN=FN = 0
-	for file in fs.load_splits()[2] if not settings.SHHS else fs.getAllSubjectFilenames(preprocessed=True):
-		try:
-			X_,y = fs.load_csv(file)
-			X,_,_ = make_features(X_, None, settings.SAMPLE_RATE, removal=True)
-			if not settings.SHHS:
-				yhat, timecol_hat = eng.LR_classify_shhs(fs.directory(), file+'.edf', float(settings.SAMPLE_RATE), nargout=2)
-			else:
-				yhat, timecol_hat = eng.LR_classify(fs.directory(), file+'.edf', float(settings.SAMPLE_RATE), nargout=2)
-			timecol_hat = array([t[0] for t in timecol_hat])
-			yhat = transform_yhat([1. if yh[0] else 0. for yh in yhat], timecol_hat, transpose(X)[0], transpose(X_)[0])
-
-			tp,fp,tn,fn = metrics.cm_overlap(y, yhat, transpose(X_)[0], settings.OVERLAP_SCORE, settings.SAMPLE_RATE)
-			TP += tp ; FP += fp ; TN += tn ; FN += fn
-			file_score = metrics.compute_cm_score(tp, fp, tn, fn)
-			log.print(file + ' -- Se: ' + '{0:.2f}'.format(file_score['score']['sensitivity']) + ',  P+: ' + '{0:.2f}'.format(file_score['score']['precision']))
-		except Exception as e:
-			print(e)
-	log.printHL()
-	log.print('TOTAL')
-	score = metrics.compute_cm_score(TP, FP, TN, FN)
-	for k,d in score.items():
-		log.print(str(k))
-		for key,val in d.items():
-			log.print(str(key)+':'+str(val))
 
 def get_batch_size(gpu = True):
 	'''
@@ -194,7 +147,7 @@ def predict_file(filename, model = None, filter = False, removal = True, return_
 	epochs = epochs_from_prep(X, y, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter, removal)
 	if model == None:
 		model = gru(load_graph=True, path = 'gru.h5')
-	epochs = dataset(epochs, shuffle=False, exclude_ptt=False, only_arousal = True, only_rwa = True).epochs
+	epochs = dataset(epochs, shuffle=False, exclude_ptt=True).epochs
 	epochs = model.predict(epochs, return_probabilities=return_probabilities)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
 	yhat, timecol = reconstruct(X, epochs, settings.PREDICT_THRESHOLD)
@@ -215,7 +168,7 @@ def reconstruct(X, epochs, threshold = 1):
 
 def add_predictions(yhat1, yhat2):
 	'''
-	Adds together two predictions using a bit-wise OR operator.
+	Legacy function. Adds together two predictions using a bit-wise OR operator.
 	'''
 	assert len(yhat1) == len(yhat2)
 	for i in range(len(yhat1)):
@@ -225,7 +178,7 @@ def add_predictions(yhat1, yhat2):
 
 def majority_vote(yhat1, yhat2, yhat3):
 	'''
-	Adds together three predictions using a majority vote format.
+	Legacy function. Adds together three predictions using a majority vote format.
 	'''
 	assert len(yhat1) == len(yhat2)
 	assert len(yhat1) == len(yhat3)
