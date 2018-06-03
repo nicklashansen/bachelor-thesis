@@ -18,7 +18,7 @@ from log import Log, get_log
 import filesystem as fs
 import settings
 
-def dataflow(X, y=None, cmd_plot = False):
+def dataflow(X, y = None, cmd_plot = False):
 	'''
 	Primary function responsible for predictions and GUI output from a pre-processed file.
 	Returns signals used for plotting of features as well as generated summary statistics.
@@ -32,7 +32,7 @@ def dataflow(X, y=None, cmd_plot = False):
 	full.sort(key=lambda x: x.index_start, reverse=False)
 	wake, nrem, rem, illegal = timeseries(full)
 	summary = summary_statistics(timecol, yhat, wake, nrem, rem, illegal)
-	X,_,mask = make_features(X, None, settings.SAMPLE_RATE, removal=False)
+	X,y,mask = make_features(X, y, settings.SAMPLE_RATE, removal=False)
 	X = transpose(X)
 	ss = X[6].copy()
 	for i,_ in enumerate(ss):
@@ -40,9 +40,14 @@ def dataflow(X, y=None, cmd_plot = False):
 			ss[i] = 2
 		elif X[5,i]:
 			ss[i] = 0
-	data = X[0]/settings.SAMPLE_RATE, [X[1], X[2], X[3], X[4], ss, yhat, y], ['RR', 'RWA', 'PTT', 'PWA', 'Sleep stage', 'Arousals', 'y'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE)
+	data = X[0]/settings.SAMPLE_RATE, [X[1], X[2], X[3], X[4], ss, yhat], ['RR', 'RWA', 'PTT', 'PWA', 'Sleep stage', 'Arousals'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE)
 	if cmd_plot:
-		plot_results(*list(data))
+		d = list(data)
+		if y is not None:
+			d[1] += [y]
+			d[2] += ['y']
+			d[2][5] = 'yhat'
+		plot_results(*d)
 	return data, summary
 
 def postprocess(timecol, yhat, combine = False, remove = False):

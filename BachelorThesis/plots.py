@@ -34,10 +34,9 @@ def plot_results(timecol, signals, labels, wake_states, rem, illegals, arousals,
 		show_signals(timecol, [signals[4]], [labels[4]], COLOR, duration)
 		aai = plt.subplot(616, sharex=rr)
 		plt.Axes.autoscale(rr, True, axis = 'y')
-		if len(signals) > 6:
-			show_signals(timecol, [signals[5]], ['yhat'], COLOR, duration)
-			show_signals(timecol, [signals[6]], [labels[6]], COLOR, duration)
-		else:
+		try:
+			show_signals(timecol, signals[5:], labels[5:], COLOR, duration)
+		except Exception as e:
 			show_signals(timecol, [signals[5]], [labels[5]], COLOR, duration)
 	else:
 		rr = figure.add_subplot(611)
@@ -109,7 +108,8 @@ def show_signals(timecol, array, labels = None, colors = COLOR, duration = None,
 				duration = len(signal)
 	x = timecol/60
 	for i,signal in enumerate(array):
-		linewidth = 0.6
+		linewidth = 1.8 if labels[i] == 'y' else 0.6
+		signal = signal * -1 if labels[i] == 'y' else signal
 		if a is not None:
 			a.plot(x, signal, colors[i], label=labels[i], linewidth=linewidth)
 		else:
