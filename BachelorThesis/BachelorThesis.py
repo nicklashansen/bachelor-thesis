@@ -4,18 +4,15 @@ Nicklas Hansen
 Michael Kirkegaard
 '''
 
-from features import process_epochs, make_splits, hours_of_sleep_files
-#from model_selection import parameter_tuning, test_bidirectional, fit_validate_test, evaluate, evaluate_LR, predict_file
-from model_selection import evaluate, evaluate_LR
-from preprocessing import prepAll, prepSingle
+from features import process_epochs
+from model_selection import evaluate
+from preprocessing import prepAll
 from dataflow import dataflow
 import filesystem as fs
 
 if __name__ == '__main__':
-	#train_validate_test()
-	#evaluate(validation=False, path='best_rwa.h5')
-	X, y = fs.load_csv('mesa-sleep-1128')
+	#evaluate(validation=False, path='FEATURE_SELECTION\\best_rr_ppg.h5')
+	X, y = fs.load_csv('mesa-sleep-6422')
 	y = y * (-1)
 	dataflow(X, y, cmd_plot=True)
-	#make_splits()
 	#process_epochs()

@@ -24,7 +24,7 @@ def dataflow(X, y=None, cmd_plot = False):
 	Returns signals used for plotting of features as well as generated summary statistics.
 	'''
 	epochs = epochs_from_prep(X.copy(), None, settings.EPOCH_LENGTH, settings.OVERLAP_FACTOR, settings.SAMPLE_RATE, filter=False, removal=True)
-	epochs = dataset(epochs, shuffle=False, exclude_ptt=False, only_arousal = True, only_rwa = True).epochs
+	epochs = dataset(epochs, shuffle=False, exclude_ptt=False, only_rwa = True).epochs
 	epochs = gru(load_graph=True, path=settings.BEST_MODEL).predict(epochs)
 	epochs.sort(key=lambda x: x.index_start, reverse=False)
 	yhat,timecol = reconstruct(X, epochs)
