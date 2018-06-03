@@ -3,7 +3,7 @@ AUTHOR(S):
 Nicklas Hansen,
 Michael Kirkegaard
 
-Finilise preprocessed files into feature matrix X and score vector y,
+Finalise preprocessed files into feature matrix X and score vector y,
 filter off unreliable files taking MESA variable and masks as criteria
 and serve as wrapper for generating epochs used for model training.
 '''

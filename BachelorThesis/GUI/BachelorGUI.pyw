@@ -129,7 +129,7 @@ class AppUI(Tk):
 					if this.getName() == res.SHUTDOWNFLAG: # Shutdown Flags
 						raise
 					X = prep_X(edf, anno)
-					#X,_ = fs.load_csv(edf[-19:-4])
+					#X,_ = fs.load_csv(edf[-19:-4]) # Loading of prepped MESA file
 
 					# Step 2 Tensorflow
 					progresbar.step(int(100/steps))
@@ -467,7 +467,7 @@ class AppUI(Tk):
 
 				w = res.ss_LABEL_WIDTH
 				for k,v in self.controller.property_dict:
-					subframe = self.__property(str(k), str(v), w, res.FONT)
+					subframe = self.__property(str(res.st_dict[str(k)]), str(v), w, res.FONT)
 					subframe.grid(sticky=NE)
 					self.properties += [subframe]
 
@@ -476,7 +476,7 @@ class AppUI(Tk):
 				subframe = Frame(self)
 				Label(subframe, text=key, font=font, width=width).grid(row=0, column=0)
 				Separator(subframe, orient=VERTICAL).grid(row=0, column=1, rowspan=3, sticky=NS)
-				Label(subframe, text=val, font=font, width=width).grid(row=0, column=2)
+				Label(subframe, text=val, font=font, width=10).grid(row=0, column=2)
 				Separator(subframe, orient=HORIZONTAL).grid(row=1, column=0, rowspan=3, sticky=EW)
 				Separator(subframe, orient=HORIZONTAL).grid(row=1, column=1, rowspan=3, sticky=EW)
 				Separator(subframe, orient=HORIZONTAL).grid(row=1, column=2, rowspan=3, sticky=EW)

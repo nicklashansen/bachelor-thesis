@@ -82,22 +82,25 @@ def preprocess(subject, arousals = True):
 	
 	# ----- hardcode
 
-	Xt = transpose(fs.load_csv(subject.filename)[0])
-	rpeaks = Xt[0]
-	ppeaks, _ = PPG_Peaks(sig_PPG.signal, sig_PPG.sampleFrequency)
-	from plots import plot_data
-	from peakutils import baseline
+	#Xt = transpose(fs.load_csv(subject.filename)[0])
+	#rpeaks = Xt[0]
+	#ppeaks, _ = PPG_Peaks(sig_PPG.signal, sig_PPG.sampleFrequency)
+	#from plots import plot_data
+	#from peakutils import baseline
 
-	#plot_data([sig_ECG.signal-baseline(sig_ECG.signal)], [None, array([p for i,p in enumerate(rpeaks) if Xt[3,i] == -1]).astype(int), None, rpeaks.astype(int)], ['ECG', 'PTT fail', None, 'R'], False, (0,int(sig_PPG.duration)))
-	#plot_data([sig_ECG.signal-baseline(sig_ECG.signal)-1, sig_PPG.signal-baseline(sig_PPG.signal)+1], [rpeaks.astype(int), array(ppeaks).astype(int)], ['ECG', 'PPG'], False, (0,int(sig_PPG.duration-10)))
-	#plot_data([sig_PPG.signal], [rpeaks.astype(int), array(ppeaks).astype(int)], ['R', 'P'], False, (0,int(sig_PPG.duration-10)))
-	plot_data([sig_PPG.signal], [None, None, array(ppeaks).astype(int), rpeaks.astype(int)], ['PPG', 'PTT Failed', 'P', 'R'], False, (0,int(sig_PPG.duration)))
+	##plot_data([sig_ECG.signal-baseline(sig_ECG.signal)], [None, array([p for i,p in enumerate(rpeaks) if Xt[3,i] == -1]).astype(int), None, rpeaks.astype(int)], ['ECG', 'PTT fail', None, 'R'], False, (0,int(sig_PPG.duration)))
+	##plot_data([sig_ECG.signal-baseline(sig_ECG.signal)-1, sig_PPG.signal-baseline(sig_PPG.signal)+1], [rpeaks.astype(int), array(ppeaks).astype(int)], ['ECG', 'PPG'], False, (0,int(sig_PPG.duration-10)))
+	##plot_data([sig_PPG.signal], [rpeaks.astype(int), array(ppeaks).astype(int)], ['R', 'P'], False, (0,int(sig_PPG.duration-10)))
+	#plot_data([sig_PPG.signal], [None, array([p for i,p in enumerate(rpeaks) if Xt[3,i] == -1]).astype(int), array(ppeaks).astype(int), rpeaks.astype(int)], ['PPG', 'PTT Failed', 'P', 'R'], False, (0,int(sig_PPG.duration)))
+	#return None, None
 
 	# ----- hardcode
 
 	# Gets R-peak indexes and amplitudes
 	index, amp = QRS(subject)
-	
+	#Xt = transpose(fs.load_csv(subject.filename)[0])
+	#index, amp = Xt[0].astype(int), Xt[2]
+
 	# Preprocess Features
 	x_RR, x_RWA = RR(subject.frequency, index), array(amp).astype(float)
 	x_PTT, x_PWA = PPG(sig_PPG, index)

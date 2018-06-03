@@ -26,8 +26,8 @@ def directory():
 		i = i-1
 		if path[i] == '\\':
 			j = j + 1
-	#return path[0:i+1]
-	return 'D:\\BachelorThesis\\' # Michael Path (not enough harddrive space)
+	return path[0:i+1]
+	#return 'D:\\BachelorThesis\\' # Michael Path (not enough harddrive space)
 
 class Filepaths:
 	'''
@@ -58,7 +58,7 @@ class Filepaths:
 		SaveEpochs = SaveEpochs[:-1] + '_shhs\\'
 
 		# Load paths
-		LoadDatabaseCsv = Files + 'Data\\mesa\\datasets\\{0}.csv'.format('missing') # Not required
+		LoadDatabaseCsv = Files + 'Data\\shhs2\\datasets\\{0}.csv'.format('shhs2-dataset-0.13.0')
 		LoadPsg = LoadPsg.replace('mesa','shhs2')
 		loadAnno = LoadAnno.replace('mesa','shhs2')
 
@@ -93,7 +93,7 @@ class Subject:
 	def __init__(self, filename=None, edfPath=None, annoPath=None, ArousalAnno=True, ArousalOnly=False):
 		# if mesa or shhs file
 		if filename:
-			self.id = int(filename[-4:])
+			self.id = int(filename[-4:]) if not settings.SHHS else int(filename[-6:])
 			self.filename = filename
 		else:
 			self.id = None
@@ -228,7 +228,7 @@ def getDataset_csv():
 	'''
 	returns the dataset variable container
 	'''
-	return pd.read_csv(Filepaths.LoadDatabaseCsv)
+	return pd.read_csv(Filepaths.LoadDatabaseCsv, encoding = "utf-8")
 
 def load_csv(filename):
 	'''

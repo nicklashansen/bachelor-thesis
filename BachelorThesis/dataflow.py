@@ -34,12 +34,12 @@ def dataflow(X, y = None, cmd_plot = False):
 	summary = summary_statistics(timecol, yhat, wake, nrem, rem, illegal)
 	X,y,mask = make_features(X, y, settings.SAMPLE_RATE, removal=False)
 	X = transpose(X)
-	ss = X[6].copy()
+	ss = X[6].copy().astype(float)
 	for i,_ in enumerate(ss):
 		if X[7,i]:
-			ss[i] = 2
+			ss[i] = 2.0
 		elif X[5,i]:
-			ss[i] = 0
+			ss[i] = 0.0
 	data = X[0]/settings.SAMPLE_RATE, [X[1], X[2], X[3], X[4], ss, yhat], ['RR', 'RWA', 'PTT', 'PWA', 'Sleep stage', 'Arousals'], region(X[5]), region(X[7]), None, None, int(X[0,-1]/settings.SAMPLE_RATE)
 	if cmd_plot:
 		d = list(data)
@@ -111,7 +111,7 @@ def summary_statistics(timecol, yhat, wake, nrem, rem, illegal):
 	ill_score = str(int((n_ill/len(illegal))*(10**5)))
 	arousals, n = region(yhat, count = True)
 	n_arousals = len(arousals)
-	arousals_hr = '{0:.1f}'.format(n_arousals/(rec_dur_float/60)*(1-p_wake))
+	arousals_hr = '{0:.1f}'.format(n_arousals/((rec_dur_float/60)*(1-(p_wake/100))))
 	arousal_dur = []
 	for arousal in arousals:
 		arousal_dur.append(arousal[1] - arousal[0])
@@ -123,5 +123,5 @@ def summary_statistics(timecol, yhat, wake, nrem, rem, illegal):
 			,('avg_arousal', '{0:.1f}'.format(mean(arousal_dur)))
 			,('med_arousal', '{0:.1f}'.format(median(arousal_dur)))
 			,('std_arousal', '{0:.1f}'.format(std(arousal_dur)))
-			,('ill_score', ill_score)
+			#,('ill_score', ill_score)
 			]

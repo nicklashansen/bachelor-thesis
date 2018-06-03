@@ -32,7 +32,7 @@ def extreme_removal(data):
 	mean = np.mean(data)
 	return np.array([d if abs(d) < abs(mean*10) else mean for d in data])
 
-def PPG_Peaks(data, freq, plot=True, remove_extreme=True):
+def PPG_Peaks(data, freq, plot=False, remove_extreme=False):
 	'''
 	Performs the peak detection in steps. filtering (lowpass and cubic), peak detections (adaptive treshold
 	and minimum distance) and lastly find the amplitudes for each peak, from the baseline removed signal.
@@ -52,7 +52,7 @@ def PPG_Peaks(data, freq, plot=True, remove_extreme=True):
 	# peak amps from filtered data
 	amps = [_data[i] for i in peaks]
 
-	if True:
+	if plot:
 		b_data = data-baseline(data, 2)
 		plot_data([data+10, b_data], labels=['PPG', 'PPG Baselined'], normalization=True, indice=(0,len(data)))
 		#plot_data([None, b_data], peaksIndexs=[None,peaks], labels=[None,'PPG Baselined'], normalization=False, indice = (0,len(data)))
