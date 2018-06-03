@@ -75,3 +75,8 @@ if __name__ == '__main__':
 	
 	#X,y = fs.load_csv('mesa-sleep-0001')
 	#dataflow(X, y,True)
+
+	X, y = fs.load_csv('mesa-sleep-6422')
+	y = y * (-1)
+	dataflow(X, y, cmd_plot=True)
+	#process_epochs()
