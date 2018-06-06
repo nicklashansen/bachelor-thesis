@@ -213,10 +213,10 @@ def make_masks(X):
 	def threeSigmaRule(data):
 		_data = [x for x in data if x != -1]
 		mu = mean(_data)
-		std3 = std(_data)*3
+		std4 = std(_data)*4
 		# if datapoint's distance from mu is above 3 times the standard deviation
 		# or value is -1 (i.e. no PTT value)
-		return [(1 if x == -1 or abs(mu-x) > std3 else 0) for x in data]
+		return [(1 if x == -1 or abs(mu-x) > std4 else 0) for x in data]
 
 	# compiles mask for each file, and a summarised mask for X
 	masklist = [threeSigmaRule(x_feat) for x_feat in Xt[1:5]] # RR, RPA, PTT, PWA
@@ -229,24 +229,21 @@ def cubic_spline(X, masks, plot=False):
 	Spline corrects featues where mask index shows errors
 	'''
 	Xt = transpose(X)
+	timecol = Xt[0]
 
 	def spline(maskid, data):
-		# datapoint of non-error indexes
 		mask = masks[maskid]
-		datamask = [data[i] for i,m in enumerate(mask) if m == 0]
+		unique = [i for i,t in enumerate(timecol) if i>0 and t != timecol[i-1]]
+		timecolmask,datamask = zip(*[(timecol[i],data[i]) for i,m in enumerate(mask) if m == 0 and i in unique])
 		if(len(datamask) >= 2):
-			# Creates spline and interpolates points inbetween 
-			cs = CubicSpline(range(len(datamask)),datamask)
-			datacs = cs(range(len(mask)))
-			
-			# plottin is an option
+			cs = CubicSpline(timecolmask,datamask)
+			datacs = cs(timecol)
 			if plot:
-				plot_data([data, datacs], labels=['Signal','Spline Correction'])
+				plot_data([data, datacs], labels=['Signal','Spline Correction'], indice=(0,30000))
 			return array(datacs)
 		return data
 
-	# Spline for DR,RPA,PTT,PWA
-	Xt = array([Xt[0]] + [spline(id,x) for id,x in enumerate(Xt[1:5])] + [Xt[5]])
+	Xt = array([Xt[0]] + [spline(id,x) for id,x in enumerate(Xt[1:5])] + [Xt[5]]) # Spline DR,RPA,PTT,PWA
 	X = transpose(Xt)
 	return X
 

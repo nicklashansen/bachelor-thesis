@@ -308,6 +308,7 @@ class AppUI(Tk):
 				filepath = filedialog.asksaveasfilename(filetypes=[(res.ff_FILETITLE_a,'*'+res.ff_FILETAG_a)])
 				if not filepath or filepath == '':
 					return
+				filepath = filepath if filepath[len(res.ff_FILETAG_a)*-1:] == res.ff_FILETAG_a else filepath+res.ff_FILETAG_a
 				save_property_dict = [x for x in self.property_dict if x[0] not in  ['aplot_path', 'edf_path', 'anno_path']]
 				fs.write_aplot(filepath, self.plot_data, save_property_dict)
 				self.property_dict = [('aplot_path',filepath)] + [x for x in self.property_dict if x[0] != 'aplot_path']

@@ -12,7 +12,7 @@
     <OutputPath>.</OutputPath>
     <Name>BachelorThesis</Name>
     <RootNamespace>BachelorThesis</RootNamespace>
-    <InterpreterId>{5b3125f7-a263-401e-bb7b-06293404ee6e}</InterpreterId>
+    <InterpreterId>{eeaa2aaa-8303-48ac-bcb8-05bf91db1da3}</InterpreterId>
     <InterpreterVersion>3.5</InterpreterVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -25,7 +25,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="BachelorThesis.py" />
-    <Compile Include="New\features_better.py" />
+    <Compile Include="New\features_new.py" />
+    <Compile Include="New\PPGpeak_detector_new.py" />
+    <Compile Include="New\preprocessing_new.py" />
     <Compile Include="settings.py">
       <SubType>Code</SubType>
     </Compile>
