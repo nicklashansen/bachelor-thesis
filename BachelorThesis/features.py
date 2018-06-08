@@ -59,7 +59,7 @@ def process_epochs():
 	'''
 	Loads training data and generated epoch file
 	'''
-	train = fs.load_splits()[0]
+	train = fs.load_splits()[1]
 	epochs = compile_epochs(train)
 
 

@@ -6,7 +6,7 @@ Micael Kirkegaard
 Setting used across the solution
 '''
 
-SHHS = False
+SHHS = True
 BEST_MODEL = 'best_rwa.h5'
 
 SAMPLE_RATE = 250 if SHHS else 256
