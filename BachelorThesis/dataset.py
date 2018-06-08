@@ -80,6 +80,7 @@ class dataset:
 		for i,obj in enumerate(self.epochs):
 			obj.X = delete(obj.X, 2, 1)
 			obj.X = delete(obj.X, 2, 1)
+			obj.X = delete(obj.X, 0, 1)
 			self.epochs[i].X = obj.X
 		self.features = self.epochs[0].X.shape[1]
 
