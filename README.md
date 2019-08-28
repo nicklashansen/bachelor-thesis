@@ -1,6 +1,6 @@
 # Automatic Multi-Modal Detection of Autonomic Arousals in Sleep
 
-Repository for bachelor thesis on Automatic Multi-Modal Detection of Autonomic Arousals in Sleep. The thesis itself (236 pages) and all related data is confidential and thus not publicly available, but access to the thesis can be granted upon request. We have however made our presentation slides available for review here.
+Repository for bachelor thesis on Automatic Multi-Modal Detection of Autonomic Arousals in Sleep. The thesis itself (236 pages) and all related data is confidential and thus not publicly available, but **access to the thesis can be granted upon request**. We have however made our presentation slides available for review here.
 
 ### Abstract
 
